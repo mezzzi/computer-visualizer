@@ -20,28 +20,28 @@ class VMTranslator {
       command = this.vmParser.getCurrentInstruction()
       const opcode = command.getOpCode()
       switch (opcode) {
-        case HVMInstructionSet.PUSH_CODE:
+        case HVMInstructionSet.C_PUSH:
           this.assemblyWriter.writePushPop(command)
           break
-        case HVMInstructionSet.POP_CODE:
+        case HVMInstructionSet.C_POP:
           this.assemblyWriter.writePushPop(command)
           break
-        case HVMInstructionSet.FUNCTION_CODE:
+        case HVMInstructionSet.C_FUNCTION:
           this.assemblyWriter.writeFunction(command)
           break
-        case HVMInstructionSet.RETURN_CODE:
+        case HVMInstructionSet.C_RETURN:
           this.assemblyWriter.writeReturn(command)
           break
-        case HVMInstructionSet.CALL_CODE:
+        case HVMInstructionSet.C_CALL:
           this.assemblyWriter.writeCall(command)
           break
-        case HVMInstructionSet.LABEL_CODE:
+        case HVMInstructionSet.C_LABEL:
           this.assemblyWriter.writeLabel(command)
           break
-        case HVMInstructionSet.GOTO_CODE:
+        case HVMInstructionSet.C_GOTO:
           this.assemblyWriter.writeGoto(command)
           break
-        case HVMInstructionSet.IF_GOTO_CODE:
+        case HVMInstructionSet.C_IF:
           this.assemblyWriter.writeIf(command)
           break
         default:

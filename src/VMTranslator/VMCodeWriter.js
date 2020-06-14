@@ -62,7 +62,7 @@ class VMCodeWriter {
     const segmentOrClassName = command.getStringArg()
     const segmentCode = command.getArg0()
     const index = command.getArg1()
-    if (opcode === HVMInstructionSet.PUSH_CODE) {
+    if (opcode === HVMInstructionSet.C_PUSH) {
       switch (segmentCode) {
         case HVMInstructionSet.LOCAL_SEGMENT_CODE:
           this.generatePushAssembly(index, 'LCL')
@@ -100,7 +100,7 @@ class VMCodeWriter {
           throw new ProgramException(`Invalid segement code for a push operation: ${segmentCode}`)
       }
       this.incrementSP()
-    } else if (opcode === HVMInstructionSet.POP_CODE) {
+    } else if (opcode === HVMInstructionSet.C_POP) {
       switch (segmentCode) {
         case HVMInstructionSet.LOCAL_SEGMENT_CODE:
           this.generatePopAssembly(index, 'LCL')
@@ -151,7 +151,7 @@ class VMCodeWriter {
     this.assembly.push('M=D')
     // call Sys.init
     if (this.shouldCallSysInit) {
-      const command = new HVMInstruction(HVMInstructionSet.CALL_CODE, -1, 0)
+      const command = new HVMInstruction(HVMInstructionSet.C_CALL, -1, 0)
       command.setStringArg('Sys.init')
       this.writeCall(command)
     }

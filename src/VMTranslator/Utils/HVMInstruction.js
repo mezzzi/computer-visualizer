@@ -29,10 +29,10 @@ class HVMInstruction {
       this.numberOfArgs = 0
     }
     /** Segment code */
-    this.arg0 = isArg0 ? arg0 : -1
+    this.arg0 = isArg0 ? arg0 : HVMInstruction.DEFAULT_ARG
 
     /** The segment index */
-    this.arg1 = isArg1 ? arg1 : -1
+    this.arg1 = isArg1 ? arg1 : HVMInstruction.DEFAULT_ARG
   }
 
   /**
@@ -98,30 +98,30 @@ class HVMInstruction {
       result[0] = ''
     }
     switch (this.opCode) {
-      case HVMInstructionSet.PUSH_CODE:
+      case HVMInstructionSet.C_PUSH:
         result[1] = instructionSet.segmentCodeToVMString(this.arg0)
         result[2] = String(this.arg1)
         break
-      case HVMInstructionSet.POP_CODE:
+      case HVMInstructionSet.C_POP:
         if (this.numberOfArgs === 2) {
           result[1] = instructionSet.segmentCodeToVMString(this.arg0)
           result[2] = String(this.arg1)
         }
         break
-      case HVMInstructionSet.LABEL_CODE:
+      case HVMInstructionSet.C_LABEL:
         result[1] = this.stringArg
         break
-      case HVMInstructionSet.GOTO_CODE:
+      case HVMInstructionSet.C_GOTO:
         result[1] = this.stringArg
         break
-      case HVMInstructionSet.IF_GOTO_CODE:
+      case HVMInstructionSet.C_IF:
         result[1] = this.stringArg
         break
-      case HVMInstructionSet.FUNCTION_CODE:
+      case HVMInstructionSet.C_FUNCTION:
         result[1] = this.stringArg
         result[2] = String(this.arg0)
         break
-      case HVMInstructionSet.CALL_CODE:
+      case HVMInstructionSet.C_CALL:
         result[1] = this.stringArg
         result[2] = String(this.arg1)
         break
@@ -149,4 +149,9 @@ class HVMInstruction {
     return result.toString()
   }
 }
+/**
+ * Default arg value, for arg0 and arg1
+ */
+HVMInstruction.DEFAULT_ARG = -1
+
 export default HVMInstruction

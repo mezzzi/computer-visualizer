@@ -43,7 +43,7 @@ class HVMInstructionSet {
     const result = this.instructionToCode[instruction]
     return result !== undefined
       ? result
-      : UNKNOWN_INSTRUCTION
+      : UNKNOWN_COMMAND
   }
 
   /**
@@ -105,14 +105,14 @@ class HVMInstructionSet {
     this.instructionToCode[AND_STRING] = AND_CODE
     this.instructionToCode[OR_STRING] = OR_CODE
     this.instructionToCode[NOT_STRING] = NOT_CODE
-    this.instructionToCode[PUSH_STRING] = PUSH_CODE
-    this.instructionToCode[POP_STRING] = POP_CODE
-    this.instructionToCode[LABEL_STRING] = LABEL_CODE
-    this.instructionToCode[GOTO_STRING] = GOTO_CODE
-    this.instructionToCode[IF_GOTO_STRING] = IF_GOTO_CODE
-    this.instructionToCode[FUNCTION_STRING] = FUNCTION_CODE
-    this.instructionToCode[RETURN_STRING] = RETURN_CODE
-    this.instructionToCode[CALL_STRING] = CALL_CODE
+    this.instructionToCode[PUSH_STRING] = C_PUSH
+    this.instructionToCode[POP_STRING] = C_POP
+    this.instructionToCode[LABEL_STRING] = C_LABEL
+    this.instructionToCode[GOTO_STRING] = C_GOTO
+    this.instructionToCode[IF_GOTO_STRING] = C_IF
+    this.instructionToCode[FUNCTION_STRING] = C_FUNCTION
+    this.instructionToCode[RETURN_STRING] = C_RETURN
+    this.instructionToCode[CALL_STRING] = C_CALL
     this.instructionToString = {}
     this.instructionToString[ADD_CODE] = ADD_STRING
     this.instructionToString[SUBSTRACT_CODE] = SUBSTRACT_STRING
@@ -123,14 +123,14 @@ class HVMInstructionSet {
     this.instructionToString[AND_CODE] = AND_STRING
     this.instructionToString[OR_CODE] = OR_STRING
     this.instructionToString[NOT_CODE] = NOT_STRING
-    this.instructionToString[PUSH_CODE] = PUSH_STRING
-    this.instructionToString[POP_CODE] = POP_STRING
-    this.instructionToString[LABEL_CODE] = LABEL_STRING
-    this.instructionToString[GOTO_CODE] = GOTO_STRING
-    this.instructionToString[IF_GOTO_CODE] = IF_GOTO_STRING
-    this.instructionToString[FUNCTION_CODE] = FUNCTION_STRING
-    this.instructionToString[RETURN_CODE] = RETURN_STRING
-    this.instructionToString[CALL_CODE] = CALL_STRING
+    this.instructionToString[C_PUSH] = PUSH_STRING
+    this.instructionToString[C_POP] = POP_STRING
+    this.instructionToString[C_LABEL] = LABEL_STRING
+    this.instructionToString[C_GOTO] = GOTO_STRING
+    this.instructionToString[C_IF] = IF_GOTO_STRING
+    this.instructionToString[C_FUNCTION] = FUNCTION_STRING
+    this.instructionToString[C_RETURN] = RETURN_STRING
+    this.instructionToString[C_CALL] = CALL_STRING
   }
 
   /** Initializes the segment strings table */
@@ -201,41 +201,45 @@ export const OR_CODE = 8
  */
 export const NOT_CODE = 9
 /**
+ * Arithmetic command codes are below this number
+ */
+export const ARITHMETIC_CODE_MAX_LIMIT = 10
+/**
  * Push instruction code
  */
-export const PUSH_CODE = 10
+export const C_PUSH = 10
 /**
  * Pop instruction code
  */
-export const POP_CODE = 11
+export const C_POP = 11
 /**
  * Label instruction code
  */
-export const LABEL_CODE = 12
+export const C_LABEL = 12
 /**
  * Goto instruction code
  */
-export const GOTO_CODE = 13
+export const C_GOTO = 13
 /**
  * If-Goto instruction code
  */
-export const IF_GOTO_CODE = 14
+export const C_IF = 14
 /**
  * Function instruction code
  */
-export const FUNCTION_CODE = 15
+export const C_FUNCTION = 15
 /**
  * Return instruction code
  */
-export const RETURN_CODE = 16
+export const C_RETURN = 16
 /**
  * Call instruction code
  */
-export const CALL_CODE = 17
+export const C_CALL = 17
 /**
  * Unknown instruction code
  */
-export const UNKNOWN_INSTRUCTION = -99
+export const UNKNOWN_COMMAND = -99
 
 /**
  * Add instruction string

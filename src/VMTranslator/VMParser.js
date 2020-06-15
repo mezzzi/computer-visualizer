@@ -207,12 +207,13 @@ class VMParser {
    */
   parseSingleFile (file, className) {
     this.isInSlashStar = false
+    file = this.removeComment(file)
     try {
-      for (let line of file.split('\n')) {
+      for (const line of file.split('\n')) {
         this.lineNumber++
-        if (line.indexOf('/') !== -1) {
-          line = this.unCommentLine(line)
-        }
+        // if (line.indexOf('/') !== -1) {
+        //   line = this.unCommentLine(line)
+        // }
         if (line.trim() !== '') {
           // get the opcode
           this.tokenizer = new StringTokenizer(line)
@@ -265,9 +266,9 @@ class VMParser {
     } catch (e) {
       throw new ProgramException('In line ' + this.lineNumber + e.message)
     }
-    if (this.isInSlashStar) {
-      throw new ProgramException('Unterminated /* comment at end of file')
-    }
+    // if (this.isInSlashStar) {
+    //   throw new ProgramException('Unterminated /* comment at end of file')
+    // }
   }
 
   /**
@@ -396,6 +397,10 @@ class VMParser {
       }
       this.instructions[this.pc] = new HVMInstruction(this.opCode, arg0)
     }
+  }
+
+  removeComment (code) {
+    return code.replace(/(?:\/\*(?:[\s\S]*?)\*\/)|(\/\/.*)/g, '')
   }
 
   /**

@@ -158,8 +158,7 @@ class VMParser {
   /**
    * The second argument of the current command. Should be called only if the
    * current command is C_PUSH, C_POP, C_FUNCTION, or C_CALL.
-   * @return { number } the second argument of the current command, -1 is
-   * returned when arg2 does not make sense
+   * @return { number } the second argument of the current command
    * @throws { ProgramException }
    */
   arg2 () {
@@ -171,9 +170,9 @@ class VMParser {
         opcode === HVMInstructionSet.C_PUSH ||
         opcode === HVMInstructionSet.C_FUNCTION ||
         opcode === HVMInstructionSet.C_CALL) {
-        throw new ProgramException(`arg2 called on ${codeString}`)
+        return currentCommand.getArg1()
       }
-      return currentCommand.getArg1()
+      throw new ProgramException(`arg2 called on ${codeString}`)
     } else {
       throw new ProgramException('arg2 called on non-existent command')
     }
@@ -344,11 +343,11 @@ class VMParser {
     if (this.currentFunction === 'Sys.init') {
       this.isSysInitFound = true
     }
-    const arg0 = parseInt(this.tokenizer.nextToken(), 10)
-    if (arg0 < 0) {
+    const arg1 = parseInt(this.tokenizer.nextToken(), 10)
+    if (arg1 < 0) {
       throw new ProgramException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
     }
-    this.instructions[this.pc] = new HVMInstruction(this.opCode, arg0)
+    this.instructions[this.pc] = new HVMInstruction(this.opCode, -1, arg1)
     this.instructions[this.pc].setStringArg(this.currentFunction)
   }
 

@@ -297,7 +297,7 @@ class VMCodeWriter {
      */
   writeFunction (command) {
     const functionName = command.getStringArg()
-    const numLocals = command.getArg0()
+    const numLocals = command.getArg1()
     const localsAllocationLoop = `${functionName}_localVarsInitLoop`
     const localsAllocationDone = `${functionName}_localVarsInitDone`
     // write the function label

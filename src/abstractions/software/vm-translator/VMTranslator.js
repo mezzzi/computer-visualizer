@@ -18,8 +18,7 @@ class VMTranslator {
     while (this.vmParser.hasMoreCommands()) {
       this.vmParser.advance()
       command = this.vmParser.getCurrentInstruction()
-      const opcode = command.getOpCode()
-      switch (opcode) {
+      switch (this.vmParser.commandType()) {
         case HVMInstructionSet.C_PUSH:
           this.assemblyWriter.writePushPop(command)
           break

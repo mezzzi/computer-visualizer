@@ -1,6 +1,12 @@
 /**
  * A simple tokenizer that splits a string using space as
- * a delimiter
+ * a delimiter. Tokenizers are known for being used in
+ * all types of parsers. So even if this one is a
+ * simple one, it is still preferable than a
+ * no-tokenizer approach. Using tokenizer
+ * will allow for easily incorporating
+ * new and complex feature into the
+ * parser
  */
 class StringTokenizer {
   /**

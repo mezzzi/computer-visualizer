@@ -1,24 +1,40 @@
-import { OP_CODE, isArithmetic } from './Utils'
+import { COMMAND, isArithmeticCommand, isCommandType, isSegmentName, typeCheck } from './utils'
 import ProgramException from './ProgramException'
 
 /**
- * This class represents a single hack virtual machine (HVM) command
+ * This class represents a single HVM (Hack Virtual Machine) command
  */
 class HVMCommand {
   /**
    * Constructs a new HVM command
-   * @param {number} opCode the HVM command's operation code
-   * @param {number} arg1 segment, function, or label name
-   * @param {number} arg2 segment index for push/pull instructions,
-   * function's number of argument for call command, or function's
-   * number of local variables for function declaration command
+   * @param {COMMAND} commandType the HVM command's type
+   * @param {string} arg1 segment, function, or label name
+   * @param {number} arg2 second argument of the command
+   * - segment index for push/pull commands,
+   * - function's number of argument for call command,
+   * - or function's number of local variables for function
+   * declaration command
+   * @throws {ProgramException} if `commandType` is not provided,
+   * or is of invalid type
    */
-  constructor (opCode, arg1, arg2) {
+  constructor (commandType, arg1, arg2) {
+    if (!commandType) {
+      throw new ProgramException(
+        'HVMCommand.constructor > cannot create HVM' +
+        'command without providing a command type')
+    }
+    if (!isCommandType(commandType)) {
+      throw new ProgramException(
+        'HVMCommand.constructor > ' +
+        'cannot create HVM command with an invalid command type: ' +
+        `${commandType}`)
+    }
+
     /**
-     * The HVM command's operation code
-     * @type {OP_CODE}
+     * The HVM command's type
+     * @type {COMMAND}
      */
-    this.opCode = opCode
+    this.commandType = commandType
 
     /**
      * segment, function, or label name
@@ -27,8 +43,9 @@ class HVMCommand {
     this.arg1 = arg1
 
     /**
-     * segment index for push/pull instructions, function's number of argument
-     * for call command, or function's number of local variables for
+     * - segment index for push/pull commands,
+     * - function's number of argument for call command,
+     * - or function's number of local variables for
      * function declaration command
      * @type {number}
      */
@@ -42,14 +59,14 @@ class HVMCommand {
     this.stringArg = ''
 
     /**
-     * Number of arguments (arg1 and arg2). So for example if both arg1
+     * Number of arguments (arg1 plus arg2). So for example if both arg1
      * and arg2 are set, number of arguments is set to 2
      * @type {number}
      */
     this.numberOfArgs = 0
 
-    // set number of arguments
-    this.updateNumberOfArguments()
+    // calculate and update number of arguments
+    this.updateNumberOfArgs()
   }
 
   /**
@@ -58,10 +75,30 @@ class HVMCommand {
    * - function name for function/call commands
    * - label name for label and goto/if-goto commands
    * @param {string} arg1 first argument of HVM command
+   * @throws {ProgramException} if setting arg1 doesn't make sense
    */
   setArg1 (arg1) {
+    typeCheck({
+      expectedSample: 'local',
+      receivedArg: arg1,
+      functionName: 'HVMCommand.setArg1',
+      argumentName: 'arg1'
+    })
+    if (this.commandType === COMMAND.RETURN) {
+      throw new ProgramException('HVMCommand.setArg1 > ' +
+      'cannot set arg1 to a return command')
+    }
+    if (isArithmeticCommand(this.commandType)) {
+      throw new ProgramException('HVMCommand.setArg1 > ' +
+      'cannot set arg1 to arithmetic command')
+    }
+    if ([COMMAND.PUSH, COMMAND.POP].includes(this.commandType) &&
+      !isSegmentName(arg1)) {
+      throw new ProgramException('HVMCommand.setArg1 > ' +
+      `invalid segment name: ${arg1} to ${this.commandType} command`)
+    }
     this.arg1 = arg1
-    this.updateNumberOfArguments()
+    this.updateNumberOfArgs()
   }
 
   /**
@@ -70,10 +107,22 @@ class HVMCommand {
    * - number of arguments for call command
    * - number of local variables for function command
    * @param {number} arg2 arg2 of HVM command
+   * @throws {ProgramException} if setting arg2 doesn't make sense
    */
   setArg2 (arg2) {
+    typeCheck({
+      expectedSample: 1,
+      receivedArg: arg2,
+      functionName: 'HVMCommand.setArg2',
+      argumentName: 'arg2'
+    })
+    if (!this.isArg2Relevant(this.commandType)) {
+      throw new ProgramException(
+        'HVMCommand.setArg2 > ' +
+        `cannot set arg2 to the ${this.commandType} command`)
+    }
     this.arg2 = arg2
-    this.updateNumberOfArguments()
+    this.updateNumberOfArgs()
   }
 
   /**
@@ -90,7 +139,7 @@ class HVMCommand {
    * are present, to 1 if either is missing, to 0 if both
    * are not set
    */
-  updateNumberOfArguments () {
+  updateNumberOfArgs () {
     const isArg0 = this.arg1 !== undefined
     const isArg1 = this.arg2 !== undefined
     if (isArg0 && isArg1) {
@@ -103,10 +152,10 @@ class HVMCommand {
   }
 
   /**
-   * @returns {OP_CODE} the operation code (opcode) of the HVM command
+   * @returns {COMMAND} the type of the HVM command
    */
-  getOpCode () {
-    return this.opCode
+  getCommandType () {
+    return this.commandType
   }
 
   /**
@@ -114,23 +163,25 @@ class HVMCommand {
    * @throws {ProgramException} if called on the return command
    */
   getArg1 () {
-    if (this.opCode === OP_CODE.RETURN) {
-      throw new ProgramException('return command doesn\'t have arg1')
+    if (this.commandType === COMMAND.RETURN) {
+      throw new ProgramException('HVMCommand.getArg1 > ' +
+      'return command doesn\'t have arg1')
     }
-    if (isArithmetic(this.opCode)) return this.opCode
+    if (isArithmeticCommand(this.commandType)) return this.commandType
     return this.arg1
   }
 
   /**
    * @returns {number} arg2 of HVM command
-   * - segment index for push/pull instructions,
+   * - segment index for push/pull commands,
    * - function's number of argument for call command, or
    * - function's number of local variables for function declaration command
    * @throws {ProgramException} if called on the wrong command
    */
   getArg2 () {
     if (!this.isArg2Relevant()) {
-      throw new ProgramException(`${this.opCode} doesn't have arg2`)
+      throw new ProgramException('HVMCommand.setArg1 > ' +
+      `${this.commandType} doesn't have arg2`)
     }
     return this.arg2
   }
@@ -145,15 +196,16 @@ class HVMCommand {
   }
 
   /**
-   * @returns {boolean} true if arg2 makes sense for the current opcode
+   * @returns {boolean} true if arg2 makes sense for the current
+   * command type
    */
   isArg2Relevant () {
     return [
-      OP_CODE.FUNCTION,
-      OP_CODE.PUSH,
-      OP_CODE.POP,
-      OP_CODE.FUNCTION,
-      OP_CODE.CALL].includes(this.opCode)
+      COMMAND.FUNCTION,
+      COMMAND.PUSH,
+      COMMAND.POP,
+      COMMAND.FUNCTION,
+      COMMAND.CALL].includes(this.commandType)
   }
 
   /**
@@ -166,42 +218,45 @@ class HVMCommand {
   }
 
   /**
-   * Returns an array of 3 Strings. The first is the operation name, the second is
-   * the first argument and the third is the second argument.
+   * Returns an array of 3 Strings. The first is the command name,
+   * the second is the first argument (arg1) and the third is the
+   * second argument (arg2).
+   * @returns {string} string array of command components in the
+   * form [commandName, arg1, arg2]
    */
-  getFormattedStrings () {
+  getCommandComponents () {
     const result = []
     result[1] = ''
     result[2] = ''
-    result[0] = this.opCode
+    result[0] = this.commandType
     if (result[0] === null) {
       result[0] = ''
     }
-    switch (this.opCode) {
-      case OP_CODE.PUSH:
+    switch (this.commandType) {
+      case COMMAND.PUSH:
         result[1] = this.arg1
         result[2] = String(this.arg2)
         break
-      case OP_CODE.POP:
+      case COMMAND.POP:
         if (this.numberOfArgs === 2) {
           result[1] = this.arg1
           result[2] = String(this.arg2)
         }
         break
-      case OP_CODE.LABEL:
+      case COMMAND.LABEL:
         result[1] = this.arg1
         break
-      case OP_CODE.GOTO:
+      case COMMAND.GOTO:
         result[1] = this.arg1
         break
-      case OP_CODE.IF_GOTO:
+      case COMMAND.IF_GOTO:
         result[1] = this.arg1
         break
-      case OP_CODE.FUNCTION:
+      case COMMAND.FUNCTION:
         result[1] = this.arg1
         result[2] = String(this.arg2)
         break
-      case OP_CODE.CALL:
+      case COMMAND.CALL:
         result[1] = this.arg1
         result[2] = String(this.arg2)
         break
@@ -210,19 +265,19 @@ class HVMCommand {
   }
 
   /**
-   * The string representation of the `HVMInstruction`
+   * The string representation of the `HVMCommand`
    */
   toString () {
-    const formatted = this.getFormattedStrings()
+    const components = this.getCommandComponents()
     let result = ''
-    if (formatted[0] !== '') {
-      result = result.concat(formatted[0])
-      if (formatted[1] !== '') {
+    if (components[0] !== '') {
+      result = result.concat(components[0])
+      if (components[1] !== '') {
         result = result.concat(' ')
-        result = result.concat(formatted[1])
-        if (formatted[2] !== '') {
+        result = result.concat(components[1])
+        if (components[2] !== '') {
           result = result.concat(' ')
-          result = result.concat(formatted[2])
+          result = result.concat(components[2])
         }
       }
     }

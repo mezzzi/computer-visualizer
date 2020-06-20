@@ -1,4 +1,4 @@
-import { COMMAND_TYPE } from './Utils'
+import { COMMAND } from './utils'
 import HVMCodeWriter from './HVMCodeWriter'
 import HVMParser from './HVMParser'
 
@@ -18,29 +18,29 @@ class HVMTranslator {
     while (this.vmParser.hasMoreCommands()) {
       this.vmParser.advance()
       command = this.vmParser.getCurrentCommand()
-      switch (this.vmParser.commandType()) {
-        case COMMAND_TYPE.C_PUSH:
+      switch (this.vmParser.getCommandType()) {
+        case COMMAND.PUSH:
           this.assemblyWriter.writePushPop(command)
           break
-        case COMMAND_TYPE.C_POP:
+        case COMMAND.POP:
           this.assemblyWriter.writePushPop(command)
           break
-        case COMMAND_TYPE.C_FUNCTION:
+        case COMMAND.FUNCTION:
           this.assemblyWriter.writeFunction(command)
           break
-        case COMMAND_TYPE.C_RETURN:
+        case COMMAND.RETURN:
           this.assemblyWriter.writeReturn(command)
           break
-        case COMMAND_TYPE.C_CALL:
+        case COMMAND.CALL:
           this.assemblyWriter.writeCall(command)
           break
-        case COMMAND_TYPE.C_LABEL:
+        case COMMAND.LABEL:
           this.assemblyWriter.writeLabel(command)
           break
-        case COMMAND_TYPE.C_GOTO:
+        case COMMAND.GOTO:
           this.assemblyWriter.writeGoto(command)
           break
-        case COMMAND_TYPE.C_IF:
+        case COMMAND.IF_GOTO:
           this.assemblyWriter.writeIf(command)
           break
         default:

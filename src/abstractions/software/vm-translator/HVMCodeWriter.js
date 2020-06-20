@@ -1,6 +1,6 @@
 import ProgramException from './ProgramException'
 import HVMCommand from './HVMCommand'
-import { COMMAND_TYPE, OP_CODE, SEGMENT_CODE } from './Utils'
+import { COMMAND, SEGMENT } from './utils'
 
 class HVMCodeWriter {
   /**
@@ -18,33 +18,33 @@ class HVMCodeWriter {
      * @param {HVMCommand} command the vm arithmetic instruction to be tranlsted into assembly
      */
   writeArithmetic (command) {
-    const opcode = command.getOpCode()
+    const opcode = command.getCommandType()
     switch (opcode) {
-      case OP_CODE.ADD:
+      case COMMAND.ADD:
         this.generateBinaryOpAssembly('+')
         break
-      case OP_CODE.SUBTRACT:
+      case COMMAND.SUBTRACT:
         this.generateBinaryOpAssembly('-')
         break
-      case OP_CODE.AND:
+      case COMMAND.AND:
         this.generateBinaryOpAssembly('&')
         break
-      case OP_CODE.OR:
+      case COMMAND.OR:
         this.generateBinaryOpAssembly('|')
         break
-      case OP_CODE.LESS_THAN:
+      case COMMAND.LESS_THAN:
         this.generateRelationalAssembly('LT')
         break
-      case OP_CODE.GREATER_THAN:
+      case COMMAND.GREATER_THAN:
         this.generateRelationalAssembly('GT')
         break
-      case OP_CODE.EQUAL:
+      case COMMAND.EQUAL:
         this.generateRelationalAssembly('EQ')
         break
-      case OP_CODE.NOT:
+      case COMMAND.NOT:
         this.generateUnaryOpAssembly('!')
         break
-      case OP_CODE.NEGATE:
+      case COMMAND.NEGATE:
         this.generateUnaryOpAssembly('-')
         break
       default:
@@ -54,41 +54,41 @@ class HVMCodeWriter {
 
   /**
    * Writes the assembly code that is the translation of the given command, where command
-   * is either C_PUSH or C_POP
-   * @param {HVMCommand} command C_PUSH or C_POP
+   * is either PUSH or POP
+   * @param {HVMCommand} command PUSH or POP
    */
   writePushPop (command) {
-    const opcode = command.getOpCode()
+    const opcode = command.getCommandType()
     const segmentCode = command.getArg1()
     const segmentIndex = command.getArg2()
-    if (opcode === COMMAND_TYPE.C_PUSH) {
+    if (opcode === COMMAND.PUSH) {
       switch (segmentCode) {
-        case SEGMENT_CODE.LOCAL:
+        case SEGMENT.LOCAL:
           this.generatePushAssembly(segmentIndex, 'LCL')
           break
-        case SEGMENT_CODE.THIS:
+        case SEGMENT.THIS:
           this.generatePushAssembly(segmentIndex, 'THIS')
           break
-        case SEGMENT_CODE.THAT:
+        case SEGMENT.THAT:
           this.generatePushAssembly(segmentIndex, 'THAT')
           break
-        case SEGMENT_CODE.ARGUMENT:
+        case SEGMENT.ARGUMENT:
           this.generatePushAssembly(segmentIndex, 'ARG')
           break
-        case SEGMENT_CODE.TEMP:
+        case SEGMENT.TEMP:
           this.generatePushAssembly(segmentIndex, 'R5', false)
           break
-        case SEGMENT_CODE.POINTER:
+        case SEGMENT.POINTER:
           this.generatePushAssembly(segmentIndex, 'R3', false)
           break
-        case SEGMENT_CODE.CONSTANT:
+        case SEGMENT.CONSTANT:
           this.assembly.push(`@${segmentIndex}`)
           this.assembly.push('D=A')
           this.assembly.push('@SP')
           this.assembly.push('A=M')
           this.assembly.push('M=D')
           break
-        case SEGMENT_CODE.STATIC:
+        case SEGMENT.STATIC:
           this.assembly.push(`@${command.getStringArg()}.${segmentIndex}`)
           this.assembly.push('D=M')
           this.assembly.push('@SP')
@@ -99,27 +99,27 @@ class HVMCodeWriter {
           throw new ProgramException(`Invalid segement code for a push operation: ${segmentCode}`)
       }
       this.incrementSP()
-    } else if (opcode === COMMAND_TYPE.C_POP) {
+    } else if (opcode === COMMAND.POP) {
       switch (segmentCode) {
-        case SEGMENT_CODE.LOCAL:
+        case SEGMENT.LOCAL:
           this.generatePopAssembly(segmentIndex, 'LCL')
           break
-        case SEGMENT_CODE.THIS:
+        case SEGMENT.THIS:
           this.generatePopAssembly(segmentIndex, 'THIS')
           break
-        case SEGMENT_CODE.THAT:
+        case SEGMENT.THAT:
           this.generatePopAssembly(segmentIndex, 'THAT')
           break
-        case SEGMENT_CODE.ARGUMENT:
+        case SEGMENT.ARGUMENT:
           this.generatePopAssembly(segmentIndex, 'ARG')
           break
-        case SEGMENT_CODE.TEMP:
+        case SEGMENT.TEMP:
           this.generatePopAssembly(segmentIndex, 'R5', false)
           break
-        case SEGMENT_CODE.POINTER:
+        case SEGMENT.POINTER:
           this.generatePopAssembly(segmentIndex, 'R3', false)
           break
-        case SEGMENT_CODE.STATIC:
+        case SEGMENT.STATIC:
           // Get stack top value, and put it in D
           this.assembly.push('@SP')
           this.assembly.push('A=M-1')
@@ -150,7 +150,7 @@ class HVMCodeWriter {
     this.assembly.push('M=D')
     // call Sys.init
     if (this.shouldCallSysInit) {
-      const command = new HVMCommand(OP_CODE.CALL)
+      const command = new HVMCommand(COMMAND.CALL)
       command.setArg1('Sys.init')
       command.setArg2(0)
       this.writeCall(command)

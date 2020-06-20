@@ -1,14 +1,12 @@
 import ProgramException from './ProgramException'
 import HVMCommand from './HVMCommand'
 import {
-  COMMAND_TYPE,
-  OP_CODE,
-  SEGMENT_CODE,
+  COMMAND,
+  SEGMENT,
   UNKNOWN_COMMAND,
-  isArithmetic,
-  isValidCommandName,
-  isValidSegmentName
-} from './Utils'
+  isCommandType,
+  isSegmentName
+} from './utils'
 import StringTokenizer from './StringTokenizer'
 
 /**
@@ -68,9 +66,9 @@ class HVMParser {
     this.currentFunction = ''
 
     /**
-     * The value of the current op code that is being processed
+     * The value of the current command type that is being processed
      */
-    this.opCode = 0
+    this.commandType = 0
 
     /**
      * The current value of the program counter
@@ -126,13 +124,10 @@ class HVMParser {
    * @return { number } Returns the type of the current HVM command.
    * - C_ARITHMETIC is returned for all the arithmetic commands.
    */
-  commandType () {
+  getCommandType () {
     const currentCommand = this.instructions[this.currentInstructionIndex]
     if (!currentCommand) return UNKNOWN_COMMAND
-    if (isArithmetic(currentCommand.getOpCode())) {
-      return COMMAND_TYPE.C_ARITHMETIC
-    }
-    return currentCommand.getOpCode()
+    return currentCommand.getCommandType()
   }
 
   /**
@@ -219,37 +214,37 @@ class HVMParser {
    * @param {string} className the HVM className to which the line belongs to
    */
   parseLine (line, className) {
-    // get the opcode
+    // get the command type
     this.tokenizer = new StringTokenizer(line)
     const commandName = this.tokenizer.nextToken()
-    if (!isValidCommandName(commandName)) {
+    if (!isCommandType(commandName)) {
       throw new ProgramException('in line ' +
       this.lineNumber +
         ': unknown command - ' +
         commandName)
     }
-    this.opCode = commandName
-    // parse based on the opcode
-    switch (this.opCode) {
-      case OP_CODE.PUSH:
+    this.commandType = commandName
+    // parse based on the command type
+    switch (this.commandType) {
+      case COMMAND.PUSH:
         this.parseMemoryAccessCommands(line, className)
         break
-      case OP_CODE.POP:
+      case COMMAND.POP:
         this.parseMemoryAccessCommands(line, className)
         break
-      case OP_CODE.FUNCTION:
+      case COMMAND.FUNCTION:
         this.parseFunction(line)
         break
-      case OP_CODE.CALL:
+      case COMMAND.CALL:
         this.parseCall()
         break
-      case OP_CODE.LABEL:
+      case COMMAND.LABEL:
         this.parseLabel()
         break
-      case OP_CODE.GOTO:
+      case COMMAND.GOTO:
         this.parseGoto()
         break
-      case OP_CODE.IF_GOTO:
+      case COMMAND.IF_GOTO:
         this.parseIfgoto()
         break
       // arithemtic or return commands
@@ -272,24 +267,24 @@ class HVMParser {
    */
   parseMemoryAccessCommands (line, className) {
     const segmentName = this.tokenizer.nextToken()
-    if (!isValidSegmentName(segmentName)) {
+    if (!isSegmentName(segmentName)) {
       throw new ProgramException(
         `in line : ${this.lineNumber}, invalid segment name: ${segmentName}`)
     }
     try {
       const segmentIndex = parseInt(this.tokenizer.nextToken(), 10)
-      if (segmentName !== SEGMENT_CODE.CONSTANT && segmentIndex < 0) {
+      if (segmentName !== SEGMENT.CONSTANT && segmentIndex < 0) {
         throw new ProgramException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
       }
-      const command = new HVMCommand(this.opCode)
+      const command = new HVMCommand(this.commandType)
       command.setArg1(segmentName)
       command.setArg2(segmentIndex)
-      if (segmentName === SEGMENT_CODE.STATIC) {
+      if (segmentName === SEGMENT.STATIC) {
         command.setStringArg(className)
       }
       this.instructions[this.pc] = command
     } catch (pe) {
-      throw new ProgramException('in line ' + this.lineNumber + pe.message)
+      throw new ProgramException(pe.message, this.lineNumber)
     }
   }
 
@@ -307,7 +302,7 @@ class HVMParser {
     if (numberOfLocalVariables < 0) {
       throw new ProgramException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
     }
-    const command = new HVMCommand(this.opCode)
+    const command = new HVMCommand(this.commandType)
     command.setArg1(this.currentFunction)
     command.setArg2(numberOfLocalVariables)
     this.instructions[this.pc] = command
@@ -320,7 +315,7 @@ class HVMParser {
   parseCall () {
     const functionName = this.tokenizer.nextToken()
     const numberOfArgs = parseInt(this.tokenizer.nextToken(), 10)
-    const command = new HVMCommand(this.opCode)
+    const command = new HVMCommand(this.commandType)
     command.setArg1(functionName)
     command.setArg2(numberOfArgs)
     this.instructions[this.pc] = command
@@ -334,7 +329,7 @@ class HVMParser {
     if (this.currentFunction !== '') {
       labelName = this.currentFunction + '$' + labelName
     }
-    const command = new HVMCommand(this.opCode)
+    const command = new HVMCommand(this.commandType)
     command.setArg1(labelName)
     this.instructions[this.pc] = command
   }
@@ -347,7 +342,7 @@ class HVMParser {
     if (this.currentFunction !== '') {
       labelName = this.currentFunction + '$' + labelName
     }
-    const command = new HVMCommand(this.opCode)
+    const command = new HVMCommand(this.commandType)
     command.setArg1(labelName)
     this.instructions[this.pc] = command
   }
@@ -360,7 +355,7 @@ class HVMParser {
     if (this.currentFunction !== '') {
       labelName = this.currentFunction + '$' + labelName
     }
-    const command = new HVMCommand(this.opCode)
+    const command = new HVMCommand(this.commandType)
     command.setArg1(labelName)
     this.instructions[this.pc] = command
   }
@@ -371,13 +366,13 @@ class HVMParser {
    */
   parseDefault (line) {
     if (this.tokenizer.countTokens() === 0) {
-      this.instructions[this.pc] = new HVMCommand(this.opCode)
+      this.instructions[this.pc] = new HVMCommand(this.commandType)
     } else {
       const arg1 = parseInt(this.tokenizer.nextToken(), 10)
       if (arg1 < 0) {
         throw new ProgramException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
       }
-      this.instructions[this.pc] = new HVMCommand(this.opCode, arg1)
+      this.instructions[this.pc] = new HVMCommand(this.commandType, arg1)
     }
   }
 

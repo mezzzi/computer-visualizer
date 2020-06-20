@@ -3,7 +3,7 @@
  */
 class ProgramException extends Error {
   constructor (message, lineNumber) {
-    super('In line ' + lineNumber + ', ' + message)
+    super(`${lineNumber ? `In line ${lineNumber}: ` : ''}${message}`)
   }
 }
 export default ProgramException

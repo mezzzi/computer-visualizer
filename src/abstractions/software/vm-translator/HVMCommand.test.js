@@ -1,46 +1,39 @@
 import HVMCommand from './HVMCommand'
-import { OP_CODE } from './Utils'
+import { COMMAND, isArithmeticCommand } from './utils'
 import ProgramException from './ProgramException'
 
 /** @type {string[]} */
-let commandCodes = []
+let commandTypes = []
 /** @type {HVMCommand[]} */
 let commandObjects = []
 
 describe('arithmetic and logical commands', () => {
   beforeEach(() => {
-    commandCodes = [
-      OP_CODE.ADD,
-      OP_CODE.SUBTRACT,
-      OP_CODE.AND,
-      OP_CODE.OR,
-      OP_CODE.GREATER_THAN,
-      OP_CODE.LESS_THAN,
-      OP_CODE.EQUAL,
-      OP_CODE.NEGATE
-    ]
-    commandObjects = commandCodes.map(code => new HVMCommand(code))
+    commandTypes = Object.keys(COMMAND).filter(
+      command => isArithmeticCommand(command))
+    commandObjects = commandTypes.map(type => new HVMCommand(type))
   })
 
-  test('getOpcode method ', () => {
-    const collectedOpCodes = commandObjects.map(command => command.getOpCode())
-    expect(commandCodes).toEqual(collectedOpCodes)
+  it('getCommandType method ', () => {
+    const collectedTypes = commandObjects.map(
+      command => command.getCommandType())
+    expect(commandTypes).toEqual(collectedTypes)
   })
 
-  test('getArg1 method ', () => {
+  it('getArg1 method ', () => {
     const collectedArg1s = commandObjects.map(command => command.getArg1())
-    expect(collectedArg1s).toEqual(commandCodes)
+    expect(collectedArg1s).toEqual(commandTypes)
   })
 
-  test('getArg2 method ', () => {
+  it('getArg2 method ', () => {
     commandObjects.forEach(command => {
       expect(() => command.getArg2()).toThrow(ProgramException)
     })
   })
 
-  test('toString method', () => {
-    const formattedInstructions = commandObjects.map(command => command.toString())
-    expect(formattedInstructions).toEqual(commandCodes)
+  it('toString method', () => {
+    const stringifiedCommands = commandObjects.map(command => command.toString())
+    expect(stringifiedCommands).toEqual(commandTypes)
   })
 })
 
@@ -48,35 +41,37 @@ describe('memory access commands', () => {
   const segments = ['local', 'temp']
   const indexes = [0, 3]
   beforeEach(() => {
-    commandCodes = [
-      OP_CODE.PUSH,
-      OP_CODE.POP
+    commandTypes = [
+      COMMAND.PUSH,
+      COMMAND.POP
     ]
-    commandObjects = commandCodes.map(
-      (code, i) => new HVMCommand(code, segments[i], indexes[i]))
+    commandObjects = commandTypes.map(
+      (type, i) => new HVMCommand(type, segments[i], indexes[i]))
   })
 
-  test('getOpcode method ', () => {
-    const collectedOpCodes = commandObjects.map(command => command.getOpCode())
-    expect(commandCodes).toEqual(collectedOpCodes)
+  it('getCommandType method ', () => {
+    const collectedTypes = commandObjects.map(
+      command => command.getCommandType())
+    expect(commandTypes).toEqual(collectedTypes)
   })
 
-  test('getArg1 method ', () => {
+  it('getArg1 method ', () => {
     const collectedArg1s = commandObjects.map(command => command.getArg1())
     expect(collectedArg1s).toEqual(segments)
   })
 
-  test('getArg2 method ', () => {
+  it('getArg2 method ', () => {
     const collectedArg2s = commandObjects.map(command => command.getArg2())
     expect(collectedArg2s).toEqual(indexes)
   })
 
-  test('toString method', () => {
-    const formattedInstructions = commandObjects.map(command => command.toString())
-    const expectedStrings = commandCodes.map(
-      (code, i) => `${code} ${segments[i]} ${indexes[i]}`
+  it('toString method', () => {
+    const stringifiedCommands = commandObjects.map(
+      command => command.toString())
+    const expectedStrings = commandTypes.map(
+      (type, i) => `${type} ${segments[i]} ${indexes[i]}`
     )
-    expect(formattedInstructions).toEqual(expectedStrings)
+    expect(stringifiedCommands).toEqual(expectedStrings)
   })
 })
 
@@ -84,104 +79,130 @@ describe('function commands', () => {
   const functions = ['doThis', 'Class.doThat']
   const localAndArgs = [4, 6]
   beforeEach(() => {
-    commandCodes = [
-      OP_CODE.FUNCTION,
-      OP_CODE.CALL
+    commandTypes = [
+      COMMAND.FUNCTION,
+      COMMAND.CALL
     ]
-    commandObjects = commandCodes.map(
-      (code, i) => new HVMCommand(code, functions[i], localAndArgs[i]))
+    commandObjects = commandTypes.map(
+      (type, i) => new HVMCommand(type, functions[i], localAndArgs[i]))
   })
 
-  test('getOpcode method ', () => {
-    const collectedOpCodes = commandObjects.map(command => command.getOpCode())
-    expect(commandCodes).toEqual(collectedOpCodes)
+  it('getCommandType method ', () => {
+    const collectedTypes = commandObjects.map(
+      command => command.getCommandType())
+    expect(commandTypes).toEqual(collectedTypes)
   })
 
-  test('getArg1 method ', () => {
+  it('getArg1 method ', () => {
     const collectedArg1s = commandObjects.map(command => command.getArg1())
     expect(collectedArg1s).toEqual(functions)
   })
 
-  test('getArg2 method ', () => {
+  it('getArg2 method ', () => {
     const collectedArg2s = commandObjects.map(command => command.getArg2())
     expect(collectedArg2s).toEqual(localAndArgs)
   })
 
-  test('toString method', () => {
-    const formattedInstructions = commandObjects.map(command => command.toString())
-    const expectedStrings = commandCodes.map(
-      (code, i) => `${code} ${functions[i]} ${localAndArgs[i]}`
+  it('toString method', () => {
+    const stringifiedCommands = commandObjects.map(
+      command => command.toString())
+    const expectedStrings = commandTypes.map(
+      (type, i) => `${type} ${functions[i]} ${localAndArgs[i]}`
     )
-    expect(formattedInstructions).toEqual(expectedStrings)
+    expect(stringifiedCommands).toEqual(expectedStrings)
   })
 })
 
 describe('control flow commands', () => {
   const labels = ['heaven', 'paradise', 'joy']
   beforeEach(() => {
-    commandCodes = [
-      OP_CODE.LABEL,
-      OP_CODE.GOTO,
-      OP_CODE.IF_GOTO
+    commandTypes = [
+      COMMAND.LABEL,
+      COMMAND.GOTO,
+      COMMAND.IF_GOTO
     ]
-    commandObjects = commandCodes.map(
-      (code, i) => new HVMCommand(code, labels[i]))
+    commandObjects = commandTypes.map(
+      (type, i) => new HVMCommand(type, labels[i]))
   })
 
-  test('getOpcode method ', () => {
-    const collectedOpCodes = commandObjects.map(command => command.getOpCode())
-    expect(commandCodes).toEqual(collectedOpCodes)
+  it('getCommandType method ', () => {
+    const collectedTypes = commandObjects.map(
+      command => command.getCommandType())
+    expect(commandTypes).toEqual(collectedTypes)
   })
 
-  test('getArg1 method ', () => {
+  it('getArg1 method ', () => {
     const collectedArg1s = commandObjects.map(command => command.getArg1())
     expect(collectedArg1s).toEqual(labels)
   })
 
-  test('getArg2 method ', () => {
+  it('getArg2 method ', () => {
     commandObjects.forEach(command => {
       expect(() => command.getArg2()).toThrow(ProgramException)
     })
   })
 
-  test('toString method', () => {
-    const formattedInstructions = commandObjects.map(command => command.toString())
-    const expectedStrings = commandCodes.map(
-      (code, i) => `${code} ${labels[i]}`
+  it('toString method', () => {
+    const stringifiedCommands = commandObjects.map(
+      command => command.toString())
+    const expectedStrings = commandTypes.map(
+      (type, i) => `${type} ${labels[i]}`
     )
-    expect(formattedInstructions).toEqual(expectedStrings)
+    expect(stringifiedCommands).toEqual(expectedStrings)
   })
 })
 
 describe('return command', () => {
-  beforeEach(() => {
-    commandCodes = [
-      OP_CODE.RETURN
-    ]
-    commandObjects = commandCodes.map(
-      code => new HVMCommand(code)
-    )
+  const returnCommandObj = new HVMCommand(COMMAND.RETURN)
+
+  it('getCommandType method ', () => {
+    const collectedType = returnCommandObj.getCommandType()
+    expect(collectedType).toEqual(COMMAND.RETURN)
   })
 
-  test('getOpcode method ', () => {
-    const collectedOpCodes = commandObjects.map(command => command.getOpCode())
-    expect(commandCodes).toEqual(collectedOpCodes)
+  it('getArg1 method ', () => {
+    expect(() => returnCommandObj.getArg1()).toThrow(ProgramException)
   })
 
-  test('getArg1 method ', () => {
-    commandObjects.forEach(command => {
-      expect(() => command.getArg1()).toThrow(ProgramException)
-    })
+  it('getArg2 method ', () => {
+    expect(() => returnCommandObj.getArg2()).toThrow(ProgramException)
   })
 
-  test('getArg2 method ', () => {
-    commandObjects.forEach(command => {
-      expect(() => command.getArg2()).toThrow(ProgramException)
-    })
+  it('toString method', () => {
+    const stringifiedCommand = returnCommandObj.toString()
+    expect(stringifiedCommand).toEqual('return')
+  })
+})
+
+describe('HVMCommand class', () => {
+  it('should create instance: constructor method', () => {
+    expect(1).toBe(1)
   })
 
-  test('toString method', () => {
-    const formattedInstructions = commandObjects.map(command => command.toString())
-    expect(formattedInstructions).toEqual(commandCodes)
+  it('should set arg1: setArg1 method', () => {
+    // correct usage
+    let commandObj = new HVMCommand(COMMAND.PUSH)
+    commandObj.setArg1('local')
+    expect(commandObj.getArg1()).toBe('local')
+    // incorrect segment name
+    expect(() => commandObj.setArg1('whatever')).toThrow(ProgramException)
+    // incorrect command type
+    commandObj = new HVMCommand(COMMAND.ADD)
+    expect(() => commandObj.setArg1('whatever')).toThrow(ProgramException)
+    // incorrect arg1 type
+    commandObj = new HVMCommand(COMMAND.PUSH)
+    expect(() => commandObj.setArg1(1)).toThrow(ProgramException)
+  })
+
+  it('should set arg2: setArg2 method', () => {
+    expect(1).toBe(1)
+  })
+
+  it('should update number of args: updateNumberOfArgs method', () => {
+    expect(1).toBe(1)
+  })
+
+  it('should set string arg: setStringArg method', () => {
+    expect(1).toBe(1)
   })
 })

@@ -1,13 +1,8 @@
-import ProgramException from './ProgramException'
-import HVMCommand from './HVMCommand'
-import {
-  COMMAND,
-  SEGMENT,
-  UNKNOWN_COMMAND,
-  isCommandType,
-  isSegmentName
-} from './utils'
-import StringTokenizer from './StringTokenizer'
+import CommandException from '../command/exception'
+import HVMCommand from '../command'
+import { isCommandType, isSegmentName } from '../utils'
+import { COMMAND, SEGMENT } from '../command/types'
+import StringTokenizer from './tokenizer'
 
 /**
   * Handles the parsing of a single HVM (Hack Virtual Machine) file and
@@ -126,7 +121,11 @@ class HVMParser {
    */
   getCommandType () {
     const currentCommand = this.instructions[this.currentInstructionIndex]
-    if (!currentCommand) return UNKNOWN_COMMAND
+    if (!currentCommand) {
+      throw new CommandException(
+        'In HVMParser.getCommandType > currentCommand ' +
+        `is ${currentCommand}`)
+    }
     return currentCommand.getCommandType()
   }
 
@@ -135,12 +134,12 @@ class HVMParser {
    * the command itself (add, sub, etc) is returned. Should not be called if the
    * current command is C_RETURN.
    * @return { string } the first argument of the current command
-   * @throws { ProgramException }
+   * @throws { CommandException }
    */
   arg1 () {
     const currentCommand = this.instructions[this.currentInstructionIndex]
     if (!currentCommand) {
-      throw new ProgramException('arg1 called on non-existent command')
+      throw new CommandException('arg1 called on non-existent command')
     }
     return currentCommand.getArg1()
   }
@@ -149,12 +148,12 @@ class HVMParser {
    * The second argument of the current command. Should be called only if the
    * current command is C_PUSH, C_POP, C_FUNCTION, or C_CALL.
    * @return { number } the second argument of the current command
-   * @throws { ProgramException } if called on the wrong command
+   * @throws { CommandException } if called on the wrong command
    */
   arg2 () {
     const currentCommand = this.instructions[this.currentInstructionIndex]
     if (!currentCommand) {
-      throw new ProgramException('arg2 called on non-existent command')
+      throw new CommandException('arg2 called on non-existent command')
     }
     return currentCommand.getArg2()
   }
@@ -175,7 +174,7 @@ class HVMParser {
    * In the second scan, the instructions array is built.
    * @param {{className: string, file: string}[]} fileInfos An array containing
    * fileInfo objects
-   * @throws { ProgramException } if an error occurs while loading the program.
+   * @throws { CommandException } if an error occurs while loading the program.
    */
   parseAllFiles (fileInfos) {
     fileInfos.forEach(fileInfo => {
@@ -204,7 +203,7 @@ class HVMParser {
       this.currentInstructionIndex = this.pc
     })
     if (this.isInSlashStar) {
-      throw new ProgramException('Unterminated /* comment at end of file')
+      throw new CommandException('Unterminated /* comment at end of file')
     }
   }
 
@@ -218,7 +217,7 @@ class HVMParser {
     this.tokenizer = new StringTokenizer(line)
     const commandName = this.tokenizer.nextToken()
     if (!isCommandType(commandName)) {
-      throw new ProgramException('in line ' +
+      throw new CommandException('in line ' +
       this.lineNumber +
         ': unknown command - ' +
         commandName)
@@ -254,7 +253,7 @@ class HVMParser {
     }
     // check end of command
     if (this.tokenizer.hasMoreTokens()) {
-      throw new ProgramException('in line ' + this.lineNumber +
+      throw new CommandException('in line ' + this.lineNumber +
       ': Too many arguments - ' + line)
     }
   }
@@ -268,13 +267,13 @@ class HVMParser {
   parseMemoryAccessCommands (line, className) {
     const segmentName = this.tokenizer.nextToken()
     if (!isSegmentName(segmentName)) {
-      throw new ProgramException(
+      throw new CommandException(
         `in line : ${this.lineNumber}, invalid segment name: ${segmentName}`)
     }
     try {
       const segmentIndex = parseInt(this.tokenizer.nextToken(), 10)
       if (segmentName !== SEGMENT.CONSTANT && segmentIndex < 0) {
-        throw new ProgramException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
+        throw new CommandException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
       }
       const command = new HVMCommand(this.commandType)
       command.setArg1(segmentName)
@@ -284,7 +283,7 @@ class HVMParser {
       }
       this.instructions[this.pc] = command
     } catch (pe) {
-      throw new ProgramException(pe.message, this.lineNumber)
+      throw new CommandException(pe.message, this.lineNumber)
     }
   }
 
@@ -300,7 +299,7 @@ class HVMParser {
     }
     const numberOfLocalVariables = parseInt(this.tokenizer.nextToken(), 10)
     if (numberOfLocalVariables < 0) {
-      throw new ProgramException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
+      throw new CommandException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
     }
     const command = new HVMCommand(this.commandType)
     command.setArg1(this.currentFunction)
@@ -370,7 +369,7 @@ class HVMParser {
     } else {
       const arg1 = parseInt(this.tokenizer.nextToken(), 10)
       if (arg1 < 0) {
-        throw new ProgramException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
+        throw new CommandException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
       }
       this.instructions[this.pc] = new HVMCommand(this.commandType, arg1)
     }

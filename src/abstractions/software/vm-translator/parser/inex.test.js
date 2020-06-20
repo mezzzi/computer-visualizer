@@ -1,6 +1,6 @@
-import HVMParser from './HVMParser'
-import { COMMAND } from './utils'
-import ProgramException from './ProgramException'
+import HVMParser from './index'
+import { COMMAND } from '../command/types'
+import CommandException from '../command/exception'
 
 describe('VMParser class', () => {
   it('should pass general test', () => {
@@ -12,7 +12,7 @@ describe('VMParser class', () => {
     // label MAIN_LOOP_START
     expect(vmParser.getCommandType()).toBe(COMMAND.LABEL)
     expect(vmParser.arg1()).toBe('MAIN_LOOP_START')
-    expect(() => vmParser.arg2()).toThrow(ProgramException)
+    expect(() => vmParser.arg2()).toThrow(CommandException)
     // push argument 0
     vmParser.advance()
     expect(vmParser.getCommandType()).toBe(COMMAND.PUSH)
@@ -27,17 +27,17 @@ describe('VMParser class', () => {
     vmParser.advance()
     expect(vmParser.getCommandType()).toBe(COMMAND.ADD)
     expect(vmParser.arg1()).toBe('add')
-    expect(() => vmParser.arg2()).toThrow(ProgramException)
+    expect(() => vmParser.arg2()).toThrow(CommandException)
     // if-goto COMPUTE_ELEMENT
     vmParser.advance()
     expect(vmParser.getCommandType()).toBe(COMMAND.IF_GOTO)
     expect(vmParser.arg1()).toBe('COMPUTE_ELEMENT')
-    expect(() => vmParser.arg2()).toThrow(ProgramException)
+    expect(() => vmParser.arg2()).toThrow(CommandException)
     // goto END_PROGRAM
     vmParser.advance()
     expect(vmParser.getCommandType()).toBe(COMMAND.GOTO)
     expect(vmParser.arg1()).toBe('END_PROGRAM')
-    expect(() => vmParser.arg2()).toThrow(ProgramException)
+    expect(() => vmParser.arg2()).toThrow(CommandException)
     // function TestCode.set 0
     vmParser.advance()
     expect(vmParser.getCommandType()).toBe(COMMAND.FUNCTION)
@@ -46,8 +46,8 @@ describe('VMParser class', () => {
     // return
     vmParser.advance()
     expect(vmParser.getCommandType()).toBe(COMMAND.RETURN)
-    expect(() => vmParser.arg1()).toThrow(ProgramException)
-    expect(() => vmParser.arg2()).toThrow(ProgramException)
+    expect(() => vmParser.arg1()).toThrow(CommandException)
+    expect(() => vmParser.arg2()).toThrow(CommandException)
     // call TestCode.get 5
     vmParser.advance()
     expect(vmParser.getCommandType()).toBe(COMMAND.CALL)
@@ -57,12 +57,12 @@ describe('VMParser class', () => {
     vmParser.advance()
     expect(vmParser.getCommandType()).toBe(COMMAND.LESS_THAN)
     expect(vmParser.arg1()).toBe('lt')
-    expect(() => vmParser.arg2()).toThrow(ProgramException)
+    expect(() => vmParser.arg2()).toThrow(CommandException)
     // and
     vmParser.advance()
     expect(vmParser.getCommandType()).toBe(COMMAND.AND)
     expect(vmParser.arg1()).toBe('and')
-    expect(() => vmParser.arg2()).toThrow(ProgramException)
+    expect(() => vmParser.arg2()).toThrow(CommandException)
     // hasMoreCommands
     expect(vmParser.hasMoreCommands()).toBe(false)
   })

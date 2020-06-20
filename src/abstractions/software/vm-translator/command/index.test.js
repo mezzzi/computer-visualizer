@@ -1,6 +1,7 @@
-import HVMCommand from './HVMCommand'
-import { COMMAND, isArithmeticCommand } from './utils'
-import ProgramException from './ProgramException'
+import HVMCommand from './index'
+import { COMMAND } from './types'
+import { isArithmeticCommand } from '../utils'
+import CommandException from './exception'
 
 /** @type {string[]} */
 let commandTypes = []
@@ -27,7 +28,7 @@ describe('arithmetic and logical commands', () => {
 
   it('getArg2 method ', () => {
     commandObjects.forEach(command => {
-      expect(() => command.getArg2()).toThrow(ProgramException)
+      expect(() => command.getArg2()).toThrow(CommandException)
     })
   })
 
@@ -138,7 +139,7 @@ describe('control flow commands', () => {
 
   it('getArg2 method ', () => {
     commandObjects.forEach(command => {
-      expect(() => command.getArg2()).toThrow(ProgramException)
+      expect(() => command.getArg2()).toThrow(CommandException)
     })
   })
 
@@ -161,11 +162,11 @@ describe('return command', () => {
   })
 
   it('getArg1 method ', () => {
-    expect(() => returnCommandObj.getArg1()).toThrow(ProgramException)
+    expect(() => returnCommandObj.getArg1()).toThrow(CommandException)
   })
 
   it('getArg2 method ', () => {
-    expect(() => returnCommandObj.getArg2()).toThrow(ProgramException)
+    expect(() => returnCommandObj.getArg2()).toThrow(CommandException)
   })
 
   it('toString method', () => {
@@ -185,13 +186,13 @@ describe('HVMCommand class', () => {
     commandObj.setArg1('local')
     expect(commandObj.getArg1()).toBe('local')
     // incorrect segment name
-    expect(() => commandObj.setArg1('whatever')).toThrow(ProgramException)
+    expect(() => commandObj.setArg1('whatever')).toThrow(CommandException)
     // incorrect command type
     commandObj = new HVMCommand(COMMAND.ADD)
-    expect(() => commandObj.setArg1('whatever')).toThrow(ProgramException)
+    expect(() => commandObj.setArg1('whatever')).toThrow(CommandException)
     // incorrect arg1 type
     commandObj = new HVMCommand(COMMAND.PUSH)
-    expect(() => commandObj.setArg1(1)).toThrow(ProgramException)
+    expect(() => commandObj.setArg1(1)).toThrow(CommandException)
   })
 
   it('should set arg2: setArg2 method', () => {

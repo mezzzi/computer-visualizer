@@ -1,6 +1,6 @@
-import { COMMAND } from './utils'
-import HVMCodeWriter from './HVMCodeWriter'
-import HVMParser from './HVMParser'
+import { COMMAND } from './command/types'
+import HVMCodeWriter from './writer'
+import HVMParser from './parser'
 
 class HVMTranslator {
   /**

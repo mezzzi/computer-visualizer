@@ -1,5 +1,11 @@
-import { COMMAND, isArithmeticCommand, isCommandType, isSegmentName, typeCheck } from './utils'
-import ProgramException from './ProgramException'
+import {
+  isArithmeticCommand,
+  isCommandType,
+  isSegmentName,
+  typeCheck
+} from '../utils'
+import { COMMAND } from './types'
+import CommandException from './exception'
 
 /**
  * This class represents a single HVM (Hack Virtual Machine) command
@@ -14,17 +20,17 @@ class HVMCommand {
    * - function's number of argument for call command,
    * - or function's number of local variables for function
    * declaration command
-   * @throws {ProgramException} if `commandType` is not provided,
+   * @throws {CommandException} if `commandType` is not provided,
    * or is of invalid type
    */
   constructor (commandType, arg1, arg2) {
     if (!commandType) {
-      throw new ProgramException(
+      throw new CommandException(
         'HVMCommand.constructor > cannot create HVM' +
         'command without providing a command type')
     }
     if (!isCommandType(commandType)) {
-      throw new ProgramException(
+      throw new CommandException(
         'HVMCommand.constructor > ' +
         'cannot create HVM command with an invalid command type: ' +
         `${commandType}`)
@@ -75,7 +81,7 @@ class HVMCommand {
    * - function name for function/call commands
    * - label name for label and goto/if-goto commands
    * @param {string} arg1 first argument of HVM command
-   * @throws {ProgramException} if setting arg1 doesn't make sense
+   * @throws {CommandException} if setting arg1 doesn't make sense
    */
   setArg1 (arg1) {
     typeCheck({
@@ -85,16 +91,16 @@ class HVMCommand {
       argumentName: 'arg1'
     })
     if (this.commandType === COMMAND.RETURN) {
-      throw new ProgramException('HVMCommand.setArg1 > ' +
+      throw new CommandException('HVMCommand.setArg1 > ' +
       'cannot set arg1 to a return command')
     }
     if (isArithmeticCommand(this.commandType)) {
-      throw new ProgramException('HVMCommand.setArg1 > ' +
+      throw new CommandException('HVMCommand.setArg1 > ' +
       'cannot set arg1 to arithmetic command')
     }
     if ([COMMAND.PUSH, COMMAND.POP].includes(this.commandType) &&
       !isSegmentName(arg1)) {
-      throw new ProgramException('HVMCommand.setArg1 > ' +
+      throw new CommandException('HVMCommand.setArg1 > ' +
       `invalid segment name: ${arg1} to ${this.commandType} command`)
     }
     this.arg1 = arg1
@@ -107,7 +113,7 @@ class HVMCommand {
    * - number of arguments for call command
    * - number of local variables for function command
    * @param {number} arg2 arg2 of HVM command
-   * @throws {ProgramException} if setting arg2 doesn't make sense
+   * @throws {CommandException} if setting arg2 doesn't make sense
    */
   setArg2 (arg2) {
     typeCheck({
@@ -117,7 +123,7 @@ class HVMCommand {
       argumentName: 'arg2'
     })
     if (!this.isArg2Relevant(this.commandType)) {
-      throw new ProgramException(
+      throw new CommandException(
         'HVMCommand.setArg2 > ' +
         `cannot set arg2 to the ${this.commandType} command`)
     }
@@ -160,11 +166,11 @@ class HVMCommand {
 
   /**
    * @returns {string} segment, function, or label name
-   * @throws {ProgramException} if called on the return command
+   * @throws {CommandException} if called on the return command
    */
   getArg1 () {
     if (this.commandType === COMMAND.RETURN) {
-      throw new ProgramException('HVMCommand.getArg1 > ' +
+      throw new CommandException('HVMCommand.getArg1 > ' +
       'return command doesn\'t have arg1')
     }
     if (isArithmeticCommand(this.commandType)) return this.commandType
@@ -176,11 +182,11 @@ class HVMCommand {
    * - segment index for push/pull commands,
    * - function's number of argument for call command, or
    * - function's number of local variables for function declaration command
-   * @throws {ProgramException} if called on the wrong command
+   * @throws {CommandException} if called on the wrong command
    */
   getArg2 () {
     if (!this.isArg2Relevant()) {
-      throw new ProgramException('HVMCommand.setArg1 > ' +
+      throw new CommandException('HVMCommand.setArg1 > ' +
       `${this.commandType} doesn't have arg2`)
     }
     return this.arg2

@@ -1,4 +1,4 @@
-import HVMTranslator from './HVMTranslator'
+import HVMTranslator from '.'
 
 /**
  * Sample VM files taken from chapter 07 and chapter 08 of the Nand2Tetris book

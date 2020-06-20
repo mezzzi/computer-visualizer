@@ -1,5 +1,11 @@
-import { COMMAND, isArithmeticCommand, isCommandType, isSegmentName, typeCheck } from './index'
-import ProgramException from '../ProgramException'
+import {
+  isArithmeticCommand,
+  isCommandType,
+  isSegmentName,
+  typeCheck
+} from './index'
+import { COMMAND } from '../command/types'
+import CommandException from '../command/exception'
 
 describe('Util functions', () => {
   it('isArithmetic', () => {
@@ -31,6 +37,6 @@ describe('Util functions', () => {
       receivedArg: 'there',
       functionName: 'Util.test',
       argumentName: 'stringArg'
-    })).toThrow(ProgramException)
+    })).toThrow(CommandException)
   })
 })

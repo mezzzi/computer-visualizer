@@ -1,58 +1,5 @@
-import ProgramException from '../ProgramException'
-
-/**
- * Represents an unknown HVM command
- */
-export const UNKNOWN_COMMAND = 'UNKNOWN_COMMAND'
-
-/**
- * Types of all the valid HVM (Hack Virtual Machine) commands
- */
-export const COMMAND = Object.freeze({
-  PUSH: 'push',
-  POP: 'pop',
-  LABEL: 'label',
-  GOTO: 'goto',
-  IF_GOTO: 'if-goto',
-  FUNCTION: 'function',
-  RETURN: 'return',
-  CALL: 'call',
-  ADD: 'add',
-  SUBTRACT: 'sub',
-  NEGATE: 'neg',
-  EQUAL: 'eq',
-  GREATER_THAN: 'gt',
-  LESS_THAN: 'lt',
-  AND: 'and',
-  OR: 'or',
-  NOT: 'not'
-})
-
-/**
- * All the valid segment names for an HVM memory access command (push/pop)
- */
-export const SEGMENT = Object.freeze({
-  STATIC: 'static',
-  LOCAL: 'local',
-  ARGUMENT: 'argument',
-  THIS: 'this',
-  THAT: 'that',
-  TEMP: 'temp',
-  CONSTANT: 'constant',
-  POINTER: 'pointer'
-})
-
-/**
- * All the valid pointer names that contain an address
- * to some location in a valid segment
- */
-export const POINTER = Object.freeze({
-  SP: 'SP',
-  LCL: 'LCL',
-  ARG: 'ARG',
-  THIS: 'THIS',
-  THAT: 'THAT'
-})
+import { COMMAND, SEGMENT } from '../command/types'
+import CommandException from '../command/exception'
 
 /**
  * Check if a command is an arithmetic command
@@ -103,7 +50,7 @@ export const isCommandType = command => {
  * - functionName: the function in which the type checking is being done
  * - argumentName: the name of the argument whose type is being checked
  * @returns {boolean} true if expected and received types match
- * @throws {ProgramException} if the recieved and expected types of the
+ * @throws {CommandException} if the recieved and expected types of the
  * argument does not match
  */
 export const typeCheck = ({
@@ -113,7 +60,7 @@ export const typeCheck = ({
   argumentName
 }) => {
   if (typeof expectedSample !== typeof receivedArg) {
-    throw new ProgramException(`In ${functionName} > ${argumentName}` +
+    throw new CommandException(`In ${functionName} > ${argumentName}` +
     ` should be of type '${typeof expectedSample}',` +
     ` but has type '${typeof receivedArg}'`)
   }

@@ -1,6 +1,6 @@
-import ProgramException from './ProgramException'
-import HVMCommand from './HVMCommand'
-import { COMMAND, SEGMENT } from './utils'
+import CommandException from '../command/exception'
+import HVMCommand from '../command'
+import { COMMAND, SEGMENT } from '../command/types'
 
 class HVMCodeWriter {
   /**
@@ -96,7 +96,7 @@ class HVMCodeWriter {
           this.assembly.push('M=D')
           break
         default:
-          throw new ProgramException(`Invalid segement code for a push operation: ${segmentCode}`)
+          throw new CommandException(`Invalid segement code for a push operation: ${segmentCode}`)
       }
       this.incrementSP()
     } else if (opcode === COMMAND.POP) {
@@ -130,11 +130,11 @@ class HVMCodeWriter {
           this.assembly.push('M=D')
           break
         default:
-          throw new ProgramException(`Invalid segment code for a pop operation: ${segmentCode}`)
+          throw new CommandException(`Invalid segment code for a pop operation: ${segmentCode}`)
       }
       this.decrementSP()
     } else {
-      throw new ProgramException('Non push or pop command given to method writePushPop')
+      throw new CommandException('Non push or pop command given to method writePushPop')
     }
   }
 

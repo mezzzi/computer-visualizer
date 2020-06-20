@@ -1,8 +1,8 @@
-import ProgramException from './Utils/ProgramException'
-import HVMInstruction from './Utils/HVMInstruction'
-import * as HVMInstructionSet from './Utils/HVMInstructionSet'
+import ProgramException from './ProgramException'
+import HVMCommand from './HVMCommand'
+import { COMMAND_TYPE, OP_CODE, SEGMENT_CODE } from './Utils'
 
-class VMCodeWriter {
+class HVMCodeWriter {
   /**
      * Opens the output file/stream and gets ready to write into it
      */
@@ -15,36 +15,36 @@ class VMCodeWriter {
 
   /**
      * Writes the assembly code that is the translation of the given arithmetic command
-     * @param command the vm arithmetic instruction to be tranlsted into assembly
+     * @param {HVMCommand} command the vm arithmetic instruction to be tranlsted into assembly
      */
   writeArithmetic (command) {
     const opcode = command.getOpCode()
     switch (opcode) {
-      case HVMInstructionSet.ADD_CODE:
+      case OP_CODE.ADD:
         this.generateBinaryOpAssembly('+')
         break
-      case HVMInstructionSet.SUBSTRACT_CODE:
+      case OP_CODE.SUBTRACT:
         this.generateBinaryOpAssembly('-')
         break
-      case HVMInstructionSet.AND_CODE:
+      case OP_CODE.AND:
         this.generateBinaryOpAssembly('&')
         break
-      case HVMInstructionSet.OR_CODE:
+      case OP_CODE.OR:
         this.generateBinaryOpAssembly('|')
         break
-      case HVMInstructionSet.LESS_THAN_CODE:
+      case OP_CODE.LESS_THAN:
         this.generateRelationalAssembly('LT')
         break
-      case HVMInstructionSet.GREATER_THAN_CODE:
+      case OP_CODE.GREATER_THAN:
         this.generateRelationalAssembly('GT')
         break
-      case HVMInstructionSet.EQUAL_CODE:
+      case OP_CODE.EQUAL:
         this.generateRelationalAssembly('EQ')
         break
-      case HVMInstructionSet.NOT_CODE:
+      case OP_CODE.NOT:
         this.generateUnaryOpAssembly('!')
         break
-      case HVMInstructionSet.NEGATE_CODE:
+      case OP_CODE.NEGATE:
         this.generateUnaryOpAssembly('-')
         break
       default:
@@ -53,44 +53,43 @@ class VMCodeWriter {
   }
 
   /**
-     * Writes the assembly code that is the translation of the given command, where command
-     * is either C_PUSH or C_POP
-     * @param command C_PUSH or C_POP
-     */
+   * Writes the assembly code that is the translation of the given command, where command
+   * is either C_PUSH or C_POP
+   * @param {HVMCommand} command C_PUSH or C_POP
+   */
   writePushPop (command) {
     const opcode = command.getOpCode()
-    const segmentOrClassName = command.getStringArg()
-    const segmentCode = command.getArg0()
-    const index = command.getArg1()
-    if (opcode === HVMInstructionSet.C_PUSH) {
+    const segmentCode = command.getArg1()
+    const segmentIndex = command.getArg2()
+    if (opcode === COMMAND_TYPE.C_PUSH) {
       switch (segmentCode) {
-        case HVMInstructionSet.LOCAL_SEGMENT_CODE:
-          this.generatePushAssembly(index, 'LCL')
+        case SEGMENT_CODE.LOCAL:
+          this.generatePushAssembly(segmentIndex, 'LCL')
           break
-        case HVMInstructionSet.THIS_SEGMENT_CODE:
-          this.generatePushAssembly(index, 'THIS')
+        case SEGMENT_CODE.THIS:
+          this.generatePushAssembly(segmentIndex, 'THIS')
           break
-        case HVMInstructionSet.THAT_SEGMENT_CODE:
-          this.generatePushAssembly(index, 'THAT')
+        case SEGMENT_CODE.THAT:
+          this.generatePushAssembly(segmentIndex, 'THAT')
           break
-        case HVMInstructionSet.ARG_SEGMENT_CODE:
-          this.generatePushAssembly(index, 'ARG')
+        case SEGMENT_CODE.ARGUMENT:
+          this.generatePushAssembly(segmentIndex, 'ARG')
           break
-        case HVMInstructionSet.TEMP_SEGMENT_CODE:
-          this.generatePushAssembly(index, 'R5', false)
+        case SEGMENT_CODE.TEMP:
+          this.generatePushAssembly(segmentIndex, 'R5', false)
           break
-        case HVMInstructionSet.POINTER_SEGMENT_CODE:
-          this.generatePushAssembly(index, 'R3', false)
+        case SEGMENT_CODE.POINTER:
+          this.generatePushAssembly(segmentIndex, 'R3', false)
           break
-        case HVMInstructionSet.CONST_SEGMENT_CODE:
-          this.assembly.push(`@${index}`)
+        case SEGMENT_CODE.CONSTANT:
+          this.assembly.push(`@${segmentIndex}`)
           this.assembly.push('D=A')
           this.assembly.push('@SP')
           this.assembly.push('A=M')
           this.assembly.push('M=D')
           break
-        case HVMInstructionSet.STATIC_SEGMENT_CODE:
-          this.assembly.push(`@${segmentOrClassName}.${index}`)
+        case SEGMENT_CODE.STATIC:
+          this.assembly.push(`@${command.getStringArg()}.${segmentIndex}`)
           this.assembly.push('D=M')
           this.assembly.push('@SP')
           this.assembly.push('A=M')
@@ -100,34 +99,34 @@ class VMCodeWriter {
           throw new ProgramException(`Invalid segement code for a push operation: ${segmentCode}`)
       }
       this.incrementSP()
-    } else if (opcode === HVMInstructionSet.C_POP) {
+    } else if (opcode === COMMAND_TYPE.C_POP) {
       switch (segmentCode) {
-        case HVMInstructionSet.LOCAL_SEGMENT_CODE:
-          this.generatePopAssembly(index, 'LCL')
+        case SEGMENT_CODE.LOCAL:
+          this.generatePopAssembly(segmentIndex, 'LCL')
           break
-        case HVMInstructionSet.THIS_SEGMENT_CODE:
-          this.generatePopAssembly(index, 'THIS')
+        case SEGMENT_CODE.THIS:
+          this.generatePopAssembly(segmentIndex, 'THIS')
           break
-        case HVMInstructionSet.THAT_SEGMENT_CODE:
-          this.generatePopAssembly(index, 'THAT')
+        case SEGMENT_CODE.THAT:
+          this.generatePopAssembly(segmentIndex, 'THAT')
           break
-        case HVMInstructionSet.ARG_SEGMENT_CODE:
-          this.generatePopAssembly(index, 'ARG')
+        case SEGMENT_CODE.ARGUMENT:
+          this.generatePopAssembly(segmentIndex, 'ARG')
           break
-        case HVMInstructionSet.TEMP_SEGMENT_CODE:
-          this.generatePopAssembly(index, 'R5', false)
+        case SEGMENT_CODE.TEMP:
+          this.generatePopAssembly(segmentIndex, 'R5', false)
           break
-        case HVMInstructionSet.POINTER_SEGMENT_CODE:
-          this.generatePopAssembly(index, 'R3', false)
+        case SEGMENT_CODE.POINTER:
+          this.generatePopAssembly(segmentIndex, 'R3', false)
           break
-        case HVMInstructionSet.STATIC_SEGMENT_CODE:
+        case SEGMENT_CODE.STATIC:
           // Get stack top value, and put it in D
           this.assembly.push('@SP')
           this.assembly.push('A=M-1')
           this.assembly.push('D=M')
           // transfer the stack top value, that was in D, to the
           // address pointed by the static variable
-          this.assembly.push(`@${segmentOrClassName}.${index}`)
+          this.assembly.push(`@${command.getStringArg()}.${segmentIndex}`)
           this.assembly.push('M=D')
           break
         default:
@@ -140,9 +139,9 @@ class VMCodeWriter {
   }
 
   /**
-     * Write assembly code that effects the VM initialization, also called bootstrap code.
-     * This code must be placed at the beginning of the output file.
-     */
+   * Write assembly code that effects the VM initialization, also called bootstrap code.
+   * This code must be placed at the beginning of the output file.
+   */
   writeInit () {
     // set SP = 256
     this.assembly.push('@256')
@@ -151,20 +150,22 @@ class VMCodeWriter {
     this.assembly.push('M=D')
     // call Sys.init
     if (this.shouldCallSysInit) {
-      const command = new HVMInstruction(HVMInstructionSet.C_CALL, -1, 0)
-      command.setStringArg('Sys.init')
+      const command = new HVMCommand(OP_CODE.CALL)
+      command.setArg1('Sys.init')
+      command.setArg2(0)
       this.writeCall(command)
     }
   }
 
   /**
-     * Writes assembly code that effects the call command
-     */
+   * Writes assembly code that effects the call command
+   * @param {HVMCommand} command
+   */
   writeCall (command) {
     // get the number of arguments
-    const n = command.getArg1()
+    const n = command.getArg2()
     // get function name
-    const functionName = command.getStringArg()
+    const functionName = command.getArg1()
     // devise a return address label
     const returnLabel = `line${this.assembly.length}`
     // write return address label
@@ -216,20 +217,20 @@ class VMCodeWriter {
   }
 
   /**
-     * Write the assembly code that effects the label command
-     * @param command label command object
-     */
+   * Write the assembly code that effects the label command
+   * @param {HVMCOmmand} command label command object
+   */
   writeLabel (command) {
-    const labelName = command.getStringArg()
+    const labelName = command.getArg1()
     this.assembly.push(`(${labelName})`)
   }
 
   /**
-     * Write the assembly code that effects the goto command
-     * @param command goto command object
-     */
+   * Write the assembly code that effects the goto command
+   * @param {HVMCommand} command goto command object
+   */
   writeGoto (command) {
-    const labelName = command.getStringArg()
+    const labelName = command.getArg1()
     // load jump address to A
     this.assembly.push(`@${labelName}`)
     // jump unconditionally to address pointed by A
@@ -237,11 +238,11 @@ class VMCodeWriter {
   }
 
   /**
-     * Write the assembly code that effects the if-goto command
-     * @param command if-goto command object
-     */
+   * Write the assembly code that effects the if-goto command
+   * @param {HVMCommand} command if-goto command object
+   */
   writeIf (command) {
-    const labelName = command.getStringArg()
+    const labelName = command.getArg1()
     // get stack top, the value that will be used as the jump condition
     this.assembly.push('@SP')
     this.assembly.push('A=M-1')
@@ -254,10 +255,9 @@ class VMCodeWriter {
   }
 
   /**
-     * Write the assembly code that effects the return command
-     * @param command return command object
-     */
-  writeReturn (command) {
+   * Write the assembly code that effects the return command
+   */
+  writeReturn () {
     // put return address in general register, since it will be lost when return value is
     // put where the first argument was placed (return address is pushed after
     // arguments are pushed )
@@ -293,11 +293,11 @@ class VMCodeWriter {
 
   /**
      * Write the assembly code that effects the function command
-     * @param command the function command object
+     * @param {HVMCOmmand} command the function command object
      */
   writeFunction (command) {
-    const functionName = command.getStringArg()
-    const numLocals = command.getArg1()
+    const functionName = command.getArg1()
+    const numLocals = command.getArg2()
     const localsAllocationLoop = `${functionName}_localVarsInitLoop`
     const localsAllocationDone = `${functionName}_localVarsInitDone`
     // write the function label
@@ -473,4 +473,4 @@ class VMCodeWriter {
     this.assembly.push('M=D')
   }
 }
-export default VMCodeWriter
+export default HVMCodeWriter

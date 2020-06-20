@@ -1,4 +1,4 @@
-import VMTranslator from './VMTranslator'
+import HVMTranslator from './HVMTranslator'
 
 /**
  * Sample VM files taken from chapter 07 and chapter 08 of the Nand2Tetris book
@@ -1153,7 +1153,7 @@ M=D
  * and their class names
  */
 const runTest = (fileInfos, asmKey) => {
-  const translator = new VMTranslator(fileInfos)
+  const translator = new HVMTranslator(fileInfos)
   const result = translator.translate()
   const expected = asms[asmKey]
   expect(result.trim()).toBe(expected.trim())

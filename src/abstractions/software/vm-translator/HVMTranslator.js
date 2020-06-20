@@ -1,15 +1,15 @@
-import * as HVMInstructionSet from './Utils/HVMInstructionSet'
-import VMCodeWriter from './VMCodeWriter'
-import VMParser from './VMParser'
+import { COMMAND_TYPE } from './Utils'
+import HVMCodeWriter from './HVMCodeWriter'
+import HVMParser from './HVMParser'
 
-class VMTranslator {
+class HVMTranslator {
   /**
    * @param {{className: string, file: string}[]} fileInfos an array of HVM files
    * and their class names
    */
   constructor (fileInfos) {
-    this.vmParser = new VMParser(fileInfos)
-    this.assemblyWriter = new VMCodeWriter(this.vmParser.hasSysInit())
+    this.vmParser = new HVMParser(fileInfos)
+    this.assemblyWriter = new HVMCodeWriter(this.vmParser.hasSysInit())
   }
 
   translate () {
@@ -17,30 +17,30 @@ class VMTranslator {
     this.assemblyWriter.writeInit()
     while (this.vmParser.hasMoreCommands()) {
       this.vmParser.advance()
-      command = this.vmParser.getCurrentInstruction()
+      command = this.vmParser.getCurrentCommand()
       switch (this.vmParser.commandType()) {
-        case HVMInstructionSet.C_PUSH:
+        case COMMAND_TYPE.C_PUSH:
           this.assemblyWriter.writePushPop(command)
           break
-        case HVMInstructionSet.C_POP:
+        case COMMAND_TYPE.C_POP:
           this.assemblyWriter.writePushPop(command)
           break
-        case HVMInstructionSet.C_FUNCTION:
+        case COMMAND_TYPE.C_FUNCTION:
           this.assemblyWriter.writeFunction(command)
           break
-        case HVMInstructionSet.C_RETURN:
+        case COMMAND_TYPE.C_RETURN:
           this.assemblyWriter.writeReturn(command)
           break
-        case HVMInstructionSet.C_CALL:
+        case COMMAND_TYPE.C_CALL:
           this.assemblyWriter.writeCall(command)
           break
-        case HVMInstructionSet.C_LABEL:
+        case COMMAND_TYPE.C_LABEL:
           this.assemblyWriter.writeLabel(command)
           break
-        case HVMInstructionSet.C_GOTO:
+        case COMMAND_TYPE.C_GOTO:
           this.assemblyWriter.writeGoto(command)
           break
-        case HVMInstructionSet.C_IF:
+        case COMMAND_TYPE.C_IF:
           this.assemblyWriter.writeIf(command)
           break
         default:
@@ -51,4 +51,4 @@ class VMTranslator {
     return this.assemblyWriter.Close()
   }
 }
-export default VMTranslator
+export default HVMTranslator

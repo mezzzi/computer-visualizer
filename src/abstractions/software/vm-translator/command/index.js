@@ -2,7 +2,7 @@ import {
   isArithmeticCommand,
   isCommandType,
   isSegmentName,
-  typeCheck
+  doTypesMatch
 } from '../utils'
 import { COMMAND } from './types'
 import CommandException from './exception'
@@ -26,12 +26,11 @@ class HVMCommand {
   constructor (commandType, arg1, arg2) {
     if (!commandType) {
       throw new CommandException(
-        'HVMCommand.constructor > cannot create HVM' +
+        'cannot create HVM' +
         'command without providing a command type')
     }
     if (!isCommandType(commandType)) {
       throw new CommandException(
-        'HVMCommand.constructor > ' +
         'cannot create HVM command with an invalid command type: ' +
         `${commandType}`)
     }
@@ -46,7 +45,8 @@ class HVMCommand {
      * segment, function, or label name
      * @type {string}
      */
-    this.arg1 = arg1
+    this.arg1 = undefined
+    if (arg1 !== undefined) this.setArg1(arg1)
 
     /**
      * - segment index for push/pull commands,
@@ -55,7 +55,8 @@ class HVMCommand {
      * function declaration command
      * @type {number}
      */
-    this.arg2 = arg2
+    this.arg2 = undefined
+    if (arg2 !== undefined) this.setArg2(arg2)
 
     /**
      * Additional info for the command, for example `className` for push/pull
@@ -84,24 +85,23 @@ class HVMCommand {
    * @throws {CommandException} if setting arg1 doesn't make sense
    */
   setArg1 (arg1) {
-    typeCheck({
-      expectedSample: 'local',
-      receivedArg: arg1,
-      functionName: 'HVMCommand.setArg1',
-      argumentName: 'arg1'
-    })
+    if (!doTypesMatch('local', arg1)) {
+      throw new CommandException(
+        "arg1 should be of type 'string', " +
+        ` but has type '${typeof arg1}'`)
+    }
     if (this.commandType === COMMAND.RETURN) {
-      throw new CommandException('HVMCommand.setArg1 > ' +
-      'cannot set arg1 to a return command')
+      throw new CommandException(
+        'cannot set arg1 to a return command')
     }
     if (isArithmeticCommand(this.commandType)) {
-      throw new CommandException('HVMCommand.setArg1 > ' +
-      'cannot set arg1 to arithmetic command')
+      throw new CommandException(
+        'cannot set arg1 to an arithmetic command')
     }
     if ([COMMAND.PUSH, COMMAND.POP].includes(this.commandType) &&
       !isSegmentName(arg1)) {
-      throw new CommandException('HVMCommand.setArg1 > ' +
-      `invalid segment name: ${arg1} to ${this.commandType} command`)
+      throw new CommandException(
+        `invalid segment name: ${arg1} to a ${this.commandType} command`)
     }
     this.arg1 = arg1
     this.updateNumberOfArgs()
@@ -116,16 +116,19 @@ class HVMCommand {
    * @throws {CommandException} if setting arg2 doesn't make sense
    */
   setArg2 (arg2) {
-    typeCheck({
-      expectedSample: 1,
-      receivedArg: arg2,
-      functionName: 'HVMCommand.setArg2',
-      argumentName: 'arg2'
-    })
+    if (!doTypesMatch(2, arg2)) {
+      throw new CommandException(
+        "arg1 should be of type 'number', " +
+        ` but has type '${typeof arg2}'`)
+    }
     if (!this.isArg2Relevant(this.commandType)) {
       throw new CommandException(
-        'HVMCommand.setArg2 > ' +
         `cannot set arg2 to the ${this.commandType} command`)
+    }
+    if ([COMMAND.POP, COMMAND.PUSH].includes(this.commandType)) {
+      if (arg2 < 0) {
+        throw new CommandException(`negative segment index: ${arg2}`)
+      }
     }
     this.arg2 = arg2
     this.updateNumberOfArgs()
@@ -170,8 +173,8 @@ class HVMCommand {
    */
   getArg1 () {
     if (this.commandType === COMMAND.RETURN) {
-      throw new CommandException('HVMCommand.getArg1 > ' +
-      'return command doesn\'t have arg1')
+      throw new CommandException(
+        'return command doesn\'t have arg1')
     }
     if (isArithmeticCommand(this.commandType)) return this.commandType
     return this.arg1
@@ -186,8 +189,7 @@ class HVMCommand {
    */
   getArg2 () {
     if (!this.isArg2Relevant()) {
-      throw new CommandException('HVMCommand.setArg1 > ' +
-      `${this.commandType} doesn't have arg2`)
+      throw new CommandException(`${this.commandType} doesn't have arg2`)
     }
     return this.arg2
   }
@@ -203,14 +205,17 @@ class HVMCommand {
 
   /**
    * @returns {boolean} true if arg2 makes sense for the current
-   * command type
+   * command type; arg2 applies only to the following commands:
+   * - `function`
+   * - `call`
+   * - `pop`
+   * - `push`
    */
   isArg2Relevant () {
     return [
       COMMAND.FUNCTION,
       COMMAND.PUSH,
       COMMAND.POP,
-      COMMAND.FUNCTION,
       COMMAND.CALL].includes(this.commandType)
   }
 

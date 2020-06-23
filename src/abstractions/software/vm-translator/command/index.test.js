@@ -1,5 +1,5 @@
 import HVMCommand from './index'
-import { COMMAND } from './types'
+import { COMMAND, SEGMENT } from './types'
 import { isArithmeticCommand } from '../utils'
 import CommandException from './exception'
 
@@ -177,7 +177,32 @@ describe('return command', () => {
 
 describe('HVMCommand class', () => {
   it('should create instance: constructor method', () => {
-    expect(1).toBe(1)
+    // no commadn given
+    expect(() => new HVMCommand()).toThrow(CommandException)
+    // bad command type
+    expect(() => new HVMCommand('hello')).toThrow(CommandException)
+    // valid command type
+    let command = new HVMCommand(COMMAND.ADD)
+    expect(command.getArg1()).toBe(COMMAND.ADD)
+    // commandType and arg1
+    command = new HVMCommand(COMMAND.LABEL, 'loop')
+    expect(command.getArg1()).toBe('loop')
+    // commandType, arg1, and arg2
+    command = new HVMCommand(COMMAND.PUSH, SEGMENT.LOCAL, 1)
+    expect(command.getArg1()).toBe(SEGMENT.LOCAL)
+    expect(command.getArg2()).toBe(1)
+    // arg2 missing
+    command = new HVMCommand(COMMAND.PUSH, SEGMENT.LOCAL)
+    expect(command.getArg1()).toBe(SEGMENT.LOCAL)
+    expect(command.getArg2()).toBe(undefined)
+    // invalid arg1
+    expect(
+      () => new HVMCommand(COMMAND.PUSH, 'whatever')
+    ).toThrow(CommandException)
+    // invalid arg2
+    expect(
+      () => new HVMCommand(COMMAND.PUSH, SEGMENT.LOCAL, -2)
+    ).toThrow(CommandException)
   })
 
   it('should set arg1: setArg1 method', () => {
@@ -196,14 +221,33 @@ describe('HVMCommand class', () => {
   })
 
   it('should set arg2: setArg2 method', () => {
-    expect(1).toBe(1)
+    // correct usage
+    let commandObj = new HVMCommand(COMMAND.PUSH)
+    commandObj.setArg2(1)
+    expect(commandObj.getArg2()).toBe(1)
+    // incorrect type
+    expect(() => commandObj.setArg2('1')).toThrow(CommandException)
+    // incorrect command type
+    commandObj = new HVMCommand(COMMAND.LABEL)
+    expect(() => commandObj.setArg2(1)).toThrow(CommandException)
+    // negative segment index
+    commandObj = new HVMCommand(COMMAND.PUSH)
+    expect(() => commandObj.setArg2(-1)).toThrow(CommandException)
   })
 
   it('should update number of args: updateNumberOfArgs method', () => {
-    expect(1).toBe(1)
+    const commandObj = new HVMCommand(COMMAND.PUSH)
+    expect(commandObj.getNumberOfArgs()).toBe(0)
+    commandObj.setArg1(SEGMENT.LOCAL)
+    expect(commandObj.getNumberOfArgs()).toBe(1)
+    commandObj.setArg2(4)
+    expect(commandObj.getNumberOfArgs()).toBe(2)
   })
 
   it('should set string arg: setStringArg method', () => {
-    expect(1).toBe(1)
+    const commandObj = new HVMCommand(COMMAND.PUSH)
+    commandObj.setArg1(SEGMENT.STATIC)
+    commandObj.setStringArg('ClassName')
+    expect(commandObj.getStringArg()).toBe('ClassName')
   })
 })

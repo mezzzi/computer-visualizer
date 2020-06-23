@@ -6,16 +6,18 @@ describe('String Tokenizer class', () => {
     // empty constructor not allowed
     expect(() => new StringTokenizer()).toThrow(CommandException)
   })
-  it('hasMoreTokens', () => {
-    // empty constructor not allowed
-    expect(() => new StringTokenizer()).toThrow(CommandException)
-  })
-  it('nextToken', () => {
-    // empty constructor not allowed
-    expect(() => new StringTokenizer()).toThrow(CommandException)
+  it('nextToken and hasMoreTokens', () => {
+    const tokenizer = new StringTokenizer(' hello  there   you ')
+    expect(tokenizer.hasMoreTokens()).toBe(true)
+    expect(tokenizer.nextToken()).toBe('hello')
+    expect(tokenizer.hasMoreTokens()).toBe(true)
+    expect(tokenizer.nextToken()).toBe('there')
+    expect(tokenizer.hasMoreTokens()).toBe(true)
+    expect(tokenizer.nextToken()).toBe('you')
+    expect(tokenizer.hasMoreTokens()).toBe(false)
   })
   it('countTokens', () => {
-    // empty constructor not allowed
-    expect(() => new StringTokenizer()).toThrow(CommandException)
+    const tokenizer = new StringTokenizer(' hello  there   you ')
+    expect(tokenizer.countTokens()).toBe(3)
   })
 })

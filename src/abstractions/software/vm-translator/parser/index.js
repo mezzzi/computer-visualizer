@@ -1,6 +1,6 @@
 import CommandException from '../command/exception'
 import HVMCommand from '../command'
-import { isCommandType, isSegmentName } from '../utils'
+import { isCommandType, isSegmentName, unCommentLine } from '../utils'
 import { COMMAND, SEGMENT } from '../command/types'
 import StringTokenizer from './tokenizer'
 
@@ -14,11 +14,13 @@ class HVMParser {
   /**
    * The files in the `fileInfos` are immediately read and parsed, and the
    * list of instructions is populated right away.
-   * @param {{className: string, file: string}[]} fileInfos an array of HVM `fileInfo` objects
+   * @param {{className: string, file: string}[]} fileInfos an array of
+   * HVM `fileInfo` objects
    */
   constructor (fileInfos) {
     /**
-     * @type {string[]} an array of local storage keys for the VM programs to be parsed
+     * @type {string[]} an array of local storage keys for the HVM
+     * programs to be parsed
      */
     this.fileInfos = fileInfos
 
@@ -33,7 +35,8 @@ class HVMParser {
     this.currentInstructionIndex = 0
 
     /**
-     * Whether the first advance (processing of the next hvm command) is made
+     * Whether the first advance (processing of the next hvm command)
+     * is made
      * @type {boolean} `true` if first advance is already made
      */
     this.isFirstAdvanceMade = false
@@ -46,7 +49,7 @@ class HVMParser {
 
     /**
      * Is there a function with the name `Sys.init`?
-     * @type {boolean} `true` if `Sys.init` is in the VM program
+     * @type {boolean} `true` if `Sys.init` is in the HVM program
      */
     this.isSysInitFound = false
 
@@ -74,7 +77,7 @@ class HVMParser {
      * The string tokenizer that encapsulates the current HVM command
      * @type {StringTokenizer}
      */
-    this.tokenizer = null
+    this.tokenizer = undefined
 
     // Parse files, and populate the `instructions` array
     this.parseAllFiles(this.fileInfos)
@@ -85,7 +88,7 @@ class HVMParser {
 
   /**
    * Are there more commands in the input?
-   * @return {boolean} `true` if there are more commands
+   * @returns {boolean} `true` if there are more commands
    */
   hasMoreCommands () {
     return this.currentInstructionIndex + 1 < this.instructions.length
@@ -93,7 +96,7 @@ class HVMParser {
 
   /**
    * The HVM command currently being processed
-   * @return {HVMCommand} current `HVMCommand` being processed
+   * @returns {HVMCommand} current `HVMCommand` being processed
    */
   getCurrentCommand () {
     return this.instructions[this.currentInstructionIndex]
@@ -101,8 +104,8 @@ class HVMParser {
 
   /**
    * Reads the next command from the input and makes it the current command.
-   * Should be called only if `hasMoreCommands()` is `true`. Initially there is
-   * no current command.
+   * Should be called only if `hasMoreCommands()` is `true`.
+   * Initially there is no current command.
    */
   advance () {
     if (this.hasMoreCommands()) {
@@ -116,25 +119,24 @@ class HVMParser {
   }
 
   /**
-   * @return { number } Returns the type of the current HVM command.
-   * - C_ARITHMETIC is returned for all the arithmetic commands.
+   * Get the command type
+   * @returns {number} Returns the type of the current HVM command.
    */
   getCommandType () {
     const currentCommand = this.instructions[this.currentInstructionIndex]
     if (!currentCommand) {
       throw new CommandException(
-        'In HVMParser.getCommandType > currentCommand ' +
-        `is ${currentCommand}`)
+        `currentCommand is invalid: ${currentCommand}`)
     }
     return currentCommand.getCommandType()
   }
 
   /**
-   * The first argument of the current command. In the case of C_ARITHMETIC,
-   * the command itself (add, sub, etc) is returned. Should not be called if the
-   * current command is C_RETURN.
-   * @return { string } the first argument of the current command
-   * @throws { CommandException }
+   * The first argument of the current command.
+   * For arithmetic commands, the command itself (add, sub, etc) is returned.
+   * Should not be called for a return command
+   * @returns {string} the first argument of the current command
+   * @throws {CommandException}
    */
   arg1 () {
     const currentCommand = this.instructions[this.currentInstructionIndex]
@@ -147,8 +149,8 @@ class HVMParser {
   /**
    * The second argument of the current command. Should be called only if the
    * current command is C_PUSH, C_POP, C_FUNCTION, or C_CALL.
-   * @return { number } the second argument of the current command
-   * @throws { CommandException } if called on the wrong command
+   * @returns {number} the second argument of the current command
+   * @throws {CommandException} if called on the wrong command
    */
   arg2 () {
     const currentCommand = this.instructions[this.currentInstructionIndex]
@@ -159,22 +161,18 @@ class HVMParser {
   }
 
   /**
-   * Does the VM program got `Sys.init`?
-   * @return { boolean } true if the VM program has `Sys.init`
+   * Does the HVM program got `Sys.init`?
+   * @returns { boolean } true if the HVM program has `Sys.init`
    */
   hasSysInit () {
     return this.isSysInitFound
   }
 
   /**
-   * Creates a vm program. If more than one file given, it creates a program composed of
-   * all the vm files.
-   * The vm files are scanned twice: in the first scan a symbol table (that maps
-   * function & label names into addresses) is built.
-   * In the second scan, the instructions array is built.
-   * @param {{className: string, file: string}[]} fileInfos An array containing
-   * fileInfo objects
-   * @throws { CommandException } if an error occurs while loading the program.
+   * - Creates a vm program. If more than one file given, it creates
+   * a program composed of all the hvm files.
+   * @param {{className: string, file: string}[]} fileInfos An array
+   * containing `fileInfo` objects
    */
   parseAllFiles (fileInfos) {
     fileInfos.forEach(fileInfo => {
@@ -185,9 +183,11 @@ class HVMParser {
   }
 
   /**
-   * Scans the given file and creates symbols for its functions & label names.
-   * @param {string} file the string containing the VM content of a given VM program file
-   * @param {string} className important for scoping static variable, usually same as file name
+   * Parse a single HVM file
+   * @param {string} file the string containing the content
+   * of some HVM program
+   * @param {string} className important for scoping static
+   * variable, usually same as file name
    */
   parseSingleFile (file, className) {
     this.isInSlashStar = false
@@ -203,7 +203,8 @@ class HVMParser {
       this.currentInstructionIndex = this.pc
     })
     if (this.isInSlashStar) {
-      throw new CommandException('Unterminated /* comment at end of file')
+      throw new CommandException(
+        'Unterminated /* comment at the end of file')
     }
   }
 
@@ -217,89 +218,81 @@ class HVMParser {
     this.tokenizer = new StringTokenizer(line)
     const commandName = this.tokenizer.nextToken()
     if (!isCommandType(commandName)) {
-      throw new CommandException('in line ' +
-      this.lineNumber +
-        ': unknown command - ' +
-        commandName)
+      throw new CommandException(
+        `unknown command: ${commandName}`, this.lineNumber)
     }
     this.commandType = commandName
     // parse based on the command type
     switch (this.commandType) {
       case COMMAND.PUSH:
-        this.parseMemoryAccessCommands(line, className)
+        this.parseMemoryAccessCommands(className)
         break
       case COMMAND.POP:
-        this.parseMemoryAccessCommands(line, className)
+        this.parseMemoryAccessCommands(className)
         break
       case COMMAND.FUNCTION:
-        this.parseFunction(line)
+        this.parseFunction()
         break
       case COMMAND.CALL:
         this.parseCall()
         break
       case COMMAND.LABEL:
-        this.parseLabel()
+        this.parseControlFlowCommands()
         break
       case COMMAND.GOTO:
-        this.parseGoto()
+        this.parseControlFlowCommands()
         break
       case COMMAND.IF_GOTO:
-        this.parseIfgoto()
+        this.parseControlFlowCommands()
         break
       // arithemtic or return commands
       default:
-        this.parseDefault(line)
+        this.parseDefault()
         break
     }
     // check end of command
     if (this.tokenizer.hasMoreTokens()) {
-      throw new CommandException('in line ' + this.lineNumber +
-      ': Too many arguments - ' + line)
+      throw new CommandException(
+        `too many arguments for ${commandName} command`, this.lineNumber)
     }
   }
 
   /**
-   * Parses VM commands of the format `push local 3` or `pop temp 1`
-   * @param {string} line the line currently being parsed
-   * @param {string} className the className/fileName of the VM program
+   * Parses HVM commands of the format `push local 3` or `pop temp 1`
+   * @param {string} className the className/fileName of the HVM program
    * @throws {Program Exception} if error encountered in parsing
    */
-  parseMemoryAccessCommands (line, className) {
+  parseMemoryAccessCommands (className) {
     const segmentName = this.tokenizer.nextToken()
     if (!isSegmentName(segmentName)) {
       throw new CommandException(
-        `in line : ${this.lineNumber}, invalid segment name: ${segmentName}`)
+        `invalid segment name: ${segmentName}`, this.lineNumber)
     }
-    try {
-      const segmentIndex = parseInt(this.tokenizer.nextToken(), 10)
-      if (segmentName !== SEGMENT.CONSTANT && segmentIndex < 0) {
-        throw new CommandException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
-      }
-      const command = new HVMCommand(this.commandType)
-      command.setArg1(segmentName)
-      command.setArg2(segmentIndex)
-      if (segmentName === SEGMENT.STATIC) {
-        command.setStringArg(className)
-      }
-      this.instructions[this.pc] = command
-    } catch (pe) {
-      throw new CommandException(pe.message, this.lineNumber)
+    const segmentIndex = parseInt(this.tokenizer.nextToken(), 10)
+    if (segmentName !== SEGMENT.CONSTANT && segmentIndex < 0) {
+      throw new CommandException('negative segment index', this.lineNumber)
     }
+    const command = new HVMCommand(this.commandType)
+    command.setArg1(segmentName)
+    command.setArg2(segmentIndex)
+    if (segmentName === SEGMENT.STATIC) {
+      command.setStringArg(className)
+    }
+    this.instructions[this.pc] = command
   }
 
   /**
-   * Parses VM commands of the format `function f k`,
-   * function `f` that has `k` local variables
-   * @param {string} line the line currently being parsed
+   * Parses HVM commands of the format `function f k`
    */
-  parseFunction (line) {
+  parseFunction () {
     this.currentFunction = this.tokenizer.nextToken()
     if (this.currentFunction === 'Sys.init') {
       this.isSysInitFound = true
     }
     const numberOfLocalVariables = parseInt(this.tokenizer.nextToken(), 10)
     if (numberOfLocalVariables < 0) {
-      throw new CommandException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
+      throw new CommandException(
+        'negative number of lcoal variables', this.lineNumber)
     }
     const command = new HVMCommand(this.commandType)
     command.setArg1(this.currentFunction)
@@ -308,8 +301,7 @@ class HVMParser {
   }
 
   /**
-   * Parses VM commands of the format `call f n`,
-   * Calling a function `f` after `n` arguments been pushed to the stack
+   * Parses HVM commands of the format `call f n`
    */
   parseCall () {
     const functionName = this.tokenizer.nextToken()
@@ -321,35 +313,12 @@ class HVMParser {
   }
 
   /**
-   * Parses VM commands of the format `label l`,
+   * Parses control flow commands:
+   * - `label l`
+   * - `goto l`
+   * - `if-goto l`
    */
-  parseLabel () {
-    let labelName = this.tokenizer.nextToken()
-    if (this.currentFunction !== '') {
-      labelName = this.currentFunction + '$' + labelName
-    }
-    const command = new HVMCommand(this.commandType)
-    command.setArg1(labelName)
-    this.instructions[this.pc] = command
-  }
-
-  /**
-   * Parses VM commands of the format `goto label l`,
-   */
-  parseGoto () {
-    let labelName = this.tokenizer.nextToken()
-    if (this.currentFunction !== '') {
-      labelName = this.currentFunction + '$' + labelName
-    }
-    const command = new HVMCommand(this.commandType)
-    command.setArg1(labelName)
-    this.instructions[this.pc] = command
-  }
-
-  /**
-   * Parses VM commands of the format `if-goto label l`,
-   */
-  parseIfgoto () {
+  parseControlFlowCommands () {
     let labelName = this.tokenizer.nextToken()
     if (this.currentFunction !== '') {
       labelName = this.currentFunction + '$' + labelName
@@ -361,53 +330,29 @@ class HVMParser {
 
   /**
    * Parse arithmetic or return commands
-   * @param {string} line the line being parsed
+   * - `add`, `sub`, `not`, `and`, `or`, `lt`, `gt`, `eq`, `neg`
+   * - `return`
    */
-  parseDefault (line) {
-    if (this.tokenizer.countTokens() === 0) {
-      this.instructions[this.pc] = new HVMCommand(this.commandType)
-    } else {
-      const arg1 = parseInt(this.tokenizer.nextToken(), 10)
-      if (arg1 < 0) {
-        throw new CommandException('in line ' + this.lineNumber + ': Illegal argument - ' + line)
-      }
-      this.instructions[this.pc] = new HVMCommand(this.commandType, arg1)
+  parseDefault () {
+    if (this.tokenizer.countTokens() !== 1) {
+      throw new CommandException(
+        `${this.commandType} command should not have an argument`,
+        this.lineNumber)
     }
+    this.instructions[this.pc] = new HVMCommand(this.commandType)
   }
 
   /**
    * Removes comments from a line
    * Comments can be either with // or /*.
    * The field isSlashStar holds the current /* comment state.
-   * @param { string } line the line to uncomment
-   * @return { string } the "un-commented" version of the given line.
+   * @param {string} line the line to uncomment
+   * @returns {string} the "un-commented" version of the given line.
    */
   unCommentLine (line) {
-    let result = line
-    if (line !== null) {
-      if (this.isInSlashStar) {
-        const posStarSlash = line.indexOf('*/')
-        if (posStarSlash >= 0) {
-          this.isInSlashStar = false
-          result = this.unCommentLine(line.substring(posStarSlash + 2))
-        } else {
-          result = ''
-        }
-      } else {
-        const posSlashSlash = line.indexOf('//')
-        const posSlashStar = line.indexOf('/*')
-        if (posSlashSlash >= 0 &&
-          (posSlashStar < 0 || posSlashStar > posSlashSlash)) {
-          result = line.substring(0, posSlashSlash)
-        } else if (posSlashStar >= 0) {
-          this.isInSlashStar = true
-          result =
-            line.substring(0, posSlashStar) +
-            this.unCommentLine(line.substring(posSlashStar + 2))
-        }
-      }
-    }
-    return result
+    const output = unCommentLine(line, this.isInSlashStar)
+    this.isInSlashStar = output.isInSlashStar
+    return output.result
   }
 }
 export default HVMParser

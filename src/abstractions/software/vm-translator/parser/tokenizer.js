@@ -17,11 +17,11 @@ class StringTokenizer {
    */
   constructor (line) {
     if (!line) {
-      throw new CommandException('In StringTokenizer.constructor > ' +
-      `trying to create a tokenizer with invalid input: ${line}`)
+      throw new CommandException(
+        `trying to create a tokenizer with invalid input: ${line}`)
     }
     this.currentIndex = -1
-    this.tokenArray = line.trim().split(' ')
+    this.tokenArray = line.split(' ').filter(token => token !== '')
   }
 
   /**

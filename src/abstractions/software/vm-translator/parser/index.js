@@ -230,21 +230,6 @@ class HVMParser {
       case COMMAND.POP:
         this.parseMemoryAccessCommands(className)
         break
-      case COMMAND.FUNCTION:
-        this.parseFunction()
-        break
-      case COMMAND.CALL:
-        this.parseCall()
-        break
-      case COMMAND.LABEL:
-        this.parseControlFlowCommands()
-        break
-      case COMMAND.GOTO:
-        this.parseControlFlowCommands()
-        break
-      case COMMAND.IF_GOTO:
-        this.parseControlFlowCommands()
-        break
       // arithemtic or return commands
       default:
         this.parseDefault()
@@ -278,53 +263,6 @@ class HVMParser {
     if (segmentName === SEGMENT.STATIC) {
       command.setStringArg(className)
     }
-    this.instructions[this.pc] = command
-  }
-
-  /**
-   * Parses HVM commands of the format `function f k`
-   */
-  parseFunction () {
-    this.currentFunction = this.tokenizer.nextToken()
-    if (this.currentFunction === 'Sys.init') {
-      this.isSysInitFound = true
-    }
-    const numberOfLocalVariables = parseInt(this.tokenizer.nextToken(), 10)
-    if (numberOfLocalVariables < 0) {
-      throw new CommandException(
-        'negative number of lcoal variables', this.lineNumber)
-    }
-    const command = new HVMCommand(this.commandType)
-    command.setArg1(this.currentFunction)
-    command.setArg2(numberOfLocalVariables)
-    this.instructions[this.pc] = command
-  }
-
-  /**
-   * Parses HVM commands of the format `call f n`
-   */
-  parseCall () {
-    const functionName = this.tokenizer.nextToken()
-    const numberOfArgs = parseInt(this.tokenizer.nextToken(), 10)
-    const command = new HVMCommand(this.commandType)
-    command.setArg1(functionName)
-    command.setArg2(numberOfArgs)
-    this.instructions[this.pc] = command
-  }
-
-  /**
-   * Parses control flow commands:
-   * - `label l`
-   * - `goto l`
-   * - `if-goto l`
-   */
-  parseControlFlowCommands () {
-    let labelName = this.tokenizer.nextToken()
-    if (this.currentFunction !== '') {
-      labelName = this.currentFunction + '$' + labelName
-    }
-    const command = new HVMCommand(this.commandType)
-    command.setArg1(labelName)
     this.instructions[this.pc] = command
   }
 

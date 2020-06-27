@@ -25,24 +25,6 @@ class HVMTranslator {
         case COMMAND.POP:
           this.assemblyWriter.writePushPop(command)
           break
-        case COMMAND.FUNCTION:
-          this.assemblyWriter.writeFunction(command)
-          break
-        case COMMAND.RETURN:
-          this.assemblyWriter.writeReturn(command)
-          break
-        case COMMAND.CALL:
-          this.assemblyWriter.writeCall(command)
-          break
-        case COMMAND.LABEL:
-          this.assemblyWriter.writeLabel(command)
-          break
-        case COMMAND.GOTO:
-          this.assemblyWriter.writeGoto(command)
-          break
-        case COMMAND.IF_GOTO:
-          this.assemblyWriter.writeIf(command)
-          break
         default:
           this.assemblyWriter.writeArithmetic(command)
           break

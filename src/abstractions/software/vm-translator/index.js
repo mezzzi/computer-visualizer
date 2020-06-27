@@ -9,7 +9,7 @@ class HVMTranslator {
    */
   constructor (fileInfos) {
     this.vmParser = new HVMParser(fileInfos)
-    this.assemblyWriter = new HVMCodeWriter(this.vmParser.hasSysInit())
+    this.assemblyWriter = new HVMCodeWriter()
   }
 
   translate () {

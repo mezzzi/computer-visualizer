@@ -1,16 +1,16 @@
 import CommandException from '../command/exception'
-import HVMCommand from '../command'
 import { COMMAND, SEGMENT } from '../command/types'
 
+/**
+ * Translates HVM commands into Hack assembly code.
+ */
 class HVMCodeWriter {
   /**
-     * Opens the output file/stream and gets ready to write into it
-     */
-  constructor (hasSysInit) {
+   * Creates an instance of `HVMCodeWriter`
+   */
+  constructor () {
     // Holds the translated assembly lines
     this.assembly = []
-    this.shouldCallSysInit = false
-    this.shouldCallSysInit = hasSysInit
   }
 
   /**
@@ -148,13 +148,6 @@ class HVMCodeWriter {
     this.assembly.push('D=A')
     this.assembly.push('@SP')
     this.assembly.push('M=D')
-    // call Sys.init
-    if (this.shouldCallSysInit) {
-      const command = new HVMCommand(COMMAND.CALL)
-      command.setArg1('Sys.init')
-      command.setArg2(0)
-      this.writeCall(command)
-    }
   }
 
   /**

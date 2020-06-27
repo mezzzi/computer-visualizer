@@ -12,7 +12,8 @@ import StringTokenizer from './tokenizer'
  */
 class HVMParser {
   /**
-   * The files in the `fileInfos` are immediately read and parsed, and the
+   * - Creates an instance of `HVMParser`
+   * - The files in the `fileInfos` are immediately read and parsed, and the
    * list of instructions is populated right away.
    * @param {{className: string, file: string}[]} fileInfos an array of
    * HVM `fileInfo` objects
@@ -46,12 +47,6 @@ class HVMParser {
      * @type {boolean} `true` if parsing in the middle of a comment
      */
     this.isInSlashStar = false
-
-    /**
-     * Is there a function with the name `Sys.init`?
-     * @type {boolean} `true` if `Sys.init` is in the HVM program
-     */
-    this.isSysInitFound = false
 
     /**
      * The current line number that is being processed
@@ -158,14 +153,6 @@ class HVMParser {
       throw new CommandException('arg2 called on non-existent command')
     }
     return currentCommand.getArg2()
-  }
-
-  /**
-   * Does the HVM program got `Sys.init`?
-   * @returns { boolean } true if the HVM program has `Sys.init`
-   */
-  hasSysInit () {
-    return this.isSysInitFound
   }
 
   /**

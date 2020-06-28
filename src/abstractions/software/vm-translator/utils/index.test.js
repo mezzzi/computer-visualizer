@@ -3,9 +3,14 @@ import {
   isCommandType,
   isSegmentName,
   doTypesMatch,
-  unCommentLine
+  unCommentLine,
+  getSegmentPointer,
+  getOperatorSymbol,
+  isRelational,
+  isUnary,
+  isBinary
 } from './index'
-import { COMMAND } from '../command/types'
+import { COMMAND, SEGMENT, POINTER, OPERATOR_SYMBOL } from '../command/types'
 
 describe('Util functions', () => {
   it('isArithmetic', () => {
@@ -83,5 +88,46 @@ describe('Util functions', () => {
     expectedOutput.result = ''
     expectedOutput.isInSlashStar = true
     expect(output).toEqual(expectedOutput)
+  })
+
+  it('getSegmentPointer', () => {
+    let result = getSegmentPointer(SEGMENT.LOCAL)
+    expect(result).toBe(POINTER.LOCAL)
+    result = getSegmentPointer('whatever')
+    expect(result).toBe(undefined)
+  })
+
+  it('getOperatorSymbol', () => {
+    let result = getOperatorSymbol(COMMAND.ADD)
+    expect(result).toBe(OPERATOR_SYMBOL.ADD)
+    result = getOperatorSymbol('whatever')
+    expect(result).toBe(undefined)
+  })
+
+  it('isRelational', () => {
+    let result = isRelational(COMMAND.LESS_THAN)
+    expect(result).toBe(true)
+    result = isRelational(COMMAND.ADD)
+    expect(result).toBe(false)
+    result = isRelational('whatever')
+    expect(result).toBe(false)
+  })
+
+  it('isUnary', () => {
+    let result = isUnary(COMMAND.NEGATE)
+    expect(result).toBe(true)
+    result = isUnary(COMMAND.ADD)
+    expect(result).toBe(false)
+    result = isUnary('whatever')
+    expect(result).toBe(false)
+  })
+
+  it('isBinary', () => {
+    let result = isBinary(COMMAND.ADD)
+    expect(result).toBe(true)
+    result = isBinary(COMMAND.NOT)
+    expect(result).toBe(false)
+    result = isBinary('whatever')
+    expect(result).toBe(false)
   })
 })

@@ -30,7 +30,7 @@ class HVMTranslator {
           break
       }
     }
-    return this.assemblyWriter.Close()
+    return this.assemblyWriter.getTranslatedAssembly()
   }
 }
 export default HVMTranslator

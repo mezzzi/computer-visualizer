@@ -1,4 +1,4 @@
-import { COMMAND, SEGMENT } from '../command/types'
+import { COMMAND, SEGMENT, POINTER, OPERATOR_SYMBOL } from '../command/types'
 
 /**
  * Check if a command is an arithmetic command
@@ -98,4 +98,54 @@ export const unCommentLine = (line, isInSlashStar) => {
     }
   }
   return output
+}
+
+/**
+ * Gets the base pointer for the given segment
+ * @param {SEGMENT} segment segment name
+ * @returns {POINTER} base pointer for the segment
+ */
+export const getSegmentPointer = segment => {
+  return POINTER[Object.entries(SEGMENT)
+    .reduce((acc, [key, value]) => value === segment ? key : acc)]
+}
+
+/**
+ * Get the operator symbol for the given arithmetic hvm command type
+ * @param {COMMAND} commandType the hvm command type
+ * @returns {OPERATOR_SYMBOL} the operator symbol for the given hvm
+ * command type
+ */
+export const getOperatorSymbol = commandType => {
+  return OPERATOR_SYMBOL[Object.entries(COMMAND)
+    .reduce((acc, [key, value]) => value === commandType ? key : acc)]
+}
+
+/**
+ * Is the hvm command type one of the relational arithmetic hvm commands?
+ * @param {COMMAND} commandType the hvm command type
+ * @returns {boolean} `true` if command type is relational
+ */
+export const isRelational = commandType => {
+  return [COMMAND.GREATER_THAN, COMMAND.LESS_THAN, COMMAND.EQUAL]
+    .includes(commandType)
+}
+
+/**
+ * Is the hvm command type one of the unary arithmetic hvm commands?
+ * @param {COMMAND} commandType the hvm command type
+ * @returns {boolean} `true` if command type is unary
+ */
+export const isUnary = commandType => {
+  return [COMMAND.NEGATE, COMMAND.NOT].includes(commandType)
+}
+
+/**
+ * Is the hvm command type one of the binary arithmetic hvm commands?
+ * @param {COMMAND} commandType the hvm command type
+ * @returns {boolean} `true` if command type is binary
+ */
+export const isBinary = commandType => {
+  return [COMMAND.ADD, COMMAND.SUBTRACT, COMMAND.AND, COMMAND.OR]
+    .includes(commandType)
 }

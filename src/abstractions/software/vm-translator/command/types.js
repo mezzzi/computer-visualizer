@@ -41,9 +41,25 @@ export const SEGMENT = Object.freeze({
  * to some location in a valid segment
  */
 export const POINTER = Object.freeze({
-  SP: 'SP',
-  LCL: 'LCL',
-  ARG: 'ARG',
+  STACK: 'SP',
+  LOCAL: 'LCL',
+  ARGUMENT: 'ARG',
   THIS: 'THIS',
   THAT: 'THAT'
+})
+
+/**
+ * String symbols for the arithemetic operators that
+ * can be part of some hvm arithmetic command
+ */
+export const OPERATOR_SYMBOL = Object.freeze({
+  ADD: '+',
+  SUBTRACT: '-',
+  AND: '&',
+  OR: '|',
+  GREATER_THAN: 'GT',
+  LESS_THAN: 'LT',
+  EQUAL: 'EQ',
+  NOT: '!',
+  NEGATE: '-'
 })

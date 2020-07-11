@@ -65,6 +65,7 @@ const vms = {
   push constant 8
   add
   `,
+
   BasicTest: `
   // This file is part of www.nand2tetris.org
   // and the book "The Elements of Computing Systems"

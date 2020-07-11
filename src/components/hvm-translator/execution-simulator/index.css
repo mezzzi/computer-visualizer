@@ -1,0 +1,63 @@
+.simulatorContainer {
+  display: flex;
+  flex-wrap: wrap;
+  background-color: #795548;  
+}
+
+.quarterBox, .halfBox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  border: 1px solid rebeccapurple;
+  width: 50%;
+  height: 50%;
+  justify-content: center;
+  align-items: center;
+}
+
+.halfBox {
+  height: 100%
+}
+
+.romContainer {
+  display: block;
+  text-align: center;
+  width: 60%;
+  height: 60%;
+  border-top: none;
+  overflow-y: scroll;
+}
+
+.romWrapper {
+  flex-direction: column;
+  justify-content: flex-end;  
+}
+
+.romButton {
+  width: 60%;
+  height: 15%;
+  background-color: green;
+  color: black;
+  font-size: xx-large;  
+  cursor: pointer;
+  border: none;
+  margin: 2% 0;
+}
+
+.romButton:hover {
+  background-color: rgb(2, 26, 2);
+  color: white;
+}
+
+.hvmCommand {
+  background: black;
+  color: green;
+  padding: 3px;
+  margin: 1px 0;  
+}
+
+.stackBottom {
+  border: 1px solid black;
+  width: 70%;  
+}

@@ -354,5 +354,14 @@ class HVMParser {
     this.isInSlashStar = output.isInSlashStar
     return output.result
   }
+
+  /**
+   * This is not part of the official api, but is found
+   * convenient for the execution simulator
+   * @returns array of HVMCommand objects, generated after parsing
+   */
+  getCommands () {
+    return this.instructions
+  }
 }
 export default HVMParser

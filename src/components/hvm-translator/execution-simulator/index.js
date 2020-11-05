@@ -12,7 +12,6 @@ const ExecutionSimulator = () => {
   }]).getCommands())
   const [currentInstruction, setCurrentInstruction] = useState('')
   const [isUnary, setIsUnary] = useState(true)
-  const [isBinary, setIsBinary] = useState(true)
   const [stack, setStack] = useState([])
   const [op1, setOp1] = useState(null)
   const [op2, setOp2] = useState(null)
@@ -21,12 +20,14 @@ const ExecutionSimulator = () => {
 
   const popInstruction = () => {
     if (commands.length < 1) return
-    const command = commands[0]
+    const updatedCommands = [...commands]
+    const command = updatedCommands.shift()
     const commandType = command.getCommandType()
-    setCommands(commands.slice(1, commands.length))
+    setCommands(updatedCommands)
     const updatedStack = [...stack]
     if (commandType === COMMAND.PUSH) {
-      updatedStack.push(command.getArg2())
+      setOp1(null)
+      updatedStack.unshift(command.getArg2())
       setStack(updatedStack)
     }
     if (commandType === COMMAND.POP) {
@@ -39,30 +40,27 @@ const ExecutionSimulator = () => {
       COMMAND.GREATER_THAN, COMMAND.EQUAL
     ].includes(commandType)
     if (isCurrentUnary || isCurrentBinary) {
+      setOperator(commandType)
       setIsUnary(isCurrentUnary)
-      setIsBinary(isCurrentBinary)
       if (isCurrentUnary) {
-        const op1 = updatedStack.pop()
+        const op1 = updatedStack.shift()
         setOp1(op1)
         const output = getUnaryResult(op1, commandType)
         setResult(output)
-        updatedStack.push(output)
+        updatedStack.unshift(output)
         setStack(updatedStack)
-      }
-      if (isBinary) {
-        const op1 = updatedStack.pop()
-        const op2 = updatedStack.pop()
+      } else {
+        const op2 = updatedStack.shift()
+        const op1 = updatedStack.shift()
         setOp1(op1)
         setOp2(op2)
         const output = getBinaryResult(op1, commandType, op2)
         setResult(output)
-        updatedStack.push(output)
+        updatedStack.unshift(output)
         setStack(updatedStack)
       }
-      setStack(updatedStack)
-      setOperator(commandType)
     }
-    setCurrentInstruction(commands[0].getCommandType())
+    setCurrentInstruction(command.toString())
   }
 
   return (
@@ -76,7 +74,7 @@ const ExecutionSimulator = () => {
       <div className='quarterBox'>
         <div className='halfBox'>
           <Stack
-            width='80%'
+            width='90%'
             content={commands.map(com => com.toString())}
             hasAction
             onAction={popInstruction}
@@ -97,8 +95,8 @@ const ExecutionSimulator = () => {
             isUnary ? (
               <div className='cpuUnaryOps'>
                 <div>
-                  <span>{operator === null ? 'OP' : operator}</span>
-                  <span>{op1 === null ? 'OP1' : op1}</span>
+                  <span>{operator === null ? 'OP' : getOperatorSymbol(operator)}</span>
+                  <span>{op1 === null ? 'OP1' : `(${op1})`}</span>
                 </div>
                 <div>=</div>
                 <div>{result === null ? 'RES' : result}</div>
@@ -106,7 +104,7 @@ const ExecutionSimulator = () => {
             ) : (
               <div className='cpuTwoOps'>
                 <div>{op1 === null ? 'OP1' : op1}</div>
-                <div>{operator === null ? 'OP' : operator}</div>
+                <div>{operator === null ? 'OP' : getOperatorSymbol(operator)}</div>
                 <div>{op2 === null ? 'OP2' : op2}</div>
                 <div>=</div>
                 <div>{result === null ? 'RES' : result}</div>
@@ -133,19 +131,19 @@ const ExecutionSimulator = () => {
 const getBinaryResult = (op1, operator, op2) => {
   switch (operator) {
     case COMMAND.AND:
-      return op1 && op2 ? 1 : 0
+      return op1 & op2
     case COMMAND.OR:
-      return op1 || op2 ? 1 : 0
+      return op1 | op2
     case COMMAND.ADD:
       return op1 + op2
     case COMMAND.SUBTRACT:
       return op1 - op2
     case COMMAND.LESS_THAN:
-      return op1 < op2 ? 1 : 0
+      return op1 < op2 ? -1 : 0
     case COMMAND.GREATER_THAN:
-      return op1 > op2 ? 1 : 0
+      return op1 > op2 ? -1 : 0
     case COMMAND.EQUAL:
-      return op1 === op2 ? 1 : 0
+      return op1 === op2 ? -1 : 0
     default:
       return 0
   }
@@ -153,7 +151,32 @@ const getBinaryResult = (op1, operator, op2) => {
 
 const getUnaryResult = (op1, operator) => {
   const isNegate = operator === COMMAND.NEGATE
-  return isNegate ? -op1 : (!op1 ? 1 : 0)
+  return isNegate ? -op1 : ~op1
+}
+
+const getOperatorSymbol = operator => {
+  switch (operator) {
+    case COMMAND.AND:
+      return '&'
+    case COMMAND.OR:
+      return '|'
+    case COMMAND.ADD:
+      return '+'
+    case COMMAND.SUBTRACT:
+      return '-'
+    case COMMAND.LESS_THAN:
+      return '<'
+    case COMMAND.GREATER_THAN:
+      return '>'
+    case COMMAND.EQUAL:
+      return '==='
+    case COMMAND.NEGATE:
+      return '-'
+    case COMMAND.NOT:
+      return '~'
+    default:
+      return 0
+  }
 }
 
 export default ExecutionSimulator

@@ -1,0 +1,59 @@
+.stackWrapper {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  margin-bottom: 10px;
+}
+
+.bucketWrapper {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  width: 60%;
+  height: 60%;
+}
+
+.bucket {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  text-align: center;
+  border-top: none;
+  padding-top: 10px;
+  overflow-y: scroll;
+}
+
+.stackButton {
+  width: 60%;
+  height: 12%;
+  background-color: green;
+  color: black;
+  font-size: large;
+  cursor: pointer;
+  border: none;
+  margin: 2% 0;
+}
+
+.stackButton:hover {
+  background-color: rgb(2, 26, 2);
+  color: white;
+}
+
+.stackButton:focus {
+  outline: none;
+}
+
+.stackItem {
+  background: black;
+  color: green;
+  padding: 3px;
+  margin: 1px 0;
+}
+
+.stackBottom {
+  border: 1px solid black;
+  width: 70%;
+}

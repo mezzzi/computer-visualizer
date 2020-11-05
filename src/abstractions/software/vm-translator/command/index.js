@@ -271,6 +271,8 @@ class HVMCommand {
         result[1] = this.arg1
         result[2] = String(this.arg2)
         break
+      default:
+        break
     }
     return result
   }

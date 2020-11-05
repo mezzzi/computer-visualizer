@@ -25,7 +25,9 @@
     "extends": "react-app"
   },
   "standard": {
-    "env": [ "mocha"],
+    "env": [
+      "mocha"
+    ],
     "globals": [
       "describe",
       "context",

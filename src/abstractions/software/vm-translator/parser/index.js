@@ -3,6 +3,7 @@ import HVMCommand from '../command'
 import { isCommandType, isSegmentName, unCommentLine } from '../utils'
 import { COMMAND, SEGMENT } from '../command/types'
 import StringTokenizer from './tokenizer'
+import Emitter from '../../../../emitter'
 
 /**
   * Handles the parsing of a single HVM (Hack Virtual Machine) file and
@@ -77,8 +78,7 @@ class HVMParser {
      */
     this.tokenizer = undefined
 
-    // Parse files, and populate the `instructions` array
-    this.parseAllFiles(this.fileInfos)
+    this.parseAllFiles()
 
     // Reposition index, now that the `instructions` array is ready
     this.currentInstructionIndex = -1
@@ -163,12 +163,13 @@ class HVMParser {
    * @param {{className: string, file: string}[]} fileInfos An array
    * containing `fileInfo` objects
    */
-  parseAllFiles (fileInfos) {
-    fileInfos.forEach(fileInfo => {
+  parseAllFiles () {
+    this.fileInfos.forEach(fileInfo => {
       // class names are important for scoping static fields
       const className = fileInfo.className
       this.parseSingleFile(fileInfo.file, className)
     })
+    Emitter.emit('COMMANDS_PARSED', this.getCommands())
   }
 
   /**

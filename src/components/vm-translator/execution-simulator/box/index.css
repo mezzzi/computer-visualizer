@@ -1,0 +1,9 @@
+.box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  border: 1px solid green;
+  justify-content: center;
+  align-items: center;
+}

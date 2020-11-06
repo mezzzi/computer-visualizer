@@ -1,0 +1,18 @@
+.simulatorContainer {
+  display: flex;
+  flex-wrap: wrap;
+  background-color: #171514;
+  color: green
+}
+
+.cpuTwoOps {
+  display: flex;
+  width: 40%;
+  justify-content: space-around;
+}
+
+.cpuUnaryOps {
+  display: flex;
+  width: 20%;
+  justify-content: space-around;
+}

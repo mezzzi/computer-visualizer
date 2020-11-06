@@ -1,6 +1,7 @@
 import CommandException from '../command/exception'
 import HVMCommand from '../command'
 import { COMMAND, SEGMENT } from '../command/types'
+import Emitter from '../../../../emitter'
 
 class HVMCodeWriter {
   /**
@@ -82,11 +83,11 @@ class HVMCodeWriter {
           this.generatePushAssembly(segmentIndex, 'R3', false)
           break
         case SEGMENT.CONSTANT:
-          this.assembly.push(`@${segmentIndex}`)
-          this.assembly.push('D=A')
-          this.assembly.push('@SP')
-          this.assembly.push('A=M')
-          this.assembly.push('M=D')
+          {
+            const constPushAsm = [`@${segmentIndex}`, 'D=A', '@SP', 'A=M', 'M=D']
+            Emitter.emit('ASM', constPushAsm)
+            this.assembly.push(...constPushAsm)
+          }
           break
         case SEGMENT.STATIC:
           this.assembly.push(`@${command.getStringArg()}.${segmentIndex}`)

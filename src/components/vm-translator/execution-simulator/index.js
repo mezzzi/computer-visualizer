@@ -79,6 +79,7 @@ const ExecutionSimulator = () => {
 
   useEffect(() => {
     Emitter.on('ASM', (asm) => {
+      console.log('ASSEMBLY:', asm)
       const updatedAssembly = [...assembly.reverse().map(
         item => ({ ...item, color: 'green' }))]
       updatedAssembly.push(...asm.map(item => ({ item, color: 'yellow' })))

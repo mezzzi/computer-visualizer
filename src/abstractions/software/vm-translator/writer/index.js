@@ -9,6 +9,7 @@ class HVMCodeWriter {
      */
   constructor (hasSysInit) {
     // Holds the translated assembly lines
+    this.assemblyBuffer = []
     this.assembly = []
     this.shouldCallSysInit = false
     this.shouldCallSysInit = hasSysInit
@@ -51,6 +52,7 @@ class HVMCodeWriter {
       default:
         break
     }
+    this.flushAssemblyBuffer()
   }
 
   /**
@@ -83,18 +85,14 @@ class HVMCodeWriter {
           this.generatePushAssembly(segmentIndex, 'R3', false)
           break
         case SEGMENT.CONSTANT:
-          {
-            const constPushAsm = [`@${segmentIndex}`, 'D=A', '@SP', 'A=M', 'M=D']
-            Emitter.emit('ASM', constPushAsm)
-            this.assembly.push(...constPushAsm)
-          }
+          this.pushAssembly([`@${segmentIndex}`, 'D=A', '@SP', 'A=M', 'M=D'])
           break
         case SEGMENT.STATIC:
-          this.assembly.push(`@${command.getStringArg()}.${segmentIndex}`)
-          this.assembly.push('D=M')
-          this.assembly.push('@SP')
-          this.assembly.push('A=M')
-          this.assembly.push('M=D')
+          this.pushAssembly(`@${command.getStringArg()}.${segmentIndex}`)
+          this.pushAssembly('D=M')
+          this.pushAssembly('@SP')
+          this.pushAssembly('A=M')
+          this.pushAssembly('M=D')
           break
         default:
           throw new CommandException(`Invalid segement code for a push operation: ${segmentCode}`)
@@ -122,13 +120,13 @@ class HVMCodeWriter {
           break
         case SEGMENT.STATIC:
           // Get stack top value, and put it in D
-          this.assembly.push('@SP')
-          this.assembly.push('A=M-1')
-          this.assembly.push('D=M')
+          this.pushAssembly('@SP')
+          this.pushAssembly('A=M-1')
+          this.pushAssembly('D=M')
           // transfer the stack top value, that was in D, to the
           // address pointed by the static variable
-          this.assembly.push(`@${command.getStringArg()}.${segmentIndex}`)
-          this.assembly.push('M=D')
+          this.pushAssembly(`@${command.getStringArg()}.${segmentIndex}`)
+          this.pushAssembly('M=D')
           break
         default:
           throw new CommandException(`Invalid segment code for a pop operation: ${segmentCode}`)
@@ -137,6 +135,7 @@ class HVMCodeWriter {
     } else {
       throw new CommandException('Non push or pop command given to method writePushPop')
     }
+    this.flushAssemblyBuffer()
   }
 
   /**
@@ -145,10 +144,10 @@ class HVMCodeWriter {
    */
   writeInit () {
     // set SP = 256
-    this.assembly.push('@256')
-    this.assembly.push('D=A')
-    this.assembly.push('@SP')
-    this.assembly.push('M=D')
+    this.pushAssembly('@256')
+    this.pushAssembly('D=A')
+    this.pushAssembly('@SP')
+    this.pushAssembly('M=D')
     // call Sys.init
     if (this.shouldCallSysInit) {
       const command = new HVMCommand(COMMAND.CALL)
@@ -156,6 +155,7 @@ class HVMCodeWriter {
       command.setArg2(0)
       this.writeCall(command)
     }
+    this.flushAssemblyBuffer()
   }
 
   /**
@@ -168,14 +168,14 @@ class HVMCodeWriter {
     // get function name
     const functionName = command.getArg1()
     // devise a return address label
-    const returnLabel = `line${this.assembly.length}`
+    const returnLabel = `line${this.getAssemblyLength()}`
     // write return address label
-    this.assembly.push(`@${returnLabel}`)
+    this.pushAssembly(`@${returnLabel}`)
     // push return address to stack top
-    this.assembly.push('D=A')
-    this.assembly.push('@SP')
-    this.assembly.push('A=M')
-    this.assembly.push('M=D')
+    this.pushAssembly('D=A')
+    this.pushAssembly('@SP')
+    this.pushAssembly('A=M')
+    this.pushAssembly('M=D')
     // increment stack pointer
     this.incrementSP()
     // save LCL at stack top
@@ -197,24 +197,25 @@ class HVMCodeWriter {
     // calculate SP-n-5, for repositioning the ARG pointer
     // note that incrementSP is called 5 times after arguments
     // have been pushed
-    this.assembly.push(`@${n}`)
-    this.assembly.push('D=A')
-    this.assembly.push('@5')
-    this.assembly.push('D=D+A')
-    this.assembly.push('@SP')
-    this.assembly.push('D=M-D')
-    this.assembly.push('@ARG')
-    this.assembly.push('M=D')
+    this.pushAssembly(`@${n}`)
+    this.pushAssembly('D=A')
+    this.pushAssembly('@5')
+    this.pushAssembly('D=D+A')
+    this.pushAssembly('@SP')
+    this.pushAssembly('D=M-D')
+    this.pushAssembly('@ARG')
+    this.pushAssembly('M=D')
     // reposition LCL to current value of SP
-    this.assembly.push('@SP')
-    this.assembly.push('D=M')
-    this.assembly.push('@LCL')
-    this.assembly.push('M=D')
+    this.pushAssembly('@SP')
+    this.pushAssembly('D=M')
+    this.pushAssembly('@LCL')
+    this.pushAssembly('M=D')
     // jump to the location of the function
-    this.assembly.push(`@${functionName}`)
-    this.assembly.push('0;JMP')
+    this.pushAssembly(`@${functionName}`)
+    this.pushAssembly('0;JMP')
     // insert the label of the return address
-    this.assembly.push(`(${returnLabel})`)
+    this.pushAssembly(`(${returnLabel})`)
+    this.flushAssemblyBuffer()
   }
 
   /**
@@ -223,7 +224,8 @@ class HVMCodeWriter {
    */
   writeLabel (command) {
     const labelName = command.getArg1()
-    this.assembly.push(`(${labelName})`)
+    this.pushAssembly(`(${labelName})`)
+    this.flushAssemblyBuffer()
   }
 
   /**
@@ -233,9 +235,10 @@ class HVMCodeWriter {
   writeGoto (command) {
     const labelName = command.getArg1()
     // load jump address to A
-    this.assembly.push(`@${labelName}`)
+    this.pushAssembly(`@${labelName}`)
     // jump unconditionally to address pointed by A
-    this.assembly.push('0;JMP')
+    this.pushAssembly('0;JMP')
+    this.flushAssemblyBuffer()
   }
 
   /**
@@ -245,14 +248,15 @@ class HVMCodeWriter {
   writeIf (command) {
     const labelName = command.getArg1()
     // get stack top, the value that will be used as the jump condition
-    this.assembly.push('@SP')
-    this.assembly.push('A=M-1')
-    this.assembly.push('D=M')
+    this.pushAssembly('@SP')
+    this.pushAssembly('A=M-1')
+    this.pushAssembly('D=M')
     // decrement SP
     this.decrementSP()
     // jump if stack top value is not zero
-    this.assembly.push(`@${labelName}`)
-    this.assembly.push('D;JNE')
+    this.pushAssembly(`@${labelName}`)
+    this.pushAssembly('D;JNE')
+    this.flushAssemblyBuffer()
   }
 
   /**
@@ -262,34 +266,35 @@ class HVMCodeWriter {
     // put return address in general register, since it will be lost when return value is
     // put where the first argument was placed (return address is pushed after
     // arguments are pushed )
-    this.assembly.push('@LCL')
-    this.assembly.push('D=M')
-    this.assembly.push('@5')
-    this.assembly.push('A=D-A')
-    this.assembly.push('D=M')
-    this.assembly.push('@R13')
-    this.assembly.push('M=D')
+    this.pushAssembly('@LCL')
+    this.pushAssembly('D=M')
+    this.pushAssembly('@5')
+    this.pushAssembly('A=D-A')
+    this.pushAssembly('D=M')
+    this.pushAssembly('@R13')
+    this.pushAssembly('M=D')
     // put return value to a new stack top (to where the first argument was)
-    this.assembly.push('@SP')
-    this.assembly.push('A=M-1')
-    this.assembly.push('D=M')
-    this.assembly.push('@ARG')
-    this.assembly.push('A=M')
-    this.assembly.push('M=D')
+    this.pushAssembly('@SP')
+    this.pushAssembly('A=M-1')
+    this.pushAssembly('D=M')
+    this.pushAssembly('@ARG')
+    this.pushAssembly('A=M')
+    this.pushAssembly('M=D')
     // repositon SP just after the return value
-    this.assembly.push('@ARG')
-    this.assembly.push('D=M')
-    this.assembly.push('@SP')
-    this.assembly.push('M=D+1')
+    this.pushAssembly('@ARG')
+    this.pushAssembly('D=M')
+    this.pushAssembly('@SP')
+    this.pushAssembly('M=D+1')
     // restore THAT, THIS, ARG, LCL
     this.restorePointer('THAT', 1)
     this.restorePointer('THIS', 2)
     this.restorePointer('ARG', 3)
     this.restorePointer('LCL', 4)
     // go to RET
-    this.assembly.push('@R13')
-    this.assembly.push('A=M')
-    this.assembly.push('0;JMP')
+    this.pushAssembly('@R13')
+    this.pushAssembly('A=M')
+    this.pushAssembly('0;JMP')
+    this.flushAssemblyBuffer()
   }
 
   /**
@@ -302,29 +307,30 @@ class HVMCodeWriter {
     const localsAllocationLoop = `${functionName}_localVarsInitLoop`
     const localsAllocationDone = `${functionName}_localVarsInitDone`
     // write the function label
-    this.assembly.push(`(${functionName})`)
+    this.pushAssembly(`(${functionName})`)
     // store the num locals constant on D
-    this.assembly.push(`@${numLocals}`)
-    this.assembly.push('D=A')
+    this.pushAssembly(`@${numLocals}`)
+    this.pushAssembly('D=A')
     // mark the allocation loop label
-    this.assembly.push(`(${localsAllocationLoop})`)
+    this.pushAssembly(`(${localsAllocationLoop})`)
     // load local allocation done address
-    this.assembly.push(`@${localsAllocationDone}`)
+    this.pushAssembly(`@${localsAllocationDone}`)
     // if D = 0, loop is done numLocals times, so jump to the end
-    this.assembly.push('D;JEQ')
+    this.pushAssembly('D;JEQ')
     // decrement numLocals by 1
-    this.assembly.push('D=D-1')
+    this.pushAssembly('D=D-1')
     // initialize local variable to zero
-    this.assembly.push('@SP')
-    this.assembly.push('A=M')
-    this.assembly.push('M=0')
+    this.pushAssembly('@SP')
+    this.pushAssembly('A=M')
+    this.pushAssembly('M=0')
     // increment SP by 1, to initialize next local variable
     this.incrementSP()
     // jump back to loop (so next local variable can be initialized)
-    this.assembly.push(`@${localsAllocationLoop}`)
-    this.assembly.push('0;JMP')
+    this.pushAssembly(`@${localsAllocationLoop}`)
+    this.pushAssembly('0;JMP')
     // mark locals allocation done label
-    this.assembly.push(`(${localsAllocationDone})`)
+    this.pushAssembly(`(${localsAllocationDone})`)
+    this.flushAssemblyBuffer()
   }
 
   /**
@@ -338,24 +344,24 @@ class HVMCodeWriter {
   generateRelationalAssembly (name) {
     this.prepareFirstAndSecondArgs()
     // store the diffrence between the first and the second argument in M
-    this.assembly.push('D=M-D')
+    this.pushAssembly('D=M-D')
     // jump to M=true (M=-1) on condition
-    this.assembly.push(`@line${this.assembly.length + 5}`)
-    this.assembly.push(`D;J${name}`)
+    this.pushAssembly(`@line${this.getAssemblyLength() + 5}`)
+    this.pushAssembly(`D;J${name}`)
     // condition not satisfied, set M=false (M=0)
-    this.assembly.push('D=0')
+    this.pushAssembly('D=0')
     // skip set M=true, since it is already set to false.
-    this.assembly.push(`@line${this.assembly.length + 4}`)
-    this.assembly.push('0;JMP')
+    this.pushAssembly(`@line${this.getAssemblyLength() + 4}`)
+    this.pushAssembly('0;JMP')
     // set M=true
-    this.assembly.push(`(line${this.assembly.length})`)
-    this.assembly.push('D=-1')
-    this.assembly.push(`(line${this.assembly.length})`)
+    this.pushAssembly(`(line${this.getAssemblyLength()})`)
+    this.pushAssembly('D=-1')
+    this.pushAssembly(`(line${this.getAssemblyLength()})`)
     // transfer D to M
-    this.assembly.push('@SP')
-    this.assembly.push('A=M-1')
-    this.assembly.push('A=A-1')
-    this.assembly.push('M=D')
+    this.pushAssembly('@SP')
+    this.pushAssembly('A=M-1')
+    this.pushAssembly('A=A-1')
+    this.pushAssembly('M=D')
     // decrement sp
     this.decrementSP()
   }
@@ -363,16 +369,16 @@ class HVMCodeWriter {
   generateBinaryOpAssembly (op) {
     this.prepareFirstAndSecondArgs()
     // push result back to M (where first arg is located)
-    this.assembly.push(`M=M${op}D`)
+    this.pushAssembly(`M=M${op}D`)
     // decrement stack pointer
     this.decrementSP()
   }
 
   generateUnaryOpAssembly (op) {
     // get stack top value to M
-    this.assembly.push('@SP')
-    this.assembly.push('A=M-1')
-    this.assembly.push(`M=${op}M`)
+    this.pushAssembly('@SP')
+    this.pushAssembly('A=M-1')
+    this.pushAssembly(`M=${op}M`)
   }
 
   /**
@@ -380,65 +386,65 @@ class HVMCodeWriter {
      */
   prepareFirstAndSecondArgs () {
     // put second argument on D
-    this.assembly.push('@SP')
-    this.assembly.push('A=M-1')
-    this.assembly.push('D=M')
+    this.pushAssembly('@SP')
+    this.pushAssembly('A=M-1')
+    this.pushAssembly('D=M')
     // let M point to first argument, located at SP - 2
-    this.assembly.push('@SP')
-    this.assembly.push('A=M-1')
-    this.assembly.push('A=A-1')
+    this.pushAssembly('@SP')
+    this.pushAssembly('A=M-1')
+    this.pushAssembly('A=A-1')
   }
 
   generatePushAssembly (index, basePointer, isPointer = true) {
     // store index to D
-    this.assembly.push(`@${index}`)
-    this.assembly.push('D=A')
+    this.pushAssembly(`@${index}`)
+    this.pushAssembly('D=A')
     // add index to base address
-    this.assembly.push(`@${basePointer}`)
+    this.pushAssembly(`@${basePointer}`)
     if (isPointer) {
-      this.assembly.push('A=M+D')
+      this.pushAssembly('A=M+D')
     } else {
-      this.assembly.push('A=A+D')
+      this.pushAssembly('A=A+D')
     }
     // store pointed value in D
-    this.assembly.push('D=M')
+    this.pushAssembly('D=M')
     // transfer pointed value to stack top
-    this.assembly.push('@SP')
-    this.assembly.push('A=M')
-    this.assembly.push('M=D')
+    this.pushAssembly('@SP')
+    this.pushAssembly('A=M')
+    this.pushAssembly('M=D')
   }
 
   generatePopAssembly (index, basePointer, isPointer = true) {
     // store index (offest from the base address) on D
-    this.assembly.push(`@${index}`)
-    this.assembly.push('D=A')
+    this.pushAssembly(`@${index}`)
+    this.pushAssembly('D=A')
     // add index(offset) to base address, and store the sum on a general purpose register
-    this.assembly.push(`@${basePointer}`)
+    this.pushAssembly(`@${basePointer}`)
     if (isPointer) {
-      this.assembly.push('D=M+D')
+      this.pushAssembly('D=M+D')
     } else {
-      this.assembly.push('D=A+D')
+      this.pushAssembly('D=A+D')
     }
-    this.assembly.push('@R13')
-    this.assembly.push('M=D')
+    this.pushAssembly('@R13')
+    this.pushAssembly('M=D')
     // put stack top value on D
-    this.assembly.push('@SP')
-    this.assembly.push('A=M-1')
-    this.assembly.push('D=M')
+    this.pushAssembly('@SP')
+    this.pushAssembly('A=M-1')
+    this.pushAssembly('D=M')
     // put stack top value on the destination address
-    this.assembly.push('@R13')
-    this.assembly.push('A=M')
-    this.assembly.push('M=D')
+    this.pushAssembly('@R13')
+    this.pushAssembly('A=M')
+    this.pushAssembly('M=D')
   }
 
   incrementSP () {
-    this.assembly.push('@SP')
-    this.assembly.push('M=M+1')
+    this.pushAssembly('@SP')
+    this.pushAssembly('M=M+1')
   }
 
   decrementSP () {
-    this.assembly.push('@SP')
-    this.assembly.push('M=M-1')
+    this.pushAssembly('@SP')
+    this.pushAssembly('M=M-1')
   }
 
   /**
@@ -447,12 +453,12 @@ class HVMCodeWriter {
      */
   savePointerAtStackTop (name) {
     // get the pointed address, and put it on D
-    this.assembly.push(`@${name}`)
-    this.assembly.push('D=M')
+    this.pushAssembly(`@${name}`)
+    this.pushAssembly('D=M')
     // transfer value from D to stack top
-    this.assembly.push('@SP')
-    this.assembly.push('A=M')
-    this.assembly.push('M=D')
+    this.pushAssembly('@SP')
+    this.pushAssembly('A=M')
+    this.pushAssembly('M=D')
   }
 
   /**
@@ -462,16 +468,30 @@ class HVMCodeWriter {
      */
   restorePointer (name, offset) {
     // put the address value at LCL in D
-    this.assembly.push('@LCL')
-    this.assembly.push('D=M')
-    this.assembly.push(`@${offset}`)
+    this.pushAssembly('@LCL')
+    this.pushAssembly('D=M')
+    this.pushAssembly(`@${offset}`)
     // set address as LCL-offset
-    this.assembly.push('A=D-A')
+    this.pushAssembly('A=D-A')
     // set D = M[LCL-offset]
-    this.assembly.push('D=M')
+    this.pushAssembly('D=M')
     // now POINTER = M[LCL-offset]
-    this.assembly.push(`@${name}`)
-    this.assembly.push('M=D')
+    this.pushAssembly(`@${name}`)
+    this.pushAssembly('M=D')
+  }
+
+  pushAssembly (assembly) {
+    this.assemblyBuffer.push(...(assembly instanceof Array ? assembly : [assembly]))
+  }
+
+  flushAssemblyBuffer () {
+    Emitter.emit('ASM', [...this.assemblyBuffer])
+    this.assembly.push(...this.assemblyBuffer)
+    this.assemblyBuffer = []
+  }
+
+  getAssemblyLength () {
+    return this.assembly.length + this.assemblyBuffer.length
   }
 }
 export default HVMCodeWriter

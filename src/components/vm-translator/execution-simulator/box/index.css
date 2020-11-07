@@ -1,9 +1,22 @@
 .box {
   display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border: 1px solid black;
+}
+
+.boxTitle {
+  height: 15%;
+  width: 100%;
+  background: #252323;
+  display: flex;
   justify-content: center;
   align-items: center;
-  box-sizing: border-box;
-  border: 1px solid green;
+}
+
+.boxContent {
+  width: 100%;
+  display: flex;
   justify-content: center;
   align-items: center;
 }

@@ -12,8 +12,6 @@
   display: flex;
   flex-direction: column-reverse;
   justify-content: flex-start;
-  width: 60%;
-  height: 60%;
 }
 
 .bucket {
@@ -25,7 +23,6 @@
 }
 
 .stackButton {
-  width: 60%;
   height: 12%;
   background-color: green;
   color: black;
@@ -36,8 +33,7 @@
 }
 
 .stackButton:hover {
-  background-color: rgb(2, 26, 2);
-  color: white;
+  background-color: yellow;
 }
 
 .stackButton:focus {
@@ -50,6 +46,5 @@
 }
 
 .stackBottom {
-  border: 1px solid black;
-  width: 70%;
+  border: 1px solid green;
 }

@@ -89,13 +89,9 @@ const ExecutionSimulator = () => {
   return (
     <div
       className='simulatorContainer'
-      style={{
-        width: `${window.innerWidth}px`,
-        height: `${window.innerHeight}px`
-      }}
     >
       <Box>
-        <Box height='100%'>
+        <Box height='100%' title='Hack Virtual Machine'>
           <Stack
             width='90%'
             content={commands.map(com => com.toString())}
@@ -104,21 +100,19 @@ const ExecutionSimulator = () => {
             actionName='NEXT'
           />
         </Box>
-        {
-          currentInstruction
-            ? <Box height='100%'>{currentInstruction}</Box>
-            : <Box height='100%'>CurrentInstruction</Box>
-        }
+        <Box height='100%' title='Current VM Command'>
+          {currentInstruction || 'Current Instruction'}
+        </Box>
       </Box>
       <Box>
-        <Box height='100%'>
+        <Box height='100%' title='Hack Assembly'>
           <Stack
             width='70%'
             bottomGrowing
             content={assembly}
           />
         </Box>
-        <Box height='100%'>
+        <Box height='100%' title='Hack CPU'>
           {
             op1 === null ? (
               <div>CPU</div>
@@ -145,8 +139,8 @@ const ExecutionSimulator = () => {
           }
         </Box>
       </Box>
-      <Box>SEGMENT</Box>
-      <Box>
+      <Box title='Virtual Memory Segments'>SEGMENT</Box>
+      <Box title='Global Stack'>
         <Stack
           width='40%'
           content={stack}

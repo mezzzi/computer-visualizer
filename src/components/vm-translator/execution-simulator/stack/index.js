@@ -1,11 +1,22 @@
 import React from 'react'
 import './index.css'
 
-const Bucket = ({ width, content, hasAction, onAction, actionName, bottomGrowing }) => {
+const Bucket = ({
+  width,
+  height,
+  content,
+  hasAction,
+  onAction,
+  actionName,
+  bottomGrowing
+}) => {
   return (
-    <div style={{ width }} className='stackWrapper'>
+    <div className='stackWrapper'>
       <div
         className='bucketWrapper'
+        style={{
+          width: width || '60%', height: height || '80%'
+        }}
       >
         <div
           className='bucket'
@@ -30,12 +41,20 @@ const Bucket = ({ width, content, hasAction, onAction, actionName, bottomGrowing
           }
         </div>
       </div>
-      <div className='stackBottom' />
+      <div
+        className='stackBottom'
+        style={{
+          width: `${(parseFloat(width) || 60) * 7 / 6}%`
+        }}
+      />
       {
         hasAction &&
           <button
             className='stackButton'
             onClick={onAction}
+            style={{
+              width: width || '60%'
+            }}
           >
             {actionName}
           </button>

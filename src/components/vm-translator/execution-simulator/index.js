@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import './index.css'
 import { COMMAND } from 'abstractions/software/vm-translator/command/types'
 import Emitter from '../../../emitter'
@@ -6,6 +6,12 @@ import Box from './box'
 import Stack from './stack'
 import StackTest from './files'
 import HVMTranslator from 'abstractions/software/vm-translator'
+import {
+  getUnaryResult,
+  getBinaryResult,
+  getOperatorSymbol,
+  drawDiv
+} from './util'
 
 const ExecutionSimulator = () => {
   const [commands, setCommands] = useState([])
@@ -18,8 +24,11 @@ const ExecutionSimulator = () => {
   const [result, setResult] = useState(null)
   const [assembly, setAssembly] = useState([])
   const [translator, setTranslator] = useState(null)
+  const [commandStackBoundingDiv, setCommandStackBoundingDiv] = useState(null)
+  const [simulateModeOn] = useState(true)
+  const currentInstrnRef = useRef(null)
 
-  const popInstruction = () => {
+  const execNextVmCommand = (vmCommandDiv) => {
     translator.step()
     if (commands.length < 1) return
     const updatedCommands = [...commands]
@@ -27,6 +36,57 @@ const ExecutionSimulator = () => {
     const commandType = command.getCommandType()
     setCommands(updatedCommands)
     const updatedStack = [...stack]
+
+    if (simulateModeOn) {
+      const commandBoundingRect = vmCommandDiv.getBoundingClientRect()
+      const boundingRect = {
+        left: commandBoundingRect.left,
+        top: commandBoundingRect.top,
+        width: commandBoundingRect.width,
+        height: commandBoundingRect.height
+      }
+      const bucketBoundingRect = commandStackBoundingDiv.getBoundingClientRect()
+      boundingRect.top = boundingRect.top - boundingRect.height
+
+      const currentInstrBoundingRect = currentInstrnRef.current.getBoundingClientRect()
+
+      const movingCommand = drawDiv({
+        boundingRect,
+        name: 'vmCommand',
+        color: 'yellow',
+        text: command.toString()
+      })
+
+      let upMoveDone = false
+      let rightMoveDone = false
+      const simulatorInterval = setInterval(() => {
+        if (!upMoveDone) {
+          if (boundingRect.top < bucketBoundingRect.top + boundingRect.height / 2) {
+            upMoveDone = true
+          } else {
+            movingCommand.style.top = `${boundingRect.top}px`
+            boundingRect.top = boundingRect.top - 5
+          }
+        }
+        if (upMoveDone && !rightMoveDone) {
+          if (boundingRect.left > currentInstrBoundingRect.left) {
+            rightMoveDone = true
+          } else {
+            movingCommand.style.left = `${boundingRect.left}px`
+            boundingRect.left = boundingRect.left + 10
+          }
+        }
+        if (upMoveDone && rightMoveDone) {
+          if (boundingRect.top > currentInstrBoundingRect.top) {
+            clearInterval(simulatorInterval)
+          } else {
+            movingCommand.style.top = `${boundingRect.top}px`
+            boundingRect.top = boundingRect.top + 5
+          }
+        }
+      }, 50)
+    }
+
     if (commandType === COMMAND.PUSH) {
       setOp1(null)
       updatedStack.unshift(command.getArg2())
@@ -62,7 +122,7 @@ const ExecutionSimulator = () => {
         setStack(updatedStack)
       }
     }
-    setCurrentInstruction(command.toString())
+    !simulateModeOn && setCurrentInstruction(command.toString())
   }
 
   useEffect(() => {
@@ -79,7 +139,6 @@ const ExecutionSimulator = () => {
 
   useEffect(() => {
     Emitter.on('ASM', (asm) => {
-      console.log('ASSEMBLY:', asm)
       const updatedAssembly = [...assembly.reverse().map(
         item => ({ ...item, color: 'green' }))]
       updatedAssembly.push(...asm.map(item => ({ item, color: 'yellow' })))
@@ -92,17 +151,27 @@ const ExecutionSimulator = () => {
       className='simulatorContainer'
     >
       <Box>
-        <Box height='100%' title='Hack Virtual Machine'>
+        <Box
+          height='100%'
+          title='Hack Virtual Machine'
+          setContentBoundingDiv={setCommandStackBoundingDiv}
+        >
           <Stack
             width='90%'
+            height='60%'
             content={commands.map(com => com.toString())}
             hasAction
-            onAction={popInstruction}
+            onAction={execNextVmCommand}
             actionName='NEXT'
           />
         </Box>
-        <Box height='100%' title='Current VM Command'>
-          {currentInstruction || 'Current Instruction'}
+        <Box
+          height='100%'
+          title='Current VM Command'
+        >
+          <div ref={currentInstrnRef} className='stackItem'>
+            {currentInstruction || 'Current Instruction'}
+          </div>
         </Box>
       </Box>
       <Box>
@@ -149,57 +218,6 @@ const ExecutionSimulator = () => {
       </Box>
     </div>
   )
-}
-
-const getBinaryResult = (op1, operator, op2) => {
-  switch (operator) {
-    case COMMAND.AND:
-      return op1 & op2
-    case COMMAND.OR:
-      return op1 | op2
-    case COMMAND.ADD:
-      return op1 + op2
-    case COMMAND.SUBTRACT:
-      return op1 - op2
-    case COMMAND.LESS_THAN:
-      return op1 < op2 ? -1 : 0
-    case COMMAND.GREATER_THAN:
-      return op1 > op2 ? -1 : 0
-    case COMMAND.EQUAL:
-      return op1 === op2 ? -1 : 0
-    default:
-      return 0
-  }
-}
-
-const getUnaryResult = (op1, operator) => {
-  const isNegate = operator === COMMAND.NEGATE
-  return isNegate ? -op1 : ~op1
-}
-
-const getOperatorSymbol = operator => {
-  switch (operator) {
-    case COMMAND.AND:
-      return '&'
-    case COMMAND.OR:
-      return '|'
-    case COMMAND.ADD:
-      return '+'
-    case COMMAND.SUBTRACT:
-      return '-'
-    case COMMAND.LESS_THAN:
-      return '<'
-    case COMMAND.GREATER_THAN:
-      return '>'
-    case COMMAND.EQUAL:
-      return '==='
-    case COMMAND.NEGATE:
-      return '-'
-    case COMMAND.NOT:
-      return '~'
-    default:
-      return 0
-  }
 }
 
 export default ExecutionSimulator

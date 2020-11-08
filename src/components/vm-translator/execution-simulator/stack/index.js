@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import './index.css'
 
 const Bucket = ({
@@ -10,6 +10,8 @@ const Bucket = ({
   actionName,
   bottomGrowing
 }) => {
+  const firstItemDivRef = useRef(null)
+  const firstItem = content[0]
   return (
     <div className='stackWrapper'>
       <div
@@ -26,10 +28,25 @@ const Bucket = ({
           }}
         >
           {
-            content.map((item, index) => (
+            firstItem && (
+              <div
+                ref={firstItemDivRef}
+                className='stackItem'
+                key={0}
+                style={{
+                  color: firstItem.color || 'green',
+                  background: firstItem.background || 'black'
+                }}
+              >
+                {firstItem.item || firstItem}
+              </div>
+            )
+          }
+          {
+            content.slice(1, content.length).map((item, index) => (
               <div
                 className='stackItem'
-                key={index}
+                key={index + 1}
                 style={{
                   color: item.color || 'green',
                   background: item.background || 'black'
@@ -51,7 +68,7 @@ const Bucket = ({
         hasAction &&
           <button
             className='stackButton'
-            onClick={onAction}
+            onClick={() => onAction(firstItemDivRef.current)}
             style={{
               width: width || '60%'
             }}

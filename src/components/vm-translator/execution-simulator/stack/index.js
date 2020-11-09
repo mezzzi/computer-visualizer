@@ -8,21 +8,36 @@ const Bucket = ({
   hasAction,
   onAction,
   actionName,
-  bottomGrowing
+  bottomGrowing,
+  actionDisabled
 }) => {
   const firstItemDivRef = useRef(null)
   const firstItem = content[0]
   return (
     <div className='stackWrapper'>
+      {
+        bottomGrowing && (
+          <div
+            className='stackBottom'
+            style={{
+              width: `${(parseFloat(width) || 60) * 7 / 6}%`
+            }}
+          />
+        )
+      }
       <div
         className='bucketWrapper'
         style={{
-          width: width || '60%', height: height || '80%'
+          width: width || '60%',
+          height: height || '80%',
+          flexDirection: bottomGrowing ? 'column' : 'column-reverse'
         }}
       >
         <div
           className='bucket'
           style={{
+            paddingTop: bottomGrowing ? '0' : '10px',
+            paddingBottom: bottomGrowing ? '10px' : '0',
             flexDirection: bottomGrowing ? 'column-reverse' : 'column',
             justifyContent: bottomGrowing ? 'flex-start' : 'flex-start'
           }}
@@ -58,15 +73,20 @@ const Bucket = ({
           }
         </div>
       </div>
-      <div
-        className='stackBottom'
-        style={{
-          width: `${(parseFloat(width) || 60) * 7 / 6}%`
-        }}
-      />
+      {
+        !bottomGrowing && (
+          <div
+            className='stackBottom'
+            style={{
+              width: `${(parseFloat(width) || 60) * 7 / 6}%`
+            }}
+          />
+        )
+      }
       {
         hasAction &&
           <button
+            disabled={actionDisabled || false}
             className='stackButton'
             onClick={() => onAction(firstItemDivRef.current)}
             style={{

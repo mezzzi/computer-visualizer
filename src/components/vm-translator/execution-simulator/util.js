@@ -50,28 +50,3 @@ export const getOperatorSymbol = operator => {
       return 0
   }
 }
-
-export const drawDiv = ({ boundingRect, name, color, text }) => {
-  const oldDiv = document.getElementById(name)
-  oldDiv && oldDiv.remove()
-  const div = document.createElement('div')
-  div.id = name
-  div.className = name
-  const style = {
-    position: 'fixed',
-    left: `${boundingRect.left}px`,
-    top: `${boundingRect.top}px`,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: color,
-    width: `${boundingRect.width}px`,
-    height: `${boundingRect.height}px`
-  }
-  Object.entries(style).forEach(([key, value]) => {
-    div.style[key] = value
-  })
-  document.getElementsByTagName('body')[0].appendChild(div)
-  div.innerHTML = text
-  return div
-}

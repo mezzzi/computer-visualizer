@@ -12,7 +12,7 @@ const Bucket = ({
   actionDisabled
 }) => {
   const firstItemDivRef = useRef(null)
-  const firstItem = content[0]
+  const lastInvisibleItemRef = useRef(null)
   return (
     <div className='stackWrapper'>
       {
@@ -50,35 +50,22 @@ const Bucket = ({
                   background: 'transparent',
                   justifySelf: 'flex-end'
                 }}
+                ref={index === 2 ? lastInvisibleItemRef : undefined}
               >
                 ''
               </div>
             ))
           }
           {
-            firstItem && (
-              <div
-                ref={firstItemDivRef}
-                className='stackItem'
-                key={3}
-                style={{
-                  color: firstItem.color || 'green',
-                  background: firstItem.background || 'black'
-                }}
-              >
-                {firstItem.item || firstItem}
-              </div>
-            )
-          }
-          {
-            content.slice(1, content.length).map((item, index) => (
+            content.map((item, index) => (
               <div
                 className='stackItem'
-                key={index + 4}
+                key={index + 3}
                 style={{
                   color: item.color || 'green',
                   background: item.background || 'black'
                 }}
+                ref={index === 0 ? firstItemDivRef : undefined}
               >
                 {item.item || item}
               </div>
@@ -101,7 +88,9 @@ const Bucket = ({
           <button
             disabled={actionDisabled || false}
             className='stackButton'
-            onClick={() => onAction(firstItemDivRef.current)}
+            onClick={() => onAction(
+              firstItemDivRef.current,
+              lastInvisibleItemRef.current)}
             style={{
               width: width || '60%'
             }}

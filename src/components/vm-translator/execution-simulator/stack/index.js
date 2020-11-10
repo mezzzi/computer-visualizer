@@ -36,18 +36,31 @@ const Bucket = ({
         <div
           className='bucket'
           style={{
-            paddingTop: bottomGrowing ? '0' : '10px',
-            paddingBottom: bottomGrowing ? '10px' : '0',
             flexDirection: bottomGrowing ? 'column-reverse' : 'column',
             justifyContent: bottomGrowing ? 'flex-start' : 'flex-start'
           }}
         >
           {
+            [0, 1, 2].map((index) => (
+              <div
+                className='stackItem'
+                key={index}
+                style={{
+                  color: 'transparent',
+                  background: 'transparent',
+                  justifySelf: 'flex-end'
+                }}
+              >
+                ''
+              </div>
+            ))
+          }
+          {
             firstItem && (
               <div
                 ref={firstItemDivRef}
                 className='stackItem'
-                key={0}
+                key={3}
                 style={{
                   color: firstItem.color || 'green',
                   background: firstItem.background || 'black'
@@ -61,7 +74,7 @@ const Bucket = ({
             content.slice(1, content.length).map((item, index) => (
               <div
                 className='stackItem'
-                key={index + 1}
+                key={index + 4}
                 style={{
                   color: item.color || 'green',
                   background: item.background || 'black'

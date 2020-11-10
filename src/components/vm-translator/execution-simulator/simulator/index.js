@@ -27,9 +27,11 @@ export const simulateDivMotion = ({
   sourceRectDiv,
   sourceBoundingDiv,
   destinationRectDiv,
+  destinationRect,
   name = 'movingDiv',
   color = 'yellow',
-  text = 'moving div'
+  text = 'moving div',
+  setIsSimulating
 }) => {
   const commandBoundingRect = sourceRectDiv.getBoundingClientRect()
   const boundingRect = {
@@ -41,7 +43,9 @@ export const simulateDivMotion = ({
   const bucketBoundingRect = sourceBoundingDiv.getBoundingClientRect()
   boundingRect.top = boundingRect.top - boundingRect.height
 
-  const currentInstrBoundingRect = destinationRectDiv.getBoundingClientRect()
+  const currentInstrBoundingRect = destinationRect || destinationRectDiv.getBoundingClientRect()
+
+  setIsSimulating(true)
 
   const movingCommand = drawDiv({
     boundingRect,
@@ -72,10 +76,18 @@ export const simulateDivMotion = ({
     if (upMoveDone && rightMoveDone) {
       if (boundingRect.top > currentInstrBoundingRect.top) {
         clearInterval(simulatorInterval)
+        setIsSimulating(false)
       } else {
         movingCommand.style.top = `${boundingRect.top}px`
         boundingRect.top = boundingRect.top + 5
       }
     }
   }, 50)
+}
+
+export const getCenteredRectCoors = (boundingBox, rect) => {
+  return {
+    left: (boundingBox.left + boundingBox.width / 2) - (rect.width / 2),
+    top: (boundingBox.top + boundingBox.height / 2) - (rect.height / 2)
+  }
 }

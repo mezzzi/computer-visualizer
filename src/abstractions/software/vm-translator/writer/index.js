@@ -1,7 +1,6 @@
 import CommandException from '../command/exception'
 import HVMCommand from '../command'
 import { COMMAND, SEGMENT } from '../command/types'
-import Emitter from '../../../../emitter'
 
 class HVMCodeWriter {
   /**
@@ -10,6 +9,7 @@ class HVMCodeWriter {
   constructor (hasSysInit) {
     // Holds the translated assembly lines
     this.assemblyBuffer = []
+    this.lastBuffer = []
     this.assembly = []
     this.shouldCallSysInit = false
     this.shouldCallSysInit = hasSysInit
@@ -485,9 +485,13 @@ class HVMCodeWriter {
   }
 
   flushAssemblyBuffer () {
-    Emitter.emit('ASM', [...this.assemblyBuffer])
+    this.lastBuffer = [...this.assemblyBuffer]
     this.assembly.push(...this.assemblyBuffer)
     this.assemblyBuffer = []
+  }
+
+  getLastBuffer () {
+    return this.lastBuffer
   }
 
   getAssemblyLength () {

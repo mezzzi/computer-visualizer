@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import './index.css'
 
 const Bucket = ({
@@ -9,10 +9,18 @@ const Bucket = ({
   onAction,
   actionName,
   bottomGrowing,
-  actionDisabled
+  actionDisabled,
+  setFirstStackItemDiv,
+  setLastInvisibleItemDiv
 }) => {
   const firstItemDivRef = useRef(null)
   const lastInvisibleItemRef = useRef(null)
+  useEffect(() => {
+    setLastInvisibleItemDiv &&
+      setLastInvisibleItemDiv(lastInvisibleItemRef.current)
+    setFirstStackItemDiv &&
+      setFirstStackItemDiv(firstItemDivRef.current)
+  }, [content.length])
   return (
     <div className='stackWrapper'>
       {

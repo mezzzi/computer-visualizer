@@ -1,26 +1,34 @@
 import React, { useState, useEffect } from 'react'
 import './index.css'
-import Emitter from '../../../emitter'
 import Box from './box'
 import Stack from './stack'
-import StackTest from './files'
-import HVMTranslator from 'abstractions/software/vm-translator'
 import {
   getOperatorSymbol
 } from './util'
-import { simulateDivMotion, getCenteredRectCoors, drawDiv } from './simulator'
+import {
+  simulateDivMotion,
+  moveFromBoundaryToTarget
+} from './simulator'
 import useExecArithmeticReducer from './reducers/useExecArithmeticReducer'
+import useDivRefReducer from './reducers/useDivRefReducer'
+import useGeneralReducer from './reducers/useGeneralReducer'
 
 const ExecutionSimulator = () => {
-  const [commands, setCommands] = useState([])
-  const [currentInstruction, setCurrentInstruction] = useState('')
-  const [assembly, setAssembly] = useState([])
-  const [stack, setStack] = useState([])
-  const [translator, setTranslator] = useState(null)
-  const [commandStackBoundingDiv, setCommandStackBoundingDiv] = useState(null)
-  const [currentInstrnBoundingDiv, setCurrentInstrBoundingDiv] = useState(null)
-  const [simulateModeOn] = useState(true)
-  const [isSimulating, setIsSimulating] = useState(false)
+  const {
+    commands,
+    currentInstruction,
+    assembly,
+    globalStack,
+    translator,
+    isSimulationModeOn,
+    isSimulating,
+    setCommands,
+    setGlobalStack,
+    setCurrentInstruction,
+    setIsSimulating,
+    setAssembly
+  } = useGeneralReducer()
+
   const {
     op1,
     op2,
@@ -30,61 +38,85 @@ const ExecutionSimulator = () => {
     execNextArithmeticCommand
   } = useExecArithmeticReducer()
 
-  const execNextVmCommand = (vmCommandDiv, lastInvisibleItemDiv) => {
+  const {
+    vmStackBoundingDiv,
+    asmStackBoundingDiv,
+    lastInvisibleItemDiv,
+    currentInstrnBoundingDiv,
+    vmCommandDiv,
+    asmCommandDiv,
+    setVmStackBoundingDiv,
+    setAsmStackBoundingDiv,
+    setCurrentInstrBoundingDiv,
+    setLastInvisibleItemDiv,
+    setTopVmCommandDiv,
+    setTopAsmCommandDiv
+  } = useDivRefReducer()
+
+  const [nextAsmBatch, setNextAsmBatch] = useState([])
+  const [asmBatchIndex, setAsmBatchIndex] = useState(-1)
+  const [isVmSimulationDone, setIsVmSimulationDone] = useState(false)
+
+  const [shouldRunVmSim, setShouldRunVmSim] = useState(false)
+
+  useEffect(() => {
+    if (shouldRunVmSim) {
+      if (isVmSimulationDone) {
+        asmSimulation()
+      } else {
+        if (isSimulationModeOn) {
+          simulateDivMotion({
+            sourceRectDiv: vmCommandDiv,
+            sourceBoundingDiv: vmStackBoundingDiv,
+            currentInstrnBoundingDiv,
+            text: commands[0].toString(),
+            name: 'commandDiv',
+            setIsVmSimulationDone
+          })
+        }
+      }
+    }
+  }, [isVmSimulationDone, shouldRunVmSim])
+
+  useEffect(() => {
+    if (!isSimulating) {
+      if (asmBatchIndex < nextAsmBatch.length - 1) {
+        moveFromBoundaryToTarget({
+          boundaryRect: asmStackBoundingDiv.getBoundingClientRect(),
+          targetRect: (asmCommandDiv || lastInvisibleItemDiv).getBoundingClientRect(),
+          setIsSimulating,
+          name: 'movingAsmDiv',
+          color: 'yellow',
+          text: nextAsmBatch[asmBatchIndex],
+          batchIndex: asmBatchIndex,
+          assembly,
+          setAssembly,
+          setAsmBatchIndex
+        })
+      } else {
+        setIsSimulating(false)
+        setShouldRunVmSim(false)
+      }
+    }
+  }, [asmBatchIndex, assembly])
+
+  const asmSimulation = () => {
     execNextArithmeticCommand({
       translator,
       commands,
       setCommands,
-      stack,
-      setStack
+      globalStack,
+      setGlobalStack
     })
-
-    if (simulateModeOn) {
-      setCurrentInstruction('')
-      simulateDivMotion({
-        sourceRectDiv: vmCommandDiv,
-        sourceBoundingDiv: commandStackBoundingDiv,
-        destinationRect: getCenteredRectCoors(
-          currentInstrnBoundingDiv.getBoundingClientRect(),
-          vmCommandDiv.getBoundingClientRect()
-        ),
-        text: commands[0].toString(),
-        name: 'commandDiv',
-        setIsSimulating,
-        nextSimulation: () => {
-          drawDiv({
-            boundingRect: lastInvisibleItemDiv.getBoundingClientRect(),
-            name: 'lastInvisibleItem',
-            color: 'red',
-            text: 'here'
-          })
-        }
-      })
-    }
-
-    !simulateModeOn && setCurrentInstruction(commands[0].toString())
+    setNextAsmBatch(translator.step())
+    setAsmBatchIndex(0)
   }
 
-  useEffect(() => {
-    Emitter.on('COMMANDS_PARSED', (commands) => setCommands(commands))
-    setTranslator(new HVMTranslator([{
-      className: StackTest,
-      file: StackTest
-    }]))
-    return () => {
-      Emitter.off('COMMANDS_PARSED')
-      Emitter.off('ASM')
-    }
-  }, [])
-
-  useEffect(() => {
-    Emitter.on('ASM', (asm) => {
-      const updatedAssembly = [...assembly.reverse().map(
-        item => ({ ...item, color: 'green' }))]
-      updatedAssembly.push(...asm.map(item => ({ item, color: 'yellow' })))
-      setAssembly(updatedAssembly.reverse())
-    })
-  }, [assembly])
+  const execNextVmCommand = () => {
+    setShouldRunVmSim(true)
+    setIsVmSimulationDone(false)
+    !isSimulationModeOn && setCurrentInstruction(commands[0].toString())
+  }
 
   return (
     <div
@@ -94,7 +126,7 @@ const ExecutionSimulator = () => {
         <Box
           height='100%'
           title='Hack Virtual Machine'
-          setContentBoundingDiv={setCommandStackBoundingDiv}
+          setContentBoundingDiv={setVmStackBoundingDiv}
           border={{ right: 1 }}
         >
           <Stack
@@ -105,6 +137,7 @@ const ExecutionSimulator = () => {
             onAction={execNextVmCommand}
             actionName='NEXT'
             actionDisabled={isSimulating}
+            setFirstStackItemDiv={setTopVmCommandDiv}
           />
         </Box>
         <Box
@@ -118,11 +151,18 @@ const ExecutionSimulator = () => {
         </Box>
       </Box>
       <Box border={{ bottom: 1 }}>
-        <Box height='100%' title='Hack Assembly' border={{ right: 1 }}>
+        <Box
+          height='100%'
+          title='Hack Assembly'
+          border={{ right: 1 }}
+          setContentBoundingDiv={setAsmStackBoundingDiv}
+        >
           <Stack
             width='70%'
             bottomGrowing
             content={assembly}
+            setLastInvisibleItemDiv={setLastInvisibleItemDiv}
+            setFirstStackItemDiv={setTopAsmCommandDiv}
           />
         </Box>
         <Box height='100%' title='Hack CPU'>
@@ -156,7 +196,7 @@ const ExecutionSimulator = () => {
       <Box title='Global Stack'>
         <Stack
           width='40%'
-          content={stack}
+          content={globalStack}
         />
       </Box>
     </div>

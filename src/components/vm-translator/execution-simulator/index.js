@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import './index.css'
 import Emitter from '../../../emitter'
 import Box from './box'
@@ -8,7 +8,7 @@ import HVMTranslator from 'abstractions/software/vm-translator'
 import {
   getOperatorSymbol
 } from './util'
-import { simulateDivMotion } from './simulator'
+import { simulateDivMotion, getCenteredRectCoors } from './simulator'
 import useExecArithmeticReducer from './reducers/useExecArithmeticReducer'
 
 const ExecutionSimulator = () => {
@@ -18,9 +18,9 @@ const ExecutionSimulator = () => {
   const [stack, setStack] = useState([])
   const [translator, setTranslator] = useState(null)
   const [commandStackBoundingDiv, setCommandStackBoundingDiv] = useState(null)
+  const [currentInstrnBoundingDiv, setCurrentInstrBoundingDiv] = useState(null)
   const [simulateModeOn] = useState(true)
-  const currentInstrnRef = useRef(null)
-
+  const [isSimulating, setIsSimulating] = useState(false)
   const {
     op1,
     op2,
@@ -40,12 +40,17 @@ const ExecutionSimulator = () => {
     })
 
     if (simulateModeOn) {
+      setCurrentInstruction('')
       simulateDivMotion({
         sourceRectDiv: vmCommandDiv,
         sourceBoundingDiv: commandStackBoundingDiv,
-        destinationRectDiv: currentInstrnRef.current,
+        destinationRect: getCenteredRectCoors(
+          currentInstrnBoundingDiv.getBoundingClientRect(),
+          vmCommandDiv.getBoundingClientRect()
+        ),
         text: commands[0].toString(),
-        name: 'commandDiv'
+        name: 'commandDiv',
+        setIsSimulating
       })
     }
 
@@ -77,11 +82,12 @@ const ExecutionSimulator = () => {
     <div
       className='simulatorContainer'
     >
-      <Box>
+      <Box border={{ right: 1, bottom: 1 }}>
         <Box
           height='100%'
           title='Hack Virtual Machine'
           setContentBoundingDiv={setCommandStackBoundingDiv}
+          border={{ right: 1 }}
         >
           <Stack
             width='90%'
@@ -90,19 +96,21 @@ const ExecutionSimulator = () => {
             hasAction
             onAction={execNextVmCommand}
             actionName='NEXT'
+            actionDisabled={isSimulating}
           />
         </Box>
         <Box
           height='100%'
           title='Current VM Command'
+          setContentBoundingDiv={setCurrentInstrBoundingDiv}
         >
-          <div ref={currentInstrnRef} className='stackItem'>
-            {currentInstruction || 'Current Instruction'}
+          <div className='stackItem'>
+            {currentInstruction || ''}
           </div>
         </Box>
       </Box>
-      <Box>
-        <Box height='100%' title='Hack Assembly'>
+      <Box border={{ bottom: 1 }}>
+        <Box height='100%' title='Hack Assembly' border={{ right: 1 }}>
           <Stack
             width='70%'
             bottomGrowing
@@ -136,7 +144,7 @@ const ExecutionSimulator = () => {
           }
         </Box>
       </Box>
-      <Box title='Virtual Memory Segments'>SEGMENT</Box>
+      <Box title='Virtual Memory Segments' border={{ right: 1 }}>SEGMENT</Box>
       <Box title='Global Stack'>
         <Stack
           width='40%'

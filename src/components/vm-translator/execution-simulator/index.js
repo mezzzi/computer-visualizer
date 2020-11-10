@@ -8,7 +8,7 @@ import HVMTranslator from 'abstractions/software/vm-translator'
 import {
   getOperatorSymbol
 } from './util'
-import { simulateDivMotion, getCenteredRectCoors } from './simulator'
+import { simulateDivMotion, getCenteredRectCoors, drawDiv } from './simulator'
 import useExecArithmeticReducer from './reducers/useExecArithmeticReducer'
 
 const ExecutionSimulator = () => {
@@ -30,7 +30,7 @@ const ExecutionSimulator = () => {
     execNextArithmeticCommand
   } = useExecArithmeticReducer()
 
-  const execNextVmCommand = (vmCommandDiv) => {
+  const execNextVmCommand = (vmCommandDiv, lastInvisibleItemDiv) => {
     execNextArithmeticCommand({
       translator,
       commands,
@@ -50,7 +50,15 @@ const ExecutionSimulator = () => {
         ),
         text: commands[0].toString(),
         name: 'commandDiv',
-        setIsSimulating
+        setIsSimulating,
+        nextSimulation: () => {
+          drawDiv({
+            boundingRect: lastInvisibleItemDiv.getBoundingClientRect(),
+            name: 'lastInvisibleItem',
+            color: 'red',
+            text: 'here'
+          })
+        }
       })
     }
 

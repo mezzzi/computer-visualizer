@@ -31,7 +31,8 @@ export const simulateDivMotion = ({
   name = 'movingDiv',
   color = 'yellow',
   text = 'moving div',
-  setIsSimulating
+  setIsSimulating,
+  nextSimulation
 }) => {
   const commandBoundingRect = sourceRectDiv.getBoundingClientRect()
   const boundingRect = {
@@ -77,6 +78,7 @@ export const simulateDivMotion = ({
       if (boundingRect.top > currentInstrBoundingRect.top) {
         clearInterval(simulatorInterval)
         setIsSimulating(false)
+        nextSimulation && nextSimulation()
       } else {
         movingCommand.style.top = `${boundingRect.top}px`
         boundingRect.top = boundingRect.top + 5

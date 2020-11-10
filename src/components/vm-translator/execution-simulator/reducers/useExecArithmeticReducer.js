@@ -4,6 +4,7 @@ import {
   getUnaryResult,
   getBinaryResult
 } from '../util'
+import useGeneralReducer from './useGeneralReducer'
 
 const arithemticReducer = (state, { type, payload }) => {
   switch (type) {
@@ -47,6 +48,13 @@ const useExecArithmeticReducer = () => {
     result: null
   })
 
+  const {
+    commands,
+    globalStack,
+    setGlobalStack,
+    setCommands
+  } = useGeneralReducer()
+
   const setOp1 = (op1) => {
     dispatch({ type: 'SET_OP1', payload: op1 })
   }
@@ -63,25 +71,18 @@ const useExecArithmeticReducer = () => {
     dispatch({ type: 'SET_RESULT', payload: result })
   }
 
-  const execNextArithmeticCommand = ({
-    translator,
-    commands,
-    setCommands,
-    stack,
-    setStack
-  }) => {
-    translator.step()
+  const execNextArithmeticCommand = () => {
     if (commands.length < 1) return
     const updatedCommands = [...commands]
     const command = updatedCommands.shift()
     const commandType = command.getCommandType()
     setCommands(updatedCommands)
-    const updatedStack = [...stack]
+    const updatedStack = [...globalStack]
 
     if (commandType === COMMAND.PUSH) {
       setOp1(null)
       updatedStack.unshift(command.getArg2())
-      setStack(updatedStack)
+      setGlobalStack(updatedStack)
     }
     if (commandType === COMMAND.POP) {
 
@@ -101,7 +102,7 @@ const useExecArithmeticReducer = () => {
         const output = getUnaryResult(op1, commandType)
         setResult(output)
         updatedStack.unshift(output)
-        setStack(updatedStack)
+        setGlobalStack(updatedStack)
       } else {
         const op2 = updatedStack.shift()
         const op1 = updatedStack.shift()
@@ -110,7 +111,7 @@ const useExecArithmeticReducer = () => {
         const output = getBinaryResult(op1, commandType, op2)
         setResult(output)
         updatedStack.unshift(output)
-        setStack(updatedStack)
+        setGlobalStack(updatedStack)
       }
     }
   }

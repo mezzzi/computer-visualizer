@@ -51,6 +51,10 @@ class HVMTranslator {
     return this.assemblyWriter.Close()
   }
 
+  getCommands () {
+    return this.vmParser.getCommands()
+  }
+
   /**
    * Stepwise translate
    */
@@ -88,7 +92,7 @@ class HVMTranslator {
         this.assemblyWriter.writeArithmetic(command)
         break
     }
-    return true
+    return this.assemblyWriter.getLastBuffer()
   }
 }
 export default HVMTranslator

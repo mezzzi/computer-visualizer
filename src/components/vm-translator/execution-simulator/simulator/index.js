@@ -26,14 +26,17 @@ export const drawDiv = ({ boundingRect, name, color, text }) => {
 export const simulateDivMotion = ({
   sourceRectDiv,
   sourceBoundingDiv,
-  destinationRectDiv,
-  destinationRect,
+  currentInstrnBoundingDiv,
   name = 'movingDiv',
   color = 'yellow',
   text = 'moving div',
-  setIsSimulating,
+  setIsVmSimulationDone,
   nextSimulation
 }) => {
+  const currentInstrBoundingRect = getCenteredRectCoors(
+    currentInstrnBoundingDiv.getBoundingClientRect(),
+    sourceRectDiv.getBoundingClientRect()
+  )
   const commandBoundingRect = sourceRectDiv.getBoundingClientRect()
   const boundingRect = {
     left: commandBoundingRect.left,
@@ -43,10 +46,6 @@ export const simulateDivMotion = ({
   }
   const bucketBoundingRect = sourceBoundingDiv.getBoundingClientRect()
   boundingRect.top = boundingRect.top - boundingRect.height
-
-  const currentInstrBoundingRect = destinationRect || destinationRectDiv.getBoundingClientRect()
-
-  setIsSimulating(true)
 
   const movingCommand = drawDiv({
     boundingRect,
@@ -77,12 +76,57 @@ export const simulateDivMotion = ({
     if (upMoveDone && rightMoveDone) {
       if (boundingRect.top > currentInstrBoundingRect.top) {
         clearInterval(simulatorInterval)
-        setIsSimulating(false)
+        setIsVmSimulationDone(true)
         nextSimulation && nextSimulation()
       } else {
         movingCommand.style.top = `${boundingRect.top}px`
         boundingRect.top = boundingRect.top + 5
       }
+    }
+  }, 50)
+}
+
+export const moveFromBoundaryToTarget = ({
+  boundaryRect,
+  targetRect,
+  name,
+  color,
+  text,
+  batchIndex,
+  setAsmBatchIndex,
+  assembly,
+  setAssembly
+}) => {
+  const isMovingUp = (boundaryRect.top + boundaryRect.height) > targetRect.top
+  const boundingRect = {
+    left: targetRect.left,
+    top: isMovingUp ? boundaryRect.top + boundaryRect.height - targetRect.height
+      : boundaryRect.top,
+    width: targetRect.width,
+    height: targetRect.height
+  }
+  const movingRect = drawDiv({
+    boundingRect,
+    name,
+    color,
+    text
+  })
+
+  let hasReachedDestination = false
+  const simulatorInterval = setInterval(() => {
+    hasReachedDestination = isMovingUp ? boundingRect.top < targetRect.top
+      : boundingRect.top > (targetRect.top - targetRect.height)
+    if (hasReachedDestination) {
+      clearInterval(simulatorInterval)
+      const updatedAssembly = [...assembly.reverse().map(
+        item => ({ ...item, color: 'green' }))]
+      const asm = [text]
+      updatedAssembly.push(...asm.map(item => ({ item, color: 'yellow' })))
+      setAssembly(updatedAssembly.reverse())
+      setAsmBatchIndex(batchIndex + 1)
+    } else {
+      movingRect.style.top = `${boundingRect.top}px`
+      boundingRect.top = isMovingUp ? boundingRect.top - 5 : boundingRect.top + 5
     }
   }, 50)
 }

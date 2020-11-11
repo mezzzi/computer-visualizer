@@ -1,4 +1,4 @@
-export const drawDiv = ({ boundingRect, name, color, text }) => {
+export const drawDiv = ({ boundingRect, name, color, background, text }) => {
   const oldDiv = document.getElementById(name)
   oldDiv && oldDiv.remove()
   const div = document.createElement('div')
@@ -11,7 +11,8 @@ export const drawDiv = ({ boundingRect, name, color, text }) => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: color,
+    backgroundColor: background,
+    color,
     width: `${boundingRect.width}px`,
     height: `${boundingRect.height}px`
   }
@@ -30,8 +31,7 @@ export const simulateDivMotion = ({
   name = 'movingDiv',
   color = 'yellow',
   text = 'moving div',
-  setIsVmSimulationDone,
-  nextSimulation
+  onSimulationEnd
 }) => {
   const currentInstrBoundingRect = getCenteredRectCoors(
     currentInstrnBoundingDiv.getBoundingClientRect(),
@@ -50,7 +50,7 @@ export const simulateDivMotion = ({
   const movingCommand = drawDiv({
     boundingRect,
     name,
-    color,
+    background: color,
     text
   })
 
@@ -76,14 +76,13 @@ export const simulateDivMotion = ({
     if (upMoveDone && rightMoveDone) {
       if (boundingRect.top > currentInstrBoundingRect.top) {
         clearInterval(simulatorInterval)
-        setIsVmSimulationDone(true)
-        nextSimulation && nextSimulation()
+        onSimulationEnd && onSimulationEnd()
       } else {
         movingCommand.style.top = `${boundingRect.top}px`
         boundingRect.top = boundingRect.top + 5
       }
     }
-  }, 50)
+  }, 20)
 }
 
 export const moveFromBoundaryToTarget = ({
@@ -91,44 +90,40 @@ export const moveFromBoundaryToTarget = ({
   targetRect,
   name,
   color,
+  background,
   text,
-  batchIndex,
-  setAsmBatchIndex,
-  assembly,
-  setAssembly
+  onSimulationEnd
 }) => {
   const isMovingUp = (boundaryRect.top + boundaryRect.height) > targetRect.top
-  const boundingRect = {
+  const movingRect = {
     left: targetRect.left,
     top: isMovingUp ? boundaryRect.top + boundaryRect.height - targetRect.height
       : boundaryRect.top,
     width: targetRect.width,
     height: targetRect.height
   }
-  const movingRect = drawDiv({
-    boundingRect,
+  const movingDiv = drawDiv({
+    boundingRect: movingRect,
     name,
     color,
+    background,
     text
   })
 
   let hasReachedDestination = false
   const simulatorInterval = setInterval(() => {
-    hasReachedDestination = isMovingUp ? boundingRect.top < targetRect.top
-      : boundingRect.top > (targetRect.top - targetRect.height)
+    hasReachedDestination = isMovingUp
+      ? movingRect.top < (targetRect.top + targetRect.height)
+      : movingRect.top > (targetRect.top - targetRect.height)
     if (hasReachedDestination) {
       clearInterval(simulatorInterval)
-      const updatedAssembly = [...assembly.reverse().map(
-        item => ({ ...item, color: 'green' }))]
-      const asm = [text]
-      updatedAssembly.push(...asm.map(item => ({ item, color: 'yellow' })))
-      setAssembly(updatedAssembly.reverse())
-      setAsmBatchIndex(batchIndex + 1)
+      movingDiv.remove()
+      onSimulationEnd && onSimulationEnd()
     } else {
-      movingRect.style.top = `${boundingRect.top}px`
-      boundingRect.top = isMovingUp ? boundingRect.top - 5 : boundingRect.top + 5
+      movingDiv.style.top = `${movingRect.top}px`
+      movingRect.top = isMovingUp ? movingRect.top - 5 : movingRect.top + 5
     }
-  }, 50)
+  }, 20)
 }
 
 export const getCenteredRectCoors = (boundingBox, rect) => {

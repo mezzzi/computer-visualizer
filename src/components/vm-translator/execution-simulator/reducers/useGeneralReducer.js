@@ -9,10 +9,10 @@ const generalReducer = (state, { type, payload }) => {
         ...state,
         commands: payload
       }
-    case 'SET_CURRENT_INSTRUCTION':
+    case 'SET_CURRENT_VM_COMMAND':
       return {
         ...state,
-        currentInstruction: payload
+        currentVmCommand: payload
       }
     case 'SET_ASSEMBLY':
       return {
@@ -51,11 +51,11 @@ const generalReducer = (state, { type, payload }) => {
 const useGeneralReducer = () => {
   const [state, dispatch] = useReducer(generalReducer, {
     commands: [],
-    currentInstruction: null,
+    currentVmCommand: null,
     assembly: [],
     globalStack: [],
     translator: null,
-    isSimulationModeOn: true,
+    isSimulationModeOn: false,
     isSimulating: false
   })
 
@@ -68,15 +68,6 @@ const useGeneralReducer = () => {
     setCommands(translator.getCommands())
   }, [])
 
-  // useEffect(() => {
-  //   Emitter.on('ASM', (asm) => {
-  //     const updatedAssembly = [...state.assembly.reverse().map(
-  //       item => ({ ...item, color: 'green' }))]
-  //     updatedAssembly.push(...asm.map(item => ({ item, color: 'yellow' })))
-  //     setAssembly(updatedAssembly.reverse())
-  //   })
-  // }, [state.assembly])
-
   const setCommands = (commands) => {
     dispatch({ type: 'SET_COMMANDS', payload: commands })
   }
@@ -86,8 +77,8 @@ const useGeneralReducer = () => {
   const setGlobalStack = (globalStack) => {
     dispatch({ type: 'SET_GLOBAL_STACK', payload: globalStack })
   }
-  const setCurrentInstruction = (currentInstruction) => {
-    dispatch({ type: 'SET_CURRENT_INSTRUCTION', payload: currentInstruction })
+  const setCurrentVmCommand = (currentVmCommand) => {
+    dispatch({ type: 'SET_CURRENT_VM_COMMAND', payload: currentVmCommand })
   }
   const setTranslator = (translator) => {
     dispatch({ type: 'SET_TRANSLATOR', payload: translator })
@@ -98,15 +89,24 @@ const useGeneralReducer = () => {
   const setIsSimulating = (isSimulating) => {
     dispatch({ type: 'SET_IS_SIMULATING', payload: isSimulating })
   }
+
+  const pushAssemblyBatch = (asmBatch) => {
+    const updatedAssembly = [...state.assembly.reverse().map(
+      item => ({ ...item, color: 'green' }))]
+    updatedAssembly.push(...asmBatch.map(item => ({ item, color: 'yellow' })))
+    setAssembly(updatedAssembly.reverse())
+  }
+
   return {
     ...state,
     setCommands,
     setAssembly,
     setGlobalStack,
-    setCurrentInstruction,
+    setCurrentVmCommand,
     setTranslator,
     setIsSimulationModeOn,
-    setIsSimulating
+    setIsSimulating,
+    pushAssemblyBatch
   }
 }
 export default useGeneralReducer

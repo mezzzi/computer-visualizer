@@ -16,7 +16,7 @@ import useGeneralReducer from './reducers/useGeneralReducer'
 const ExecutionSimulator = () => {
   const {
     commands,
-    currentInstruction,
+    currentVmCommand,
     assembly,
     globalStack,
     translator,
@@ -24,9 +24,9 @@ const ExecutionSimulator = () => {
     isSimulating,
     setCommands,
     setGlobalStack,
-    setCurrentInstruction,
+    setCurrentVmCommand,
     setIsSimulating,
-    setAssembly
+    pushAssemblyBatch
   } = useGeneralReducer()
 
   const {
@@ -39,12 +39,7 @@ const ExecutionSimulator = () => {
   } = useExecArithmeticReducer()
 
   const {
-    vmStackBoundingDiv,
-    asmStackBoundingDiv,
-    lastInvisibleItemDiv,
-    currentInstrnBoundingDiv,
-    vmCommandDiv,
-    asmCommandDiv,
+    divs,
     setVmStackBoundingDiv,
     setAsmStackBoundingDiv,
     setCurrentInstrBoundingDiv,
@@ -56,66 +51,86 @@ const ExecutionSimulator = () => {
   const [nextAsmBatch, setNextAsmBatch] = useState([])
   const [asmBatchIndex, setAsmBatchIndex] = useState(-1)
   const [isVmSimulationDone, setIsVmSimulationDone] = useState(false)
-
-  const [shouldRunVmSim, setShouldRunVmSim] = useState(false)
-
-  useEffect(() => {
-    if (shouldRunVmSim) {
-      if (isVmSimulationDone) {
-        asmSimulation()
-      } else {
-        if (isSimulationModeOn) {
-          simulateDivMotion({
-            sourceRectDiv: vmCommandDiv,
-            sourceBoundingDiv: vmStackBoundingDiv,
-            currentInstrnBoundingDiv,
-            text: commands[0].toString(),
-            name: 'commandDiv',
-            setIsVmSimulationDone
-          })
-        }
-      }
-    }
-  }, [isVmSimulationDone, shouldRunVmSim])
+  const [shouldRunNextVmCmd, setShouldRunNextVmCmd] = useState(false)
+  const [isAsmSimulationDone, setIsAsmSimulationDone] = useState(false)
 
   useEffect(() => {
-    if (!isSimulating) {
-      if (asmBatchIndex < nextAsmBatch.length - 1) {
-        moveFromBoundaryToTarget({
-          boundaryRect: asmStackBoundingDiv.getBoundingClientRect(),
-          targetRect: (asmCommandDiv || lastInvisibleItemDiv).getBoundingClientRect(),
-          setIsSimulating,
-          name: 'movingAsmDiv',
-          color: 'yellow',
-          text: nextAsmBatch[asmBatchIndex],
-          batchIndex: asmBatchIndex,
-          assembly,
-          setAssembly,
-          setAsmBatchIndex
+    if (shouldRunNextVmCmd) {
+      setShouldRunNextVmCmd(false)
+      if (commands.length < 1) return
+      const updatedCommands = [...commands]
+      const command = updatedCommands.shift()
+      setCommands(updatedCommands)
+      setCurrentVmCommand(command)
+      if (!isSimulationModeOn) {
+        pushAssemblyBatch(translator.step())
+        execNextArithmeticCommand({
+          currentVmCommand: command,
+          globalStack,
+          setGlobalStack
         })
       } else {
-        setIsSimulating(false)
-        setShouldRunVmSim(false)
+        setIsSimulating(true)
+        simulateDivMotion({
+          sourceRectDiv: divs.vmCommandDiv,
+          sourceBoundingDiv: divs.vmStackBoundingDiv,
+          currentInstrnBoundingDiv: divs.currentInstrnBoundingDiv,
+          text: commands[0].toString(),
+          name: 'commandDiv',
+          onSimulationEnd: () => {
+            setIsVmSimulationDone(true)
+          }
+        })
       }
     }
-  }, [asmBatchIndex, assembly])
+  }, [shouldRunNextVmCmd])
 
-  const asmSimulation = () => {
-    execNextArithmeticCommand({
-      translator,
-      commands,
-      setCommands,
-      globalStack,
-      setGlobalStack
-    })
-    setNextAsmBatch(translator.step())
-    setAsmBatchIndex(0)
-  }
+  useEffect(() => {
+    if (asmBatchIndex > -1) {
+      moveFromBoundaryToTarget({
+        boundaryRect: divs.asmStackBoundingDiv.getBoundingClientRect(),
+        targetRect: (divs.asmCommandDiv || divs.lastInvisibleItemDiv).getBoundingClientRect(),
+        name: 'movingAsmDiv',
+        background: 'black',
+        color: 'yellow',
+        text: nextAsmBatch[asmBatchIndex],
+        onSimulationEnd: () => {
+          if (asmBatchIndex === nextAsmBatch.length - 1) {
+            setAsmBatchIndex(-1)
+            setIsSimulating(false)
+            setIsAsmSimulationDone(true)
+          } else {
+            pushAssemblyBatch([nextAsmBatch[asmBatchIndex]])
+            setAsmBatchIndex(asmBatchIndex + 1)
+          }
+        }
+      })
+    }
+  }, [asmBatchIndex])
+
+  useEffect(() => {
+    if (isSimulationModeOn && isVmSimulationDone) {
+      const asmBatch = translator.step()
+      setNextAsmBatch(asmBatch)
+      setAsmBatchIndex(0)
+      setShouldRunNextVmCmd(false)
+    }
+  }, [isVmSimulationDone])
+
+  useEffect(() => {
+    if (isSimulationModeOn && isAsmSimulationDone) {
+      execNextArithmeticCommand({
+        currentVmCommand,
+        globalStack,
+        setGlobalStack
+      })
+      setIsAsmSimulationDone(false)
+    }
+  }, [isAsmSimulationDone])
 
   const execNextVmCommand = () => {
-    setShouldRunVmSim(true)
+    setShouldRunNextVmCmd(true)
     setIsVmSimulationDone(false)
-    !isSimulationModeOn && setCurrentInstruction(commands[0].toString())
   }
 
   return (
@@ -146,7 +161,7 @@ const ExecutionSimulator = () => {
           setContentBoundingDiv={setCurrentInstrBoundingDiv}
         >
           <div className='stackItem'>
-            {currentInstruction || ''}
+            {!isSimulationModeOn && currentVmCommand ? currentVmCommand.toString() : ''}
           </div>
         </Box>
       </Box>

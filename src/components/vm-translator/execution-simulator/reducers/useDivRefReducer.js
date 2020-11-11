@@ -41,7 +41,7 @@ const divRefReducer = (state, { type, payload }) => {
 }
 
 const useDivRefReducer = () => {
-  const [state, dispatch] = useReducer(divRefReducer, {
+  const [divs, dispatch] = useReducer(divRefReducer, {
     vmStackBoundingDiv: null,
     asmStackBoundingDiv: null,
     lastInvisibleItemDiv: null,
@@ -69,7 +69,7 @@ const useDivRefReducer = () => {
     dispatch({ type: 'SET_TOP_ASM_COMMAND_DIV', payload: asmCommandDiv })
   }
   return {
-    ...state,
+    divs,
     setVmStackBoundingDiv,
     setAsmStackBoundingDiv,
     setCurrentInstrBoundingDiv,

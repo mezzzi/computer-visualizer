@@ -4,7 +4,6 @@ import {
   getUnaryResult,
   getBinaryResult
 } from '../util'
-import useGeneralReducer from './useGeneralReducer'
 
 const arithemticReducer = (state, { type, payload }) => {
   switch (type) {
@@ -48,13 +47,6 @@ const useExecArithmeticReducer = () => {
     result: null
   })
 
-  const {
-    commands,
-    globalStack,
-    setGlobalStack,
-    setCommands
-  } = useGeneralReducer()
-
   const setOp1 = (op1) => {
     dispatch({ type: 'SET_OP1', payload: op1 })
   }
@@ -71,17 +63,17 @@ const useExecArithmeticReducer = () => {
     dispatch({ type: 'SET_RESULT', payload: result })
   }
 
-  const execNextArithmeticCommand = () => {
-    if (commands.length < 1) return
-    const updatedCommands = [...commands]
-    const command = updatedCommands.shift()
-    const commandType = command.getCommandType()
-    setCommands(updatedCommands)
+  const execNextArithmeticCommand = ({
+    currentVmCommand,
+    globalStack,
+    setGlobalStack
+  }) => {
+    const commandType = currentVmCommand.getCommandType()
     const updatedStack = [...globalStack]
 
     if (commandType === COMMAND.PUSH) {
       setOp1(null)
-      updatedStack.unshift(command.getArg2())
+      updatedStack.unshift(currentVmCommand.getArg2())
       setGlobalStack(updatedStack)
     }
     if (commandType === COMMAND.POP) {

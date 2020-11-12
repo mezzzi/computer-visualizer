@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import './index.css'
 import Box from './box'
 import Stack from './stack'
 import {
-  getOperatorSymbol
+  getOperatorSymbol,
+  isBinaryOp,
+  isUnaryOp,
+  getBinaryResult,
+  getUnaryResult
 } from './util'
 import {
   simulateDivMotion,
-  moveFromBoundaryToTarget
+  moveFromBoundaryToTarget,
+  getCenteredRectCoors
 } from './simulator'
 import useExecArithmeticReducer from './reducers/useExecArithmeticReducer'
 import useDivRefReducer from './reducers/useDivRefReducer'
@@ -36,6 +41,11 @@ const ExecutionSimulator = () => {
     operator,
     isUnary,
     result,
+    setOp1,
+    setOp2,
+    setOperator,
+    setIsUnary,
+    setResult,
     execNextArithmeticCommand
   } = useExecArithmeticReducer()
 
@@ -45,6 +55,7 @@ const ExecutionSimulator = () => {
     setAsmStackBoundingDiv,
     setGlobalStackBoundingDiv,
     setCurrentInstrBoundingDiv,
+    setVmCpuBoundingDiv,
     setTopVmCommandDiv,
     setTopAsmCommandDiv,
     setTopAsmInvisibleDiv,
@@ -58,10 +69,21 @@ const ExecutionSimulator = () => {
   const [shouldRunNextVmCmd, setShouldRunNextVmCmd] = useState(false)
   const [isAsmSimulationDone, setIsAsmSimulationDone] = useState(false)
 
+  const [isOp1SimulationDone, setIsOp1SimulationDone] = useState(false)
+  const [isOp2SimulationDone, setIsOp2SimulationDone] = useState(false)
+
+  const op1DivRef = useRef(null)
+  const op2DivRef = useRef(null)
+  const resultDivRef = useRef(null)
+
   useEffect(() => {
     if (shouldRunNextVmCmd) {
       setShouldRunNextVmCmd(false)
       if (commands.length < 1) return
+      setOp1(null)
+      setOp2(null)
+      setResult(null)
+      setOperator(null)
       const updatedCommands = [...commands]
       const command = updatedCommands.shift()
       setCommands(updatedCommands)
@@ -78,8 +100,12 @@ const ExecutionSimulator = () => {
         simulateDivMotion({
           sourceRectDiv: divs.vmCommandDiv,
           sourceBoundingDiv: divs.vmStackBoundingDiv,
-          currentInstrnBoundingDiv: divs.currentInstrnBoundingDiv,
+          destinationRectCoors: getCenteredRectCoors(
+            divs.currentInstrnBoundingDiv.getBoundingClientRect(),
+            divs.vmCommandDiv.getBoundingClientRect()
+          ),
           text: commands[0].toString(),
+          speed: 10,
           onSimulationEnd: () => {
             setIsVmSimulationDone(true)
           }
@@ -95,10 +121,10 @@ const ExecutionSimulator = () => {
         targetRect: (divs.asmCommandDiv || divs.topAsmInvisibleDiv).getBoundingClientRect(),
         isMovingUp: true,
         text: nextAsmBatch[asmBatchIndex],
+        speed: 10,
         onSimulationEnd: () => {
           if (asmBatchIndex === nextAsmBatch.length - 1) {
             setAsmBatchIndex(-1)
-            setIsSimulating(false)
             setIsAsmSimulationDone(true)
           } else {
             pushAssemblyBatch([nextAsmBatch[asmBatchIndex]])
@@ -120,6 +146,7 @@ const ExecutionSimulator = () => {
 
   useEffect(() => {
     if (isSimulationModeOn && isAsmSimulationDone) {
+      const updatedStack = [...globalStack]
       if (currentVmCommand.getCommandType() === COMMAND.PUSH) {
         moveFromBoundaryToTarget({
           boundaryRect: divs.globalStackBoundingDiv.getBoundingClientRect(),
@@ -128,21 +155,113 @@ const ExecutionSimulator = () => {
           ).getBoundingClientRect(),
           isMovingUp: false,
           text: currentVmCommand.getArg2(),
+          speed: 10,
           onSimulationEnd: () => {
-            execNextArithmeticCommand({
-              currentVmCommand,
-              globalStack,
-              setGlobalStack
-            })
+            updatedStack.unshift(currentVmCommand.getArg2())
+            setGlobalStack(updatedStack)
+            setIsSimulating(false)
           }
         })
+      }
+      const commandType = currentVmCommand.getCommandType()
+      const isCurrentUnary = isUnaryOp(commandType)
+      const isCurrentBinary = isBinaryOp(commandType)
+      if (isCurrentUnary || isCurrentBinary) {
+        setOperator(commandType)
+        setIsUnary(isCurrentUnary)
+        if (isCurrentBinary) {
+          const op2 = updatedStack.shift()
+          setGlobalStack(updatedStack)
+          setOperator(currentVmCommand.getCommandType())
+          simulateDivMotion({
+            sourceRectDiv: divs.topGlobalStackDiv,
+            sourceBoundingDiv: divs.globalStackBoundingDiv,
+            destinationRectDiv: op2DivRef.current,
+            text: op2,
+            speed: 10,
+            onSimulationEnd: () => {
+              setOp2(op2)
+              setIsOp1SimulationDone(true)
+            }
+          })
+        }
+        if (isCurrentUnary) {
+          const op1 = updatedStack.shift()
+          setGlobalStack(updatedStack)
+          setOperator(currentVmCommand.getCommandType())
+          simulateDivMotion({
+            sourceRectDiv: divs.topGlobalStackDiv,
+            sourceBoundingDiv: divs.globalStackBoundingDiv,
+            destinationRectDiv: op2DivRef.current,
+            text: op1,
+            speed: 10,
+            onSimulationEnd: () => {
+              setOp1(op1)
+              const output = getUnaryResult(op1, commandType)
+              setResult(output)
+              setIsOp1SimulationDone(false)
+              setIsOp2SimulationDone(true)
+            }
+          })
+        }
       }
       setIsAsmSimulationDone(false)
     }
   }, [isAsmSimulationDone])
 
-  const getGstackItemWidth = () => divs.topGstackInvisibleDiv &&
-    divs.topGstackInvisibleDiv.getBoundingClientRect().width
+  useEffect(() => {
+    if (isOp1SimulationDone) {
+      const updatedStack = [...globalStack]
+      const op1 = updatedStack.shift()
+      setGlobalStack(updatedStack)
+      simulateDivMotion({
+        sourceRectDiv: divs.topGlobalStackDiv,
+        sourceBoundingDiv: divs.globalStackBoundingDiv,
+        destinationRectDiv: op1DivRef.current,
+        text: op1,
+        speed: 10,
+        onSimulationEnd: () => {
+          setOp1(op1)
+          const output = getBinaryResult(
+            op1, currentVmCommand.getCommandType(), op2)
+          setResult(output)
+          setIsOp1SimulationDone(false)
+          setIsOp2SimulationDone(true)
+        }
+      })
+    }
+  }, [isOp1SimulationDone])
+
+  useEffect(() => {
+    if (isOp2SimulationDone) {
+      simulateDivMotion({
+        sourceRectDiv: resultDivRef.current,
+        sourceBoundingDiv: divs.vmCpuBoundingDiv,
+        destinationRectDiv: (divs.topGlobalStackDiv ||
+          divs.topGstackInvisibleDiv),
+        text: result,
+        speed: 10,
+        clearOnEnd: true,
+        matchTopOnEnd: false,
+        onSimulationEnd: () => {
+          const updatedStack = [...globalStack]
+          updatedStack.unshift(result)
+          setGlobalStack(updatedStack)
+          setIsOp2SimulationDone(false)
+          setIsSimulating(false)
+        }
+      })
+    }
+  }, [isOp2SimulationDone])
+
+  const getGstackSize = () => {
+    if (!divs.topGstackInvisibleDiv) return {}
+    const boundingRect = divs.topGstackInvisibleDiv.getBoundingClientRect()
+    return {
+      width: `${boundingRect.width}px`,
+      height: `${boundingRect.height}px`
+    }
+  }
 
   const execNextVmCommand = () => {
     setShouldRunNextVmCmd(true)
@@ -210,33 +329,70 @@ const ExecutionSimulator = () => {
           setContentBoundingDiv={setGlobalStackBoundingDiv}
         >
           <Stack
-            width='100%'
+            width='80%'
             content={globalStack}
             setTopInvisibleDiv={setTopGstackInvisibleDiv}
             setFirstStackItemDiv={setTopGlobalStackDiv}
           />
         </Box>
-        <Box height='100%' width='70%' title='VM CPU'>
+        <Box
+          height='100%'
+          width='70%'
+          title='VM CPU'
+          setContentBoundingDiv={setVmCpuBoundingDiv}
+        >
           <div
             className='arithmeticBox'
-            style={{ width: isUnary ? '50%' : '90%' }}
+            style={{ width: '90%' }}
           >
-            {!isUnary &&
+            <div className='arithemeticUnitWrapper'>
               <div
-                className='operand'
-                style={{ width: `${getGstackItemWidth()}px` }}
+                className='arithemticUnit'
+                style={{ ...getGstackSize() }}
+                ref={op1DivRef}
               >
-                {op1 === null ? 'OP1' : op1}
-              </div>}
-            <div>{operator === null ? 'OP' : getOperatorSymbol(operator)}</div>
-            <div
-              className='operand'
-              style={{ width: `${getGstackItemWidth()}px` }}
-            >
-              {op2 === null ? 'OP2' : op2}
+                {isUnary ? '' : (op1 === null ? '' : op1)}
+              </div>
+              <div className='arithmeticUnitLabel'>
+                {isUnary ? 'None' : 'Operand 1'}
+              </div>
+            </div>
+            <div className='arithemeticUnitWrapper'>
+              <div
+                className='arithemticUnit'
+                style={{ ...getGstackSize() }}
+              >
+                {operator === null ? '' : getOperatorSymbol(operator)}
+              </div>
+              <div className='arithmeticUnitLabel'>
+                Operator
+              </div>
+            </div>
+            <div className='arithemeticUnitWrapper'>
+              <div
+                className='arithemticUnit'
+                style={{ ...getGstackSize() }}
+                ref={op2DivRef}
+              >
+                {isUnary ? (op1 === null ? '' : op1) : (op2 === null ? '' : op2)}
+              </div>
+              <div className='arithmeticUnitLabel'>
+                {isUnary ? 'Operand 1' : 'Operand 2'}
+              </div>
             </div>
             <div>=</div>
-            <div>{result === null ? 'RES' : result}</div>
+            <div className='arithemeticUnitWrapper'>
+              <div
+                className='arithemticUnit'
+                style={{ ...getGstackSize() }}
+                ref={resultDivRef}
+              >
+                {result === null ? '' : result}
+              </div>
+              <div className='arithmeticUnitLabel'>
+                Result
+              </div>
+            </div>
           </div>
         </Box>
       </Box>

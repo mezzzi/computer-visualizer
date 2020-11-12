@@ -50,3 +50,15 @@ export const getOperatorSymbol = operator => {
       return 0
   }
 }
+
+export const isBinaryOp = commandType => {
+  return [
+    COMMAND.AND, COMMAND.OR, COMMAND.ADD,
+    COMMAND.SUBTRACT, COMMAND.EQUAL, COMMAND.LESS_THAN,
+    COMMAND.GREATER_THAN, COMMAND.EQUAL
+  ].includes(commandType)
+}
+
+export const isUnaryOp = commandType => {
+  return [COMMAND.NEGATE, COMMAND.NOT].includes(commandType)
+}

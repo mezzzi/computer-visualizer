@@ -8,7 +8,7 @@ const StackTest = `
 // File name: projects/07/StackArithmetic/StackTest/StackTest.vm
 
 // Executes a sequence of arithmetic and logical operations
-// on the stack. 
+// on the stack.
 push constant 17
 push constant 17
 eq
@@ -48,4 +48,8 @@ push constant 82
 or
 not
 `
+
+// const StackTest = `
+// not
+// `
 export default StackTest

@@ -5,6 +5,13 @@ import {
   getBinaryResult
 } from '../util'
 
+export const OPERATION_TYPES = Object.freeze({
+  POP: 'pop',
+  PUSH: 'push',
+  UNARY: 'unary',
+  BINARY: 'binary'
+})
+
 const arithemticReducer = (state, { type, payload }) => {
   switch (type) {
     case 'SET_OP1':

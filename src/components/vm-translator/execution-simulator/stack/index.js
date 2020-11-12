@@ -11,13 +11,13 @@ const Bucket = ({
   bottomGrowing,
   actionDisabled,
   setFirstStackItemDiv,
-  setLastInvisibleItemDiv
+  setTopInvisibleDiv
 }) => {
   const firstItemDivRef = useRef(null)
-  const lastInvisibleItemRef = useRef(null)
+  const topInvisibleIDivRef = useRef(null)
   useEffect(() => {
-    setLastInvisibleItemDiv &&
-      setLastInvisibleItemDiv(lastInvisibleItemRef.current)
+    setTopInvisibleDiv &&
+      setTopInvisibleDiv(topInvisibleIDivRef.current)
     setFirstStackItemDiv &&
       setFirstStackItemDiv(firstItemDivRef.current)
   }, [content.length])
@@ -58,7 +58,7 @@ const Bucket = ({
                   background: 'transparent',
                   justifySelf: 'flex-end'
                 }}
-                ref={index === 2 ? lastInvisibleItemRef : undefined}
+                ref={index === 2 ? topInvisibleIDivRef : undefined}
               >
                 ''
               </div>
@@ -98,7 +98,7 @@ const Bucket = ({
             className='stackButton'
             onClick={() => onAction(
               firstItemDivRef.current,
-              lastInvisibleItemRef.current)}
+              topInvisibleIDivRef.current)}
             style={{
               width: width || '60%'
             }}

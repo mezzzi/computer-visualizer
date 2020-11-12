@@ -11,14 +11,16 @@
   overflow: hidden;
 }
 
-.cpuTwoOps {
+.arithmeticBox {
   display: flex;
-  width: 60%;
   justify-content: space-around;
 }
 
-.cpuUnaryOps {
+.operand {
+  padding: 3px;
   display: flex;
-  width: 40%;
-  justify-content: space-around;
+  justify-content: center;
+  align-items: center;
+  background-color: black;
+  color: yellow;
 }

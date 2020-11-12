@@ -2,15 +2,10 @@ import { useReducer } from 'react'
 import { COMMAND } from 'abstractions/software/vm-translator/command/types'
 import {
   getUnaryResult,
-  getBinaryResult
+  getBinaryResult,
+  isUnaryOp,
+  isBinaryOp
 } from '../util'
-
-export const OPERATION_TYPES = Object.freeze({
-  POP: 'pop',
-  PUSH: 'push',
-  UNARY: 'unary',
-  BINARY: 'binary'
-})
 
 const arithemticReducer = (state, { type, payload }) => {
   switch (type) {
@@ -86,12 +81,8 @@ const useExecArithmeticReducer = () => {
     if (commandType === COMMAND.POP) {
 
     }
-    const isCurrentUnary = [COMMAND.NEGATE, COMMAND.NOT].includes(commandType)
-    const isCurrentBinary = [
-      COMMAND.AND, COMMAND.OR, COMMAND.ADD,
-      COMMAND.SUBTRACT, COMMAND.EQUAL, COMMAND.LESS_THAN,
-      COMMAND.GREATER_THAN, COMMAND.EQUAL
-    ].includes(commandType)
+    const isCurrentUnary = isUnaryOp(commandType)
+    const isCurrentBinary = isBinaryOp(commandType)
     if (isCurrentUnary || isCurrentBinary) {
       setOperator(commandType)
       setIsUnary(isCurrentUnary)

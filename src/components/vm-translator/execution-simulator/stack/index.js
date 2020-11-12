@@ -70,7 +70,7 @@ const Bucket = ({
                 className='stackItem'
                 key={index + 3}
                 style={{
-                  color: item.color || 'green',
+                  color: item.color || (index === 0 ? 'yellow' : 'green'),
                   background: item.background || 'black'
                 }}
                 ref={index === 0 ? firstItemDivRef : undefined}

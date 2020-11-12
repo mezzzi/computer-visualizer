@@ -12,6 +12,7 @@ import {
 import useExecArithmeticReducer from './reducers/useExecArithmeticReducer'
 import useDivRefReducer from './reducers/useDivRefReducer'
 import useGeneralReducer from './reducers/useGeneralReducer'
+import { COMMAND } from 'abstractions/software/vm-translator/command/types'
 
 const ExecutionSimulator = () => {
   const {
@@ -42,10 +43,13 @@ const ExecutionSimulator = () => {
     divs,
     setVmStackBoundingDiv,
     setAsmStackBoundingDiv,
+    setGlobalStackBoundingDiv,
     setCurrentInstrBoundingDiv,
-    setLastInvisibleItemDiv,
     setTopVmCommandDiv,
-    setTopAsmCommandDiv
+    setTopAsmCommandDiv,
+    setTopAsmInvisibleDiv,
+    setTopGlobalStackDiv,
+    setTopGstackInvisibleDiv
   } = useDivRefReducer()
 
   const [nextAsmBatch, setNextAsmBatch] = useState([])
@@ -76,7 +80,6 @@ const ExecutionSimulator = () => {
           sourceBoundingDiv: divs.vmStackBoundingDiv,
           currentInstrnBoundingDiv: divs.currentInstrnBoundingDiv,
           text: commands[0].toString(),
-          name: 'commandDiv',
           onSimulationEnd: () => {
             setIsVmSimulationDone(true)
           }
@@ -89,10 +92,8 @@ const ExecutionSimulator = () => {
     if (asmBatchIndex > -1) {
       moveFromBoundaryToTarget({
         boundaryRect: divs.asmStackBoundingDiv.getBoundingClientRect(),
-        targetRect: (divs.asmCommandDiv || divs.lastInvisibleItemDiv).getBoundingClientRect(),
-        name: 'movingAsmDiv',
-        background: 'black',
-        color: 'yellow',
+        targetRect: (divs.asmCommandDiv || divs.topAsmInvisibleDiv).getBoundingClientRect(),
+        isMovingUp: true,
         text: nextAsmBatch[asmBatchIndex],
         onSimulationEnd: () => {
           if (asmBatchIndex === nextAsmBatch.length - 1) {
@@ -119,14 +120,29 @@ const ExecutionSimulator = () => {
 
   useEffect(() => {
     if (isSimulationModeOn && isAsmSimulationDone) {
-      execNextArithmeticCommand({
-        currentVmCommand,
-        globalStack,
-        setGlobalStack
-      })
+      if (currentVmCommand.getCommandType() === COMMAND.PUSH) {
+        moveFromBoundaryToTarget({
+          boundaryRect: divs.globalStackBoundingDiv.getBoundingClientRect(),
+          targetRect: (
+            divs.topGlobalStackDiv || divs.topGstackInvisibleDiv
+          ).getBoundingClientRect(),
+          isMovingUp: false,
+          text: currentVmCommand.getArg2(),
+          onSimulationEnd: () => {
+            execNextArithmeticCommand({
+              currentVmCommand,
+              globalStack,
+              setGlobalStack
+            })
+          }
+        })
+      }
       setIsAsmSimulationDone(false)
     }
   }, [isAsmSimulationDone])
+
+  const getGstackItemWidth = () => divs.topGstackInvisibleDiv &&
+    divs.topGstackInvisibleDiv.getBoundingClientRect().width
 
   const execNextVmCommand = () => {
     setShouldRunNextVmCmd(true)
@@ -176,43 +192,53 @@ const ExecutionSimulator = () => {
             width='70%'
             bottomGrowing
             content={assembly}
-            setLastInvisibleItemDiv={setLastInvisibleItemDiv}
+            setTopInvisibleDiv={setTopAsmInvisibleDiv}
             setFirstStackItemDiv={setTopAsmCommandDiv}
           />
         </Box>
         <Box height='100%' title='Hack CPU'>
-          {
-            op1 === null ? (
-              <div>CPU</div>
-            ) : (
-              isUnary ? (
-                <div className='cpuUnaryOps'>
-                  <div>
-                    <span>{operator === null ? 'OP' : getOperatorSymbol(operator)}</span>
-                    <span>{op1 === null ? 'OP1' : `(${op1})`}</span>
-                  </div>
-                  <div>=</div>
-                  <div>{result === null ? 'RES' : result}</div>
-                </div>
-              ) : (
-                <div className='cpuTwoOps'>
-                  <div>{op1 === null ? 'OP1' : op1}</div>
-                  <div>{operator === null ? 'OP' : getOperatorSymbol(operator)}</div>
-                  <div>{op2 === null ? 'OP2' : op2}</div>
-                  <div>=</div>
-                  <div>{result === null ? 'RES' : result}</div>
-                </div>
-              )
-            )
-          }
+          ASM Notes and Diagrams
         </Box>
       </Box>
       <Box title='Virtual Memory Segments' border={{ right: 1 }}>SEGMENT</Box>
-      <Box title='Global Stack'>
-        <Stack
-          width='40%'
-          content={globalStack}
-        />
+      <Box>
+        <Box
+          height='100%'
+          width='30%'
+          title='Global Stack'
+          border={{ right: 1 }}
+          setContentBoundingDiv={setGlobalStackBoundingDiv}
+        >
+          <Stack
+            width='100%'
+            content={globalStack}
+            setTopInvisibleDiv={setTopGstackInvisibleDiv}
+            setFirstStackItemDiv={setTopGlobalStackDiv}
+          />
+        </Box>
+        <Box height='100%' width='70%' title='VM CPU'>
+          <div
+            className='arithmeticBox'
+            style={{ width: isUnary ? '50%' : '90%' }}
+          >
+            {!isUnary &&
+              <div
+                className='operand'
+                style={{ width: `${getGstackItemWidth()}px` }}
+              >
+                {op1 === null ? 'OP1' : op1}
+              </div>}
+            <div>{operator === null ? 'OP' : getOperatorSymbol(operator)}</div>
+            <div
+              className='operand'
+              style={{ width: `${getGstackItemWidth()}px` }}
+            >
+              {op2 === null ? 'OP2' : op2}
+            </div>
+            <div>=</div>
+            <div>{result === null ? 'RES' : result}</div>
+          </div>
+        </Box>
       </Box>
     </div>
   )

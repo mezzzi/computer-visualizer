@@ -55,7 +55,7 @@ const useGeneralReducer = () => {
     assembly: [],
     globalStack: [],
     translator: null,
-    isSimulationModeOn: false,
+    isSimulationModeOn: true,
     isSimulating: false
   })
 

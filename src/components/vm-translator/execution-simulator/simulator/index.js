@@ -1,9 +1,8 @@
-export const drawDiv = ({ boundingRect, name, color, background, text }) => {
-  const oldDiv = document.getElementById(name)
+export const drawDiv = ({ boundingRect, id, color, background, text }) => {
+  const oldDiv = document.getElementById(id)
   oldDiv && oldDiv.remove()
   const div = document.createElement('div')
-  div.id = name
-  div.className = name
+  div.id = id
   const style = {
     position: 'fixed',
     left: `${boundingRect.left}px`,
@@ -28,8 +27,8 @@ export const simulateDivMotion = ({
   sourceRectDiv,
   sourceBoundingDiv,
   currentInstrnBoundingDiv,
-  name = 'movingDiv',
   color = 'yellow',
+  id = 'movingDiv',
   text = 'moving div',
   onSimulationEnd
 }) => {
@@ -49,7 +48,7 @@ export const simulateDivMotion = ({
 
   const movingCommand = drawDiv({
     boundingRect,
-    name,
+    id,
     background: color,
     text
   })
@@ -88,23 +87,23 @@ export const simulateDivMotion = ({
 export const moveFromBoundaryToTarget = ({
   boundaryRect,
   targetRect,
-  name,
-  color,
-  background,
+  isMovingUp,
+  color = 'yellow',
+  background = 'black',
   text,
   onSimulationEnd
 }) => {
-  const isMovingUp = (boundaryRect.top + boundaryRect.height) > targetRect.top
   const movingRect = {
     left: targetRect.left,
-    top: isMovingUp ? boundaryRect.top + boundaryRect.height - targetRect.height
+    top: isMovingUp ? boundaryRect.bottom - targetRect.height
       : boundaryRect.top,
     width: targetRect.width,
     height: targetRect.height
   }
+  const id = new Date().getTime()
   const movingDiv = drawDiv({
     boundingRect: movingRect,
-    name,
+    id,
     color,
     background,
     text

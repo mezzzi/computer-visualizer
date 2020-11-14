@@ -17,6 +17,8 @@ import {
 import useExecArithmeticReducer from './reducers/useExecArithmeticReducer'
 import useDivRefReducer from './reducers/useDivRefReducer'
 import useGeneralReducer from './reducers/useGeneralReducer'
+import useSegmentReducer from './reducers/useSegmentReducer'
+
 import { COMMAND } from 'abstractions/software/vm-translator/command/types'
 
 const ExecutionSimulator = () => {
@@ -57,10 +59,12 @@ const ExecutionSimulator = () => {
     setCurrentInstrBoundingDiv,
     setVmCpuBoundingDiv,
     setTopVmCommandDiv,
+    setTopVmInvisibleDiv,
     setTopAsmCommandDiv,
     setTopAsmInvisibleDiv,
     setTopGlobalStackDiv,
-    setTopGstackInvisibleDiv
+    setTopGstackInvisibleDiv,
+    setBottomGstackInvisibleDiv
   } = useDivRefReducer()
 
   const [nextAsmBatch, setNextAsmBatch] = useState([])
@@ -71,6 +75,8 @@ const ExecutionSimulator = () => {
 
   const [isOp1SimulationDone, setIsOp1SimulationDone] = useState(false)
   const [isOp2SimulationDone, setIsOp2SimulationDone] = useState(false)
+
+  const { segments, segmentSetters } = useSegmentReducer()
 
   const op1DivRef = useRef(null)
   const op2DivRef = useRef(null)
@@ -97,6 +103,7 @@ const ExecutionSimulator = () => {
         })
       } else {
         setIsSimulating(true)
+        divs.topVmInvisibleDiv.scrollIntoView()
         simulateDivMotion({
           sourceRectDiv: divs.vmCommandDiv,
           sourceBoundingDiv: divs.vmStackBoundingDiv,
@@ -105,7 +112,8 @@ const ExecutionSimulator = () => {
             divs.vmCommandDiv.getBoundingClientRect()
           ),
           text: commands[0].toString(),
-          speed: 10,
+          speed: 5,
+          id: 'movingCommand',
           onSimulationEnd: () => {
             setIsVmSimulationDone(true)
           }
@@ -147,38 +155,114 @@ const ExecutionSimulator = () => {
   useEffect(() => {
     if (isSimulationModeOn && isAsmSimulationDone) {
       const updatedStack = [...globalStack]
-      if (currentVmCommand.getCommandType() === COMMAND.PUSH) {
-        moveFromBoundaryToTarget({
-          boundaryRect: divs.globalStackBoundingDiv.getBoundingClientRect(),
-          targetRect: (
-            divs.topGlobalStackDiv || divs.topGstackInvisibleDiv
-          ).getBoundingClientRect(),
-          isMovingUp: false,
-          text: currentVmCommand.getArg2(),
-          speed: 10,
+      const commandType = currentVmCommand.getCommandType()
+      if (commandType === COMMAND.PUSH) {
+        const segmentName = currentVmCommand.getArg1()
+        const segmentIndex = currentVmCommand.getArg2()
+        if (segmentName === 'constant') {
+          moveFromBoundaryToTarget({
+            boundaryRect: divs.globalStackBoundingDiv.getBoundingClientRect(),
+            targetRect: (
+              divs.topGlobalStackDiv || divs.topGstackInvisibleDiv
+            ).getBoundingClientRect(),
+            isMovingUp: false,
+            text: segmentIndex,
+            speed: 5,
+            onSimulationEnd: () => {
+              updatedStack.unshift(segmentIndex)
+              setGlobalStack(updatedStack)
+              setIsSimulating(false)
+            }
+          })
+        } else {
+          const segment = segments[segmentName]
+          const segmentSetter = segmentSetters[segmentName]
+
+          const updatedSegment = [...segment]
+          const target = updatedSegment.find(item => item.index === segmentIndex)
+          let sourceDiv = null
+          const targetIndex = updatedSegment.indexOf(target)
+          if (targetIndex + 1 < segment.length) {
+            sourceDiv = segments[`${segmentName}BottomInvisibleDiv`]
+          } else {
+            if (!segment[targetIndex]) {
+              setIsSimulating(false)
+              setIsOp1SimulationDone(false)
+              setIsOp2SimulationDone(false)
+              setIsAsmSimulationDone(false)
+              return
+            }
+            sourceDiv = document.getElementById(`${segmentName}${segment[targetIndex].index}`)
+          }
+          updatedSegment.splice(targetIndex, 1)
+          segmentSetter(updatedSegment)
+          simulateDivMotion({
+            sourceRectDiv: sourceDiv,
+            sourceBoundingDiv: divs.globalStackBoundingDiv,
+            destinationRectDiv: (divs.topGlobalStackDiv || divs.bottomGstackInvisibleDiv),
+            text: target.item,
+            speed: 5,
+            clearOnEnd: true,
+            onSimulationEnd: () => {
+              updatedStack.unshift(target.item)
+              setGlobalStack(updatedStack)
+              setIsSimulating(false)
+            }
+          })
+        }
+      }
+      if (commandType === COMMAND.POP) {
+        const value = updatedStack.shift()
+        setGlobalStack(updatedStack)
+        const segmentName = currentVmCommand.getArg1()
+        const segmentIndex = currentVmCommand.getArg2()
+        const segment = segments[segmentName]
+        const segmentSetter = segmentSetters[segmentName]
+        const insertIndex = getSegmentIndex(segment, segmentIndex)
+        const targetDiv = (segment.length && insertIndex < segment.length)
+          ? document.getElementById(`${segmentName}${segment[insertIndex].index}`)
+          : segments[`${segmentName}BottomInvisibleDiv`]
+        simulateDivMotion({
+          sourceRectDiv: divs.topGlobalStackDiv,
+          sourceBoundingDiv: divs.globalStackBoundingDiv,
+          destinationRectDiv: targetDiv,
+          text: value,
+          speed: 5,
+          clearOnEnd: true,
           onSimulationEnd: () => {
-            updatedStack.unshift(currentVmCommand.getArg2())
-            setGlobalStack(updatedStack)
+            const updatedSegment = [...segment]
+            updatedSegment.push({ item: value, index: segmentIndex })
+            updatedSegment.sort()
+            segmentSetter(updatedSegment)
+            setIsOp1SimulationDone(false)
+            setIsOp2SimulationDone(false)
             setIsSimulating(false)
           }
         })
       }
-      const commandType = currentVmCommand.getCommandType()
       const isCurrentUnary = isUnaryOp(commandType)
       const isCurrentBinary = isBinaryOp(commandType)
       if (isCurrentUnary || isCurrentBinary) {
         setOperator(commandType)
         setIsUnary(isCurrentUnary)
         if (isCurrentBinary) {
+          if (globalStack.length < 2) {
+            setIsAsmSimulationDone(false)
+            setIsOp1SimulationDone(false)
+            setIsOp2SimulationDone(false)
+            setIsAsmSimulationDone(false)
+            setIsSimulating(false)
+            return
+          }
           const op2 = updatedStack.shift()
           setGlobalStack(updatedStack)
-          setOperator(currentVmCommand.getCommandType())
+          setOperator(commandType)
           simulateDivMotion({
             sourceRectDiv: divs.topGlobalStackDiv,
             sourceBoundingDiv: divs.globalStackBoundingDiv,
             destinationRectDiv: op2DivRef.current,
             text: op2,
-            speed: 10,
+            speed: 5,
             onSimulationEnd: () => {
               setOp2(op2)
               setIsOp1SimulationDone(true)
@@ -186,15 +270,23 @@ const ExecutionSimulator = () => {
           })
         }
         if (isCurrentUnary) {
+          if (globalStack.length < 1) {
+            setIsAsmSimulationDone(false)
+            setIsOp1SimulationDone(false)
+            setIsOp2SimulationDone(false)
+            setIsAsmSimulationDone(false)
+            setIsSimulating(false)
+            return
+          }
           const op1 = updatedStack.shift()
           setGlobalStack(updatedStack)
-          setOperator(currentVmCommand.getCommandType())
+          setOperator(commandType)
           simulateDivMotion({
             sourceRectDiv: divs.topGlobalStackDiv,
             sourceBoundingDiv: divs.globalStackBoundingDiv,
             destinationRectDiv: op2DivRef.current,
             text: op1,
-            speed: 10,
+            speed: 5,
             onSimulationEnd: () => {
               setOp1(op1)
               const output = getUnaryResult(op1, commandType)
@@ -211,6 +303,11 @@ const ExecutionSimulator = () => {
 
   useEffect(() => {
     if (isOp1SimulationDone) {
+      if (globalStack.length === 0) {
+        setIsOp1SimulationDone(false)
+        setIsOp2SimulationDone(false)
+        return
+      }
       const updatedStack = [...globalStack]
       const op1 = updatedStack.shift()
       setGlobalStack(updatedStack)
@@ -240,7 +337,7 @@ const ExecutionSimulator = () => {
         destinationRectDiv: (divs.topGlobalStackDiv ||
           divs.topGstackInvisibleDiv),
         text: result,
-        speed: 10,
+        speed: 5,
         clearOnEnd: true,
         matchTopOnEnd: false,
         onSimulationEnd: () => {
@@ -287,6 +384,7 @@ const ExecutionSimulator = () => {
             onAction={execNextVmCommand}
             actionName='NEXT'
             actionDisabled={isSimulating}
+            setBottomInvisibleDiv={setTopVmInvisibleDiv}
             setFirstStackItemDiv={setTopVmCommandDiv}
           />
         </Box>
@@ -319,25 +417,117 @@ const ExecutionSimulator = () => {
           ASM Notes and Diagrams
         </Box>
       </Box>
-      <Box title='Virtual Memory Segments' border={{ right: 1 }}>SEGMENT</Box>
       <Box>
         <Box
           height='100%'
-          width='30%'
+          width='20%'
+          title='TEMP'
+          border={{ right: 1 }}
+        >
+          <Stack
+            name='temp'
+            setBottomInvisibleDiv={
+              segmentSetters.tempBottomInvisibleDiv
+            }
+            width='90%'
+            content={segments.temp}
+          />
+        </Box>
+        <Box
+          height='100%'
+          width='20%'
+          title='LOCAL'
+          border={{ right: 1 }}
+        >
+          <Stack
+            name='local'
+            setBottomInvisibleDiv={
+              segmentSetters.localBottomInvisibleDiv
+            }
+            width='90%'
+            content={segments.local}
+          />
+        </Box>
+        <Box
+          height='100%'
+          width='20%'
+          title='ARGUMENT'
+          border={{ right: 1 }}
+        >
+          <Stack
+            width='90%'
+            name='argument'
+            setBottomInvisibleDiv={
+              segmentSetters.argumentBottomInvisibleDiv
+            }
+            content={segments.argument}
+          />
+        </Box>
+        <Box
+          height='100%'
+          width='20%'
+          title='THIS'
+          border={{ right: 1 }}
+        >
+          <Stack
+            width='90%'
+            name='this'
+            setBottomInvisibleDiv={
+              segmentSetters.thisBottomInvisibleDiv
+            }
+            content={segments.this}
+          />
+        </Box>
+        <Box
+          height='100%'
+          width='20%'
+          title='THAT'
+          border={{ right: 1 }}
+        >
+          <Stack
+            width='90%'
+            name='that'
+            setBottomInvisibleDiv={
+              segmentSetters.thatBottomInvisibleDiv
+            }
+            content={segments.that}
+          />
+        </Box>
+      </Box>
+      <Box>
+        <Box
+          height='100%'
+          width='20%'
+          title='POINTER'
+          border={{ right: 1 }}
+        >
+          <Stack
+            name='pointer'
+            setBottomInvisibleDiv={
+              segmentSetters.pointerBottomInvisibleDiv
+            }
+            width='90%'
+            content={segments.pointer}
+          />
+        </Box>
+        <Box
+          height='100%'
+          width='20%'
           title='Global Stack'
           border={{ right: 1 }}
           setContentBoundingDiv={setGlobalStackBoundingDiv}
         >
           <Stack
-            width='80%'
+            width='90%'
             content={globalStack}
             setTopInvisibleDiv={setTopGstackInvisibleDiv}
+            setBottomInvisibleDiv={setBottomGstackInvisibleDiv}
             setFirstStackItemDiv={setTopGlobalStackDiv}
           />
         </Box>
         <Box
           height='100%'
-          width='70%'
+          width='60%'
           title='VM CPU'
           setContentBoundingDiv={setVmCpuBoundingDiv}
         >
@@ -398,6 +588,13 @@ const ExecutionSimulator = () => {
       </Box>
     </div>
   )
+}
+
+const getSegmentIndex = (segment, index) => {
+  const indexes = segment.map(item => item.index)
+  indexes.push(index)
+  indexes.sort()
+  return indexes.indexOf(index)
 }
 
 export default ExecutionSimulator

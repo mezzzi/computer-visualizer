@@ -1,5 +1,5 @@
 import { useReducer, useEffect } from 'react'
-import StackTest from '../files'
+import { BasicTest } from '../files'
 import HVMTranslator from 'abstractions/software/vm-translator'
 
 const generalReducer = (state, { type, payload }) => {
@@ -55,14 +55,14 @@ const useGeneralReducer = () => {
     assembly: [],
     globalStack: [],
     translator: null,
-    isSimulationModeOn: false,
+    isSimulationModeOn: true,
     isSimulating: false
   })
 
   useEffect(() => {
     const translator = new HVMTranslator([{
-      className: StackTest,
-      file: StackTest
+      className: BasicTest,
+      file: BasicTest
     }])
     setTranslator(translator)
     setCommands(translator.getCommands())

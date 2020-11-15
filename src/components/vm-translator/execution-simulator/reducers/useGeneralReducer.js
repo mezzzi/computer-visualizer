@@ -1,55 +1,29 @@
 import { useReducer, useEffect } from 'react'
-import { BasicTest } from '../files'
+import { StackTest } from '../files'
 import HVMTranslator from 'abstractions/software/vm-translator'
 
+const ACTIONS = {
+  SET_COMMANDS: 'commands',
+  SET_ASSEMBLY: 'assembly',
+  SET_GLOBAL_STACK: 'globalStack',
+  SET_CURRENT_VM_COMMAND: 'currentVmCommand',
+  SET_TRANSLATOR: 'translator',
+  SET_SIMULATION_MODE_ON: 'isSimulationModeOn',
+  SET_IS_SIMULATING: 'isSimulating'
+}
+
 const generalReducer = (state, { type, payload }) => {
-  switch (type) {
-    case 'SET_COMMANDS':
-      return {
-        ...state,
-        commands: payload
-      }
-    case 'SET_CURRENT_VM_COMMAND':
-      return {
-        ...state,
-        currentVmCommand: payload
-      }
-    case 'SET_ASSEMBLY':
-      return {
-        ...state,
-        assembly: payload
-      }
-    case 'SET_GLOBAL_STACK': {
-      return {
-        ...state,
-        globalStack: payload
-      }
-    }
-    case 'SET_TRANSLATOR': {
-      return {
-        ...state,
-        translator: payload
-      }
-    }
-    case 'SET_SIMULATION_MODE_ON': {
-      return {
-        ...state,
-        isSimulationModeOn: payload
-      }
-    }
-    case 'SET_IS_SIMULATING': {
-      return {
-        ...state,
-        isSimulating: payload
-      }
-    }
-    default:
-      throw new Error('UNKNOWN GENERAL ACTION TYPE:' + type)
+  if (!ACTIONS[type]) {
+    throw new Error(`UNKNOWN GENERAL ACTION TYPE:${type}`)
+  }
+  return {
+    ...state,
+    [ACTIONS[type]]: payload
   }
 }
 
 const useGeneralReducer = () => {
-  const [state, dispatch] = useReducer(generalReducer, {
+  const [general, dispatch] = useReducer(generalReducer, {
     commands: [],
     currentVmCommand: null,
     assembly: [],
@@ -61,51 +35,35 @@ const useGeneralReducer = () => {
 
   useEffect(() => {
     const translator = new HVMTranslator([{
-      className: BasicTest,
-      file: BasicTest
+      className: StackTest,
+      file: StackTest
     }])
-    setTranslator(translator)
-    setCommands(translator.getCommands())
+    setters.translator(translator)
+    setters.commands(translator.getCommands())
   }, [])
 
-  const setCommands = (commands) => {
-    dispatch({ type: 'SET_COMMANDS', payload: commands })
-  }
-  const setAssembly = (assembly) => {
-    dispatch({ type: 'SET_ASSEMBLY', payload: assembly })
-  }
-  const setGlobalStack = (globalStack) => {
-    dispatch({ type: 'SET_GLOBAL_STACK', payload: globalStack })
-  }
-  const setCurrentVmCommand = (currentVmCommand) => {
-    dispatch({ type: 'SET_CURRENT_VM_COMMAND', payload: currentVmCommand })
-  }
-  const setTranslator = (translator) => {
-    dispatch({ type: 'SET_TRANSLATOR', payload: translator })
-  }
-  const setIsSimulationModeOn = (isSimulationModeOn) => {
-    dispatch({ type: 'SET_SIMULATION_MODE_ON', payload: isSimulationModeOn })
-  }
-  const setIsSimulating = (isSimulating) => {
-    dispatch({ type: 'SET_IS_SIMULATING', payload: isSimulating })
+  const getSetter = type => (payload) => dispatch({ type, payload })
+
+  const setters = {
+    commands: getSetter('SET_COMMANDS'),
+    assembly: getSetter('SET_ASSEMBLY'),
+    globalStack: getSetter('SET_GLOBAL_STACK'),
+    currentVmCommand: getSetter('SET_CURRENT_VM_COMMAND'),
+    translator: getSetter('SET_TRANSLATOR'),
+    isSimulationModeOn: getSetter('SET_SIMULATION_MODE_ON'),
+    isSimulating: getSetter('SET_IS_SIMULATING')
   }
 
   const pushAssemblyBatch = (asmBatch) => {
-    const updatedAssembly = [...state.assembly.reverse().map(
+    const updatedAssembly = [...general.assembly.reverse().map(
       item => ({ ...item, color: 'green' }))]
     updatedAssembly.push(...asmBatch.map(item => ({ item, color: 'yellow' })))
-    setAssembly(updatedAssembly.reverse())
+    setters.assembly(updatedAssembly.reverse())
   }
 
   return {
-    ...state,
-    setCommands,
-    setAssembly,
-    setGlobalStack,
-    setCurrentVmCommand,
-    setTranslator,
-    setIsSimulationModeOn,
-    setIsSimulating,
+    general,
+    generalSetters: setters,
     pushAssemblyBatch
   }
 }

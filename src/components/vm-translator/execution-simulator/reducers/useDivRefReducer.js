@@ -16,7 +16,9 @@ const ACTIONS = {
 }
 
 const divRefReducer = (state, { type, payload }) => {
-  if (!ACTIONS[type]) throw new Error('UNKNOWN DIV REF ACTION TYPE:' + type)
+  if (!ACTIONS[type]) {
+    throw new Error(`UNKNOWN DIV REF ACTION TYPE:${type}`)
+  }
   return {
     ...state,
     [ACTIONS[type]]: payload
@@ -43,18 +45,20 @@ const useDivRefReducer = () => {
 
   return {
     divs,
-    setVmStackBoundingDiv: getSetter('SET_VM_STACK_BOUNDING_DIV'),
-    setAsmStackBoundingDiv: getSetter('SET_ASM_STACK_BOUNDING_DIV'),
-    setGlobalStackBoundingDiv: getSetter('SET_GLOBAL_STACK_BOUNDING_DIV'),
-    setCurrentInstrBoundingDiv: getSetter('SET_CURRENT_INSTRN_BOUNDING_DIV'),
-    setVmCpuBoundingDiv: getSetter('SET_VM_CPU_BOUNDING_DIV'),
-    setTopVmCommandDiv: getSetter('SET_TOP_VM_COMMAND_DIV'),
-    setTopVmInvisibleDiv: getSetter('SET_TOP_VM_INVISIBLE_DIV'),
-    setTopAsmCommandDiv: getSetter('SET_TOP_ASM_COMMAND_DIV'),
-    setTopAsmInvisibleDiv: getSetter('SET_TOP_ASM_INVISIBLE_DIV'),
-    setTopGlobalStackDiv: getSetter('SET_TOP_GSTACK_DIV'),
-    setTopGstackInvisibleDiv: getSetter('SET_TOP_GSTACK_INVISIBLE_DIV'),
-    setBottomGstackInvisibleDiv: getSetter('SET_BOTTOM_GSTACK_INVISIBLE_DIV')
+    divRefSetters: {
+      setVmStackBoundingDiv: getSetter('SET_VM_STACK_BOUNDING_DIV'),
+      setAsmStackBoundingDiv: getSetter('SET_ASM_STACK_BOUNDING_DIV'),
+      setGlobalStackBoundingDiv: getSetter('SET_GLOBAL_STACK_BOUNDING_DIV'),
+      setCurrentInstrBoundingDiv: getSetter('SET_CURRENT_INSTRN_BOUNDING_DIV'),
+      setVmCpuBoundingDiv: getSetter('SET_VM_CPU_BOUNDING_DIV'),
+      setTopVmCommandDiv: getSetter('SET_TOP_VM_COMMAND_DIV'),
+      setTopVmInvisibleDiv: getSetter('SET_TOP_VM_INVISIBLE_DIV'),
+      setTopAsmCommandDiv: getSetter('SET_TOP_ASM_COMMAND_DIV'),
+      setTopAsmInvisibleDiv: getSetter('SET_TOP_ASM_INVISIBLE_DIV'),
+      setTopGlobalStackDiv: getSetter('SET_TOP_GSTACK_DIV'),
+      setTopGstackInvisibleDiv: getSetter('SET_TOP_GSTACK_INVISIBLE_DIV'),
+      setBottomGstackInvisibleDiv: getSetter('SET_BOTTOM_GSTACK_INVISIBLE_DIV')
+    }
   }
 }
 export default useDivRefReducer

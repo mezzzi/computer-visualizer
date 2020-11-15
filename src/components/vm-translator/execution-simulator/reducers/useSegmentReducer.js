@@ -12,12 +12,14 @@ const ACTIONS = {
   TEMP: 'temp',
   TEMP_BOTTOM_INVISIBLE_DIV: 'tempBottomInvisibleDiv',
   POINTER: 'pointer',
-  POINTER_BOTTOM_INVISIBLE_DIV: 'pointerBottomInvisibleDiv'
+  POINTER_BOTTOM_INVISIBLE_DIV: 'pointerBottomInvisibleDiv',
+  STATIC: 'static',
+  STATIC_BOTTOM_INVISIBLE_DIV: 'staticBottomInvisibleDiv'
 
 }
 
 const segmentReducer = (state, { type, payload }) => {
-  if (!ACTIONS[type]) throw new Error('UNKNOWN SEGMENT ACTION TYPE:' + type)
+  if (!ACTIONS[type]) throw new Error(`UNKNOWN SEGMENT ACTION TYPE:${type}`)
   return {
     ...state,
     [ACTIONS[type]]: payload
@@ -37,7 +39,9 @@ const useSegmentReducer = () => {
     temp: [],
     tempBottomInvisibleDiv: null,
     pointer: [],
-    pointerBottomInvisibleDiv: null
+    pointerBottomInvisibleDiv: null,
+    static: [],
+    staticBottomInvisibleDiv: null
   })
 
   const getSetter = type => (payload) => dispatch({ type, payload })
@@ -56,7 +60,9 @@ const useSegmentReducer = () => {
       temp: getSetter('TEMP'),
       tempBottomInvisibleDiv: getSetter('TEMP_BOTTOM_INVISIBLE_DIV'),
       pointer: getSetter('POINTER'),
-      pointerBottomInvisibleDiv: getSetter('POINTER_BOTTOM_INVISIBLE_DIV')
+      pointerBottomInvisibleDiv: getSetter('POINTER_BOTTOM_INVISIBLE_DIV'),
+      static: getSetter('STATIC'),
+      staticBottomInvisibleDiv: getSetter('STATIC_BOTTOM_INVISIBLE_DIV')
     }
   }
 }

@@ -7,64 +7,42 @@ import {
   isBinaryOp
 } from '../util'
 
+const ACTIONS = {
+  SET_OP1: 'op1',
+  SET_OP2: 'op2',
+  SET_OPERATOR: 'operator',
+  SET_IS_UNARY: 'isUnary',
+  SET_RESULT: 'result'
+}
+
 const arithemticReducer = (state, { type, payload }) => {
-  switch (type) {
-    case 'SET_OP1':
-      return {
-        ...state,
-        op1: payload
-      }
-    case 'SET_OP2':
-      return {
-        ...state,
-        op2: payload
-      }
-    case 'SET_OPERATOR':
-      return {
-        ...state,
-        operator: payload
-      }
-    case 'SET_IS_UNARY': {
-      return {
-        ...state,
-        isUnary: payload
-      }
-    }
-    case 'SET_RESULT': {
-      return {
-        ...state,
-        result: payload
-      }
-    }
-    default:
-      throw new Error('UNKNOWN ARITHMETIC ACTION TYPE:' + type)
+  if (!ACTIONS[type]) {
+    throw new Error(`UNKNOWN ARITHMETIC ACTION TYPE:${type}`)
+  }
+  return {
+    ...state,
+    [ACTIONS[type]]: payload
   }
 }
 
 const useExecArithmeticReducer = () => {
-  const [state, dispatch] = useReducer(arithemticReducer, {
+  const [arithmetic, dispatch] = useReducer(arithemticReducer, {
     op1: null,
     op2: null,
     operator: null,
+    isUnary: false,
     result: null
   })
 
-  const setOp1 = (op1) => {
-    dispatch({ type: 'SET_OP1', payload: op1 })
-  }
-  const setOp2 = (op2) => {
-    dispatch({ type: 'SET_OP2', payload: op2 })
-  }
-  const setOperator = (operator) => {
-    dispatch({ type: 'SET_OPERATOR', payload: operator })
-  }
-  const setIsUnary = (isUnary) => {
-    dispatch({ type: 'SET_IS_UNARY', payload: isUnary })
-  }
-  const setResult = (result) => {
-    dispatch({ type: 'SET_RESULT', payload: result })
-  }
+  const getSetter = type => (payload) => dispatch({ type, payload })
 
+  const setters = {
+    op1: getSetter('SET_OP1'),
+    op2: getSetter('SET_OP2'),
+    operator: getSetter('SET_OPERATOR'),
+    isUnary: getSetter('SET_IS_UNARY'),
+    result: getSetter('SET_RESULT')
+  }
   const execNextArithmeticCommand = ({
     currentVmCommand,
     globalStack,
@@ -74,7 +52,7 @@ const useExecArithmeticReducer = () => {
     const updatedStack = [...globalStack]
 
     if (commandType === COMMAND.PUSH) {
-      setOp1(null)
+      setters.setOp1(null)
       updatedStack.unshift(currentVmCommand.getArg2())
       setGlobalStack(updatedStack)
     }
@@ -84,34 +62,30 @@ const useExecArithmeticReducer = () => {
     const isCurrentUnary = isUnaryOp(commandType)
     const isCurrentBinary = isBinaryOp(commandType)
     if (isCurrentUnary || isCurrentBinary) {
-      setOperator(commandType)
-      setIsUnary(isCurrentUnary)
+      setters.setOperator(commandType)
+      setters.setIsUnary(isCurrentUnary)
       if (isCurrentUnary) {
         const op1 = updatedStack.shift()
-        setOp1(op1)
+        setters.setOp1(op1)
         const output = getUnaryResult(op1, commandType)
-        setResult(output)
+        setters.setResult(output)
         updatedStack.unshift(output)
         setGlobalStack(updatedStack)
       } else {
         const op2 = updatedStack.shift()
         const op1 = updatedStack.shift()
-        setOp1(op1)
-        setOp2(op2)
+        setters.setOp1(op1)
+        setters.setOp2(op2)
         const output = getBinaryResult(op1, commandType, op2)
-        setResult(output)
+        setters.setResult(output)
         updatedStack.unshift(output)
         setGlobalStack(updatedStack)
       }
     }
   }
   return {
-    ...state,
-    setOp1,
-    setOp2,
-    setOperator,
-    setIsUnary,
-    setResult,
+    arithmetic,
+    arithmeticSetters: setters,
     execNextArithmeticCommand
   }
 }

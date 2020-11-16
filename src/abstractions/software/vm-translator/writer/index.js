@@ -85,7 +85,11 @@ class HVMCodeWriter {
           this.generatePushAssembly(segmentIndex, 'R3', false)
           break
         case SEGMENT.CONSTANT:
-          this.pushAssembly([`@${segmentIndex}`, 'D=A', '@SP', 'A=M', 'M=D'])
+          this.pushAssembly(`@${segmentIndex}`)
+          this.pushAssembly('D=A')
+          this.pushAssembly('@SP')
+          this.pushAssembly('A=M')
+          this.pushAssembly('M=D')
           break
         case SEGMENT.STATIC:
           this.pushAssembly(`@${command.getStringArg()}.${segmentIndex}`)
@@ -481,7 +485,7 @@ class HVMCodeWriter {
   }
 
   pushAssembly (assembly) {
-    this.assemblyBuffer.push(...(assembly instanceof Array ? assembly : [assembly]))
+    this.assemblyBuffer.push(assembly)
   }
 
   flushAssemblyBuffer () {

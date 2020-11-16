@@ -1,5 +1,4 @@
 .stackWrapper {
-  width: 60%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -46,4 +45,5 @@
 
 .stackBottom {
   border: 1px solid green;
+  width: 100%
 }

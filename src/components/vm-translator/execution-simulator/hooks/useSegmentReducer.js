@@ -15,7 +15,6 @@ const ACTIONS = {
   POINTER_BOTTOM_INVISIBLE_DIV: 'pointerBottomInvisibleDiv',
   STATIC: 'static',
   STATIC_BOTTOM_INVISIBLE_DIV: 'staticBottomInvisibleDiv'
-
 }
 
 const segmentReducer = (state, { type, payload }) => {

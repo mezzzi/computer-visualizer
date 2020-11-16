@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import './index.css'
 
 const Bucket = ({
+  outerWidth,
   width,
   height,
   content,
@@ -27,15 +28,10 @@ const Bucket = ({
       setFirstStackItemDiv(firstItemDivRef.current)
   }, [content.length])
   return (
-    <div className='stackWrapper'>
+    <div className='stackWrapper' style={{ width: outerWidth || '60%' }}>
       {
         bottomGrowing && (
-          <div
-            className='stackBottom'
-            style={{
-              width: `${(parseFloat(width) || 60) * 7 / 6}%`
-            }}
-          />
+          <div className='stackBottom' />
         )
       }
       <div
@@ -105,12 +101,7 @@ const Bucket = ({
       </div>
       {
         !bottomGrowing && (
-          <div
-            className='stackBottom'
-            style={{
-              width: `${(parseFloat(width) || 60) * 7 / 6}%`
-            }}
-          />
+          <div className='stackBottom' />
         )
       }
       {

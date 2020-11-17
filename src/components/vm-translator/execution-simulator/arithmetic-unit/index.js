@@ -27,7 +27,8 @@ const ArithmeticItem = ({ size, setDivRef, label, children }) => {
 
 const ArithmeticUnit = ({
   itemSize,
-  vmRunner
+  vmRunner,
+  titleHeight
 }) => {
   const { divRefSetters } = useContext(DivRefContext)
   return (
@@ -35,7 +36,11 @@ const ArithmeticUnit = ({
       height='100%'
       width='100%'
       title='VM CPU'
+      titleHeight={titleHeight}
       setContentBoundingDiv={divRefSetters.setVmCpuBoundingDiv}
+      customContentStyle={{
+        alignItems: 'flex-end'
+      }}
     >
       <div
         className='arithmeticBox'

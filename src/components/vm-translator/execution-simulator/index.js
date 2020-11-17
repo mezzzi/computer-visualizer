@@ -23,7 +23,8 @@ const ExecutionSimulator = () => {
       isSimulationModeOn, isSimulating
     },
     generalSetters: {
-      globalStack: setGlobalStack, isSimulating: setIsSimulating
+      globalStack: setGlobalStack, isSimulating: setIsSimulating,
+      ...modeSetters
     }
   } = useGeneralReducer()
 
@@ -213,10 +214,75 @@ const ExecutionSimulator = () => {
         </Box>
       </Box>
       <Box width='25%'>
-        <ArithmeticUnit
-          itemSize={getGstackSize()}
-          vmRunner={vmRunner}
-        />
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%',
+            height: '100%'
+          }}
+        >
+          <div style={{ width: '100%', height: '60%' }}>
+            <ArithmeticUnit
+              itemSize={getGstackSize()}
+              vmRunner={vmRunner}
+              titleHeight='25%'
+            />
+          </div>
+          <div
+            style={{
+              width: '100%',
+              height: '40%',
+              display: 'flex',
+              justifyContent: 'center',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}
+          >
+            <Box
+              title='Simulated Features'
+              titleHeight='40%'
+              width='100%'
+              height='100%'
+              customContentStyle={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                alignItems: 'center',
+                width: '80%',
+                selfJustify: 'center',
+                flexWrap: true
+              }}
+            >
+              <span>
+                <input
+                  type='checkbox' checked={isSimulationModeOn} value='all' name='all'
+                  onClick={() => modeSetters.isSimulationModeOn(!isSimulationModeOn)}
+                />
+                <label for='all'>all</label>
+              </span>
+              <span>
+                <input type='checkbox' value='hvm' name='hvm' />
+                <label for='hvm'>hvm</label>
+              </span>
+              <span>
+                <input type='checkbox' value='asm' name='asm' />
+                <label for='asm'>asm</label>
+              </span>
+              <span>
+                <input type='checkbox' value='push' name='push' />
+                <label for='push'>push</label>
+              </span>
+              <span>
+                <input type='checkbox' value='pop' name='pop' />
+                <label for='pop'>pop</label>
+              </span>
+              <span>
+                <input type='checkbox' value='cpu' name='cpu' />
+                <label for='cpu'>cpu</label>
+              </span>
+            </Box>
+          </div>
+        </div>
       </Box>
     </div>
   )

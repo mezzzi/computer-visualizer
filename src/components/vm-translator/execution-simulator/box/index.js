@@ -7,7 +7,9 @@ const Box = ({
   children,
   title,
   setContentBoundingDiv,
-  border = {}
+  border = {},
+  titleHeight,
+  customContentStyle
 }) => {
   const contentDivRef = useRef(null)
   useEffect(() => {
@@ -27,7 +29,7 @@ const Box = ({
     >
       {
         title && (
-          <div className='boxTitle'>
+          <div className='boxTitle' style={{ height: titleHeight || '15%' }}>
             {title}
           </div>
         )
@@ -36,7 +38,9 @@ const Box = ({
         ref={contentDivRef}
         className='boxContent'
         style={{
-          height: title ? '85%' : '100%'
+          height: title
+            ? (titleHeight ? `${100 - parseFloat(titleHeight)}%` : '85%') : '100%',
+          ...customContentStyle
         }}
       >
         {children}

@@ -27,7 +27,7 @@ const ArithmeticItem = ({ size, setDivRef, label, children }) => {
 
 const ArithmeticUnit = ({
   itemSize,
-  vmRunner,
+  arithmetic,
   titleHeight
 }) => {
   const { divRefSetters } = useContext(DivRefContext)
@@ -49,24 +49,24 @@ const ArithmeticUnit = ({
         <ArithmeticItem
           size={itemSize}
           setDivRef={divRefSetters.op1Div}
-          label={vmRunner.isUnary ? 'None' : 'Operand 1'}
+          label={arithmetic.isUnary ? 'None' : 'Operand 1'}
         >
-          {vmRunner.isUnary ? '' : (vmRunner.op1 === null ? '' : vmRunner.op1)}
+          {arithmetic.isUnary ? '' : (arithmetic.op1 === null ? '' : arithmetic.op1)}
         </ArithmeticItem>
         <ArithmeticItem
           size={{ ...itemSize, width: '50px' }}
           label='Op'
         >
-          {vmRunner.operator === null ? '' : getOperatorSymbol(vmRunner.operator)}
+          {arithmetic.operator === null ? '' : getOperatorSymbol(arithmetic.operator)}
         </ArithmeticItem>
         <ArithmeticItem
           size={itemSize}
           setDivRef={divRefSetters.op2Div}
-          label={vmRunner.isUnary ? 'Operand 1' : 'Operand 2'}
+          label={arithmetic.isUnary ? 'Operand 1' : 'Operand 2'}
         >
-          {vmRunner.isUnary ? (vmRunner.op1 === null
-            ? '' : vmRunner.op1)
-            : (vmRunner.op2 === null ? '' : vmRunner.op2)}
+          {arithmetic.isUnary ? (arithmetic.op1 === null
+            ? '' : arithmetic.op1)
+            : (arithmetic.op2 === null ? '' : arithmetic.op2)}
         </ArithmeticItem>
         <div style={{ marginTop: '5px' }}>=</div>
         <ArithmeticItem
@@ -74,7 +74,7 @@ const ArithmeticUnit = ({
           setDivRef={divRefSetters.resultDiv}
           label='Result'
         >
-          {vmRunner.result === null ? '' : vmRunner.result}
+          {arithmetic.result === null ? '' : arithmetic.result}
         </ArithmeticItem>
       </div>
     </Box>

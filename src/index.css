@@ -26,3 +26,20 @@ body, html {
 ::-webkit-scrollbar-thumb:hover {
   background: gray; 
 }
+
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* Styling checkbox */
+  width: 16px;
+  height: 16px;
+  background-color: black;
+  outline: none;
+}
+
+input[type="checkbox"]:checked {
+  background-color: green;
+  outline: none;
+}

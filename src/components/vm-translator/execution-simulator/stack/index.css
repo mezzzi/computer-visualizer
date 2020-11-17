@@ -4,7 +4,8 @@
   align-items: center;
   justify-content: flex-end;
   height: 100%;
-  margin-bottom: 10px;
+  padding-bottom: 10px;
+  box-sizing: border-box;
 }
 
 .bucketWrapper {
@@ -32,6 +33,7 @@
 
 .stackButton:hover {
   background-color: yellow;
+  outline: none;
 }
 
 .stackButton:focus {

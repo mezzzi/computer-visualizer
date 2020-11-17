@@ -1,4 +1,4 @@
-import { useReducer } from 'react'
+import { useReducer, useEffect } from 'react'
 
 const ACTIONS = {
   LOCAL: 'local',
@@ -25,7 +25,7 @@ const segmentReducer = (state, { type, payload }) => {
   }
 }
 
-const useSegmentReducer = () => {
+const useSegmentReducer = (vmFileIndex) => {
   const [segments, dispatch] = useReducer(segmentReducer, {
     local: [],
     localBottomInvisibleDiv: null,
@@ -43,26 +43,36 @@ const useSegmentReducer = () => {
     staticBottomInvisibleDiv: null
   })
 
+  useEffect(() => {
+    [
+      'local', 'argument', 'this', 'that', 'temp', 'pointer', 'static'
+    ].forEach(segment => {
+      setters[segment]([])
+    })
+  }, [vmFileIndex])
+
   const getSetter = type => (payload) => dispatch({ type, payload })
+
+  const setters = {
+    local: getSetter('LOCAL'),
+    localBottomInvisibleDiv: getSetter('LOCAL_BOTTOM_INVISIBLE_DIV'),
+    argument: getSetter('ARGUMENT'),
+    argumentBottomInvisibleDiv: getSetter('ARGUMENT_BOTTOM_INVISIBLE_DIV'),
+    this: getSetter('THIS'),
+    thisBottomInvisibleDiv: getSetter('THIS_BOTTOM_INVISIBLE_DIV'),
+    that: getSetter('THAT'),
+    thatBottomInvisibleDiv: getSetter('THAT_BOTTOM_INVISIBLE_DIV'),
+    temp: getSetter('TEMP'),
+    tempBottomInvisibleDiv: getSetter('TEMP_BOTTOM_INVISIBLE_DIV'),
+    pointer: getSetter('POINTER'),
+    pointerBottomInvisibleDiv: getSetter('POINTER_BOTTOM_INVISIBLE_DIV'),
+    static: getSetter('STATIC'),
+    staticBottomInvisibleDiv: getSetter('STATIC_BOTTOM_INVISIBLE_DIV')
+  }
 
   return {
     segments,
-    segmentSetters: {
-      local: getSetter('LOCAL'),
-      localBottomInvisibleDiv: getSetter('LOCAL_BOTTOM_INVISIBLE_DIV'),
-      argument: getSetter('ARGUMENT'),
-      argumentBottomInvisibleDiv: getSetter('ARGUMENT_BOTTOM_INVISIBLE_DIV'),
-      this: getSetter('THIS'),
-      thisBottomInvisibleDiv: getSetter('THIS_BOTTOM_INVISIBLE_DIV'),
-      that: getSetter('THAT'),
-      thatBottomInvisibleDiv: getSetter('THAT_BOTTOM_INVISIBLE_DIV'),
-      temp: getSetter('TEMP'),
-      tempBottomInvisibleDiv: getSetter('TEMP_BOTTOM_INVISIBLE_DIV'),
-      pointer: getSetter('POINTER'),
-      pointerBottomInvisibleDiv: getSetter('POINTER_BOTTOM_INVISIBLE_DIV'),
-      static: getSetter('STATIC'),
-      staticBottomInvisibleDiv: getSetter('STATIC_BOTTOM_INVISIBLE_DIV')
-    }
+    segmentSetters: setters
   }
 }
 export default useSegmentReducer

@@ -43,3 +43,13 @@ input[type="checkbox"]:checked {
   background-color: green;
   outline: none;
 }
+
+select {
+  /* Styling select */
+  font-family: monospace;
+  outline: none;
+  border: none;
+  background: black;
+  color: green;
+  padding: 5px;
+}

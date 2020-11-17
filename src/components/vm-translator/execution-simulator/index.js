@@ -1,106 +1,33 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext } from 'react'
 import './index.css'
 import Box from './box'
 import Stack from './stack'
 import StackBox from './stackbox'
 import ArithmeticUnit from './arithmetic-unit'
-import useNonSimulatingVmRunner from './hooks/useNonSimulatingVmRunner'
-import useGeneralReducer from './hooks/useGeneralReducer'
-import useSegmentReducer from './hooks/useSegmentReducer'
 
-import useAsmGenerator from './hooks/useAsmGenerator'
-import useVmCodeProvider from './hooks/useVmCodeProvider'
-import usePushSimulator from './hooks/usePushSimulator'
-import usePopSimulator from './hooks/usePopSimulator'
-import useArithmeticSimulator from './hooks/useArithmeticSimulator'
+import useSimulator from './hooks/useSimulator'
 
 import { DivRefContext } from './providers/divRefProvider'
 
 const ExecutionSimulator = () => {
-  const {
-    general: {
-      translator, globalStack,
-      isSimulationModeOn, isSimulating
-    },
-    generalSetters: {
-      globalStack: setGlobalStack, isSimulating: setIsSimulating,
-      ...modeSetters
-    }
-  } = useGeneralReducer()
-
   const { divs, divRefSetters } = useContext(DivRefContext)
 
-  const { segments, segmentSetters } = useSegmentReducer()
-
   const {
-    vmCodeProvider: {
-      vmCommands, currentVmCommand,
-      isNextVmCmdProvided, shouldProvideNextVmCmd
-    },
-    vmCodeSetters
-  } = useVmCodeProvider({ isSimulationModeOn, translator, setIsSimulating })
-
-  const { asmGenerator, asmSetters } = useAsmGenerator({
-    isSimulationModeOn,
-    translator,
-    isNextVmCmdProvided,
-    setIsNextVmCmdProvided: vmCodeSetters.isNextVmCmdProvided
-  })
-
-  const {
-    vmRunner, vmRunnerSetters, resetArithmetic
-  } = useNonSimulatingVmRunner({
-    isAsmGenerated: asmGenerator.isAsmGenerated,
-    setIsAsmGenerated: asmSetters.isAsmGenerated,
-    isSimulationModeOn,
+    vmCommands,
     currentVmCommand,
+    vmCodeSetters,
+    asmGenerator,
     globalStack,
-    setGlobalStack,
-    segments,
-    segmentSetters
-  })
-
-  usePushSimulator({
-    isAsmGenerated: asmGenerator.isAsmGenerated,
-    setIsAsmGenerated: asmSetters.isAsmGenerated,
-    currentVmCommand,
-    globalStack,
-    setGlobalStack,
     segments,
     segmentSetters,
     isSimulationModeOn,
-    setIsSimulating
-  })
-
-  usePopSimulator({
-    isAsmGenerated: asmGenerator.isAsmGenerated,
-    setIsAsmGenerated: asmSetters.isAsmGenerated,
-    currentVmCommand,
-    globalStack,
-    setGlobalStack,
-    segments,
-    segmentSetters,
-    isSimulationModeOn,
-    setIsSimulating
-  })
-
-  useArithmeticSimulator({
-    isAsmGenerated: asmGenerator.isAsmGenerated,
-    setIsAsmGenerated: asmSetters.isAsmGenerated,
-    currentVmCommand,
-    globalStack,
-    setGlobalStack,
-    vmRunner,
-    vmRunnerSetters,
-    isSimulationModeOn,
-    setIsSimulating
-  })
-
-  useEffect(() => {
-    if (shouldProvideNextVmCmd) {
-      resetArithmetic()
-    }
-  }, [shouldProvideNextVmCmd])
+    isAsmSimulationOn,
+    isSimulating,
+    modeSetters,
+    arithmetic,
+    vmFileIndex,
+    setVmFileIndex
+  } = useSimulator()
 
   const provideNextVmCmd = () => {
     vmCodeSetters.shouldProvideNextVmCmd(true)
@@ -109,6 +36,15 @@ const ExecutionSimulator = () => {
   const getGstackSize = () => {
     if (!divs.topGstackInvisibleDiv) return {}
     const boundingRect = divs.topGstackInvisibleDiv.getBoundingClientRect()
+    return {
+      width: `${boundingRect.width}px`,
+      height: `${boundingRect.height}px`
+    }
+  }
+
+  const getVmStackSize = () => {
+    if (!divs.topVmInvisibleDiv) return {}
+    const boundingRect = divs.topVmInvisibleDiv.getBoundingClientRect()
     return {
       width: `${boundingRect.width}px`,
       height: `${boundingRect.height}px`
@@ -125,10 +61,15 @@ const ExecutionSimulator = () => {
           title='VM Code'
           setContentBoundingDiv={divRefSetters.setVmStackBoundingDiv}
           border={{ right: 1 }}
+          customContentStyle={{
+            flexDirection: 'column'
+          }}
         >
           <Stack
             width='90%'
             height='60%'
+            outerHeight='85%'
+            outer
             content={vmCommands.map(com => com.toString())}
             hasAction
             onAction={provideNextVmCmd}
@@ -137,15 +78,38 @@ const ExecutionSimulator = () => {
             setBottomInvisibleDiv={divRefSetters.setTopVmInvisibleDiv}
             setFirstStackItemDiv={divRefSetters.setTopVmCommandDiv}
           />
+          <div
+            style={{
+              height: '15%',
+              width: '70%',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              fontSize: 'small',
+              fontFamily: 'monospace'
+            }}
+          >
+            <label htmlFor='files'>Vm Programs:</label>
+            <select
+              name='files' id='files'
+              disabled={isSimulating}
+              onChange={(event) => setVmFileIndex(event.target.value)}
+              value={vmFileIndex}
+            >
+              <option value='0'>Simple Add</option>
+              <option value='1'>Stack Test</option>
+              <option value='2'>Basic Test</option>
+              <option value='3'>Pointer Test</option>
+            </select>
+          </div>
         </Box>
         <Box
           height='100%'
           title='Current VM Command'
           setContentBoundingDiv={divRefSetters.setCurrentInstrBoundingDiv}
         >
-          <div className='stackItem'>
-            {!isSimulationModeOn && currentVmCommand
-              ? currentVmCommand.toString() : ''}
+          <div className='currentVmCommand' style={{ ...getVmStackSize() }}>
+            {currentVmCommand ? currentVmCommand.toString() : ''}
           </div>
         </Box>
       </Box>
@@ -225,7 +189,7 @@ const ExecutionSimulator = () => {
           <div style={{ width: '100%', height: '60%' }}>
             <ArithmeticUnit
               itemSize={getGstackSize()}
-              vmRunner={vmRunner}
+              arithmetic={arithmetic}
               titleHeight='25%'
             />
           </div>
@@ -256,29 +220,35 @@ const ExecutionSimulator = () => {
               <span>
                 <input
                   type='checkbox' checked={isSimulationModeOn} value='all' name='all'
-                  onClick={() => modeSetters.isSimulationModeOn(!isSimulationModeOn)}
+                  disabled={isSimulating}
+                  onChange={() => modeSetters.isSimulationModeOn(!isSimulationModeOn)}
                 />
-                <label for='all'>all</label>
+                <label htmlFor='all'>all</label>
               </span>
               <span>
                 <input type='checkbox' value='hvm' name='hvm' />
-                <label for='hvm'>hvm</label>
+                <label htmlFor='hvm'>hvm</label>
               </span>
               <span>
-                <input type='checkbox' value='asm' name='asm' />
-                <label for='asm'>asm</label>
+                <input
+                  type='checkbox' value='asm' name='asm'
+                  disabled={isSimulating}
+                  checked={isAsmSimulationOn}
+                  onChange={() => modeSetters.isAsmSimulationOn(!isAsmSimulationOn)}
+                />
+                <label htmlFor='asm'>asm</label>
               </span>
               <span>
                 <input type='checkbox' value='push' name='push' />
-                <label for='push'>push</label>
+                <label htmlFor='push'>push</label>
               </span>
               <span>
                 <input type='checkbox' value='pop' name='pop' />
-                <label for='pop'>pop</label>
+                <label htmlFor='pop'>pop</label>
               </span>
               <span>
                 <input type='checkbox' value='cpu' name='cpu' />
-                <label for='cpu'>cpu</label>
+                <label htmlFor='cpu'>cpu</label>
               </span>
             </Box>
           </div>

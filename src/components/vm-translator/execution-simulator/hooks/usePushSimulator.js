@@ -20,7 +20,7 @@ const usePushSimulator = ({
   const { divs } = useContext(DivRefContext)
 
   useEffect(() => {
-    if (isAsmGenerated && isSimulationModeOn) {
+    if (isAsmGenerated) {
       setIsAsmGenerated(false)
       const updatedStack = [...globalStack]
       const commandType = currentVmCommand.getCommandType()
@@ -28,7 +28,9 @@ const usePushSimulator = ({
         const segmentName = currentVmCommand.getArg1()
         const segmentIndex = currentVmCommand.getArg2()
         if (segmentName === 'constant') {
-          moveFromBoundaryToTarget({
+          updatedStack.unshift(segmentIndex)
+          !isSimulationModeOn && setGlobalStack(updatedStack)
+          isSimulationModeOn && moveFromBoundaryToTarget({
             boundaryRect: divs.globalStackBoundingDiv.getBoundingClientRect(),
             targetRect: (
               divs.topGlobalStackDiv || divs.topGstackInvisibleDiv
@@ -37,7 +39,6 @@ const usePushSimulator = ({
             text: segmentIndex,
             speed: 5,
             onSimulationEnd: () => {
-              updatedStack.unshift(segmentIndex)
               setGlobalStack(updatedStack)
               setIsSimulating(false)
             }
@@ -49,34 +50,38 @@ const usePushSimulator = ({
           const updatedSegment = [...segment]
           const target = updatedSegment.find(
             item => item.index === segmentIndex)
-          let sourceDiv = null
           const targetIndex = updatedSegment.indexOf(target)
-          if (targetIndex + 1 < segment.length) {
-            sourceDiv = segments[`${segmentName}BottomInvisibleDiv`]
-          } else {
-            if (!segment[targetIndex]) {
-              setIsSimulating(false)
-              return
-            }
-            sourceDiv = document.getElementById(
-              `${segmentName}${segment[targetIndex].index}`)
-          }
           updatedSegment.splice(targetIndex, 1)
           segmentSetter(updatedSegment)
-          simulateDivMotion({
-            sourceRectDiv: sourceDiv,
-            sourceBoundingDiv: divs.globalStackBoundingDiv,
-            destinationRectDiv: (divs.topGlobalStackDiv ||
-              divs.bottomGstackInvisibleDiv),
-            text: target.item,
-            speed: 5,
-            clearOnEnd: true,
-            onSimulationEnd: () => {
-              updatedStack.unshift(target.item)
-              setGlobalStack(updatedStack)
-              setIsSimulating(false)
+
+          target && target.item && updatedStack.unshift(target.item)
+          !isSimulationModeOn && setGlobalStack(updatedStack)
+          if (isSimulationModeOn) {
+            let sourceDiv = null
+            if (targetIndex + 1 < segment.length) {
+              sourceDiv = segments[`${segmentName}BottomInvisibleDiv`]
+            } else {
+              if (!segment[targetIndex]) {
+                setIsSimulating(false)
+                return
+              }
+              sourceDiv = document.getElementById(
+                `${segmentName}${segment[targetIndex].index}`)
             }
-          })
+            simulateDivMotion({
+              sourceRectDiv: sourceDiv,
+              sourceBoundingDiv: divs.globalStackBoundingDiv,
+              destinationRectDiv: (divs.topGlobalStackDiv ||
+                divs.bottomGstackInvisibleDiv),
+              text: target.item,
+              speed: 5,
+              clearOnEnd: true,
+              onSimulationEnd: () => {
+                setGlobalStack(updatedStack)
+                setIsSimulating(false)
+              }
+            })
+          }
         }
       }
     }

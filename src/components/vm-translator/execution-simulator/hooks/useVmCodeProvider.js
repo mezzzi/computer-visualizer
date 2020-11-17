@@ -38,16 +38,17 @@ const useVmCodeProvider = ({
 
   useEffect(() => {
     translator && setters.vmCommands(translator.getCommands())
+    setters.currentVmCommand(null)
   }, [translator])
 
   useEffect(() => {
     if (state.shouldProvideNextVmCmd) {
       setters.shouldProvideNextVmCmd(false)
+      setters.currentVmCommand(null)
       if (state.vmCommands.length < 1) return
       const updatedCommands = [...state.vmCommands]
       const command = updatedCommands.shift()
       setters.vmCommands(updatedCommands)
-      setters.currentVmCommand(command)
       if (isSimulationModeOn) {
         setIsSimulating(true)
         divs.topVmInvisibleDiv.scrollIntoView()
@@ -61,11 +62,14 @@ const useVmCodeProvider = ({
           text: state.vmCommands[0].toString(),
           speed: 5,
           id: 'movingCommand',
+          clearOnEnd: true,
           onSimulationEnd: () => {
+            setters.currentVmCommand(command)
             setters.isNextVmCmdProvided(true)
           }
         })
       } else {
+        setters.currentVmCommand(command)
         setters.isNextVmCmdProvided(true)
       }
     }

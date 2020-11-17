@@ -10,3 +10,11 @@
   color: green;
   overflow: hidden;
 }
+
+.currentVmCommand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: yellow;
+  background-color: black;
+}

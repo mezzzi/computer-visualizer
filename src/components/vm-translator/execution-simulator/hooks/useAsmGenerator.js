@@ -24,7 +24,9 @@ const useAsmGenerator = ({
   isNextVmCmdProvided,
   setIsNextVmCmdProvided,
   isSimulationModeOn,
-  translator
+  isAsmSimulationOn,
+  translator,
+  vmFileIndex
 }) => {
   const { divs } = useContext(DivRefContext)
   const [state, dispatch] = useReducer(asmReducer, {
@@ -35,10 +37,14 @@ const useAsmGenerator = ({
   })
 
   useEffect(() => {
+    setters.assembly([])
+  }, [vmFileIndex])
+
+  useEffect(() => {
     if (isNextVmCmdProvided) {
       setIsNextVmCmdProvided(false)
       const asmBatch = translator.step()
-      if (isSimulationModeOn) {
+      if (isSimulationModeOn && isAsmSimulationOn) {
         setters.nextAsmBatch(asmBatch)
         setters.nextAsmBatchIndex(0)
       } else {

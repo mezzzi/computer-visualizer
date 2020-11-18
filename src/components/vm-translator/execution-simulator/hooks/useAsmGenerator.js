@@ -2,9 +2,11 @@
 import { useReducer, useEffect, useContext } from 'react'
 import { DivRefContext } from '../providers/divRefProvider'
 import { moveFromBoundaryToTarget } from '../simulator'
+import Assembler from 'abstractions/software/assembler'
 
 const ACTIONS = {
   SET_ASSEMBLY: 'assembly',
+  SET_ASSEMBLER: 'assembler',
   SET_NEXT_ASM_BATCH: 'nextAsmBatch',
   SET_NEXT_ASM_BATCH_INDEX: 'nextAsmBatchIndex',
   SET_IS_ASM_SIMULATED: 'isAsmGenerated'
@@ -31,6 +33,7 @@ const useAsmGenerator = ({
   const { divs } = useContext(DivRefContext)
   const [state, dispatch] = useReducer(asmReducer, {
     assembly: [],
+    assembler: null,
     nextAsmBatch: [],
     nextAsmBatchIndex: -1,
     isAsmGenerated: false
@@ -44,6 +47,11 @@ const useAsmGenerator = ({
     if (isNextVmCmdProvided) {
       setIsNextVmCmdProvided(false)
       const asmBatch = translator.step()
+      const assembler = new Assembler(
+        asmBatch.join('\n')
+      )
+      assembler.beforeStep()
+      setters.assembler(assembler)
       if (isSimulationModeOn && isAsmSimulationOn) {
         setters.nextAsmBatch(asmBatch)
         setters.nextAsmBatchIndex(0)
@@ -57,6 +65,15 @@ const useAsmGenerator = ({
   useEffect(() => {
     const { nextAsmBatch, nextAsmBatchIndex } = state
     if (nextAsmBatchIndex > -1) {
+      if (state.assembler) {
+        const parser = state.assembler.step()
+        console.log({
+          type: parser.commandType(),
+          dest: parser.dest(),
+          comp: parser.comp(),
+          jump: parser.jump()
+        })
+      }
       moveFromBoundaryToTarget({
         boundaryRect: divs.asmStackBoundingDiv.getBoundingClientRect(),
         targetRect: (divs.asmCommandDiv ||
@@ -81,6 +98,7 @@ const useAsmGenerator = ({
 
   const setters = {
     assembly: getSetter('SET_ASSEMBLY'),
+    assembler: getSetter('SET_ASSEMBLER'),
     nextAsmBatch: getSetter('SET_NEXT_ASM_BATCH'),
     nextAsmBatchIndex: getSetter('SET_NEXT_ASM_BATCH_INDEX'),
     isAsmGenerated: getSetter('SET_IS_ASM_SIMULATED')

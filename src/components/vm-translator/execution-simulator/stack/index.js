@@ -15,7 +15,8 @@ const Bucket = ({
   setFirstStackItemDiv,
   setTopInvisibleDiv,
   setBottomInvisibleDiv,
-  name
+  name,
+  buttonHeight
 }) => {
   const firstItemDivRef = useRef(null)
   const topInvisibleIDivRef = useRef(null)
@@ -117,7 +118,8 @@ const Bucket = ({
               firstItemDivRef.current,
               topInvisibleIDivRef.current)}
             style={{
-              width: width || '60%'
+              width: width || '60%',
+              height: buttonHeight || '15%'
             }}
           >
             {actionName}

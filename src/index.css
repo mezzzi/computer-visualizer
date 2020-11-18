@@ -40,7 +40,7 @@ input[type="checkbox"] {
 }
 
 input[type="checkbox"]:checked {
-  background-color: green;
+  background-color: red;
   outline: none;
 }
 

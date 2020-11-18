@@ -46,6 +46,7 @@ const ExecutionSimulator = () => {
     if (!divs.topVmInvisibleDiv) return {}
     const boundingRect = divs.topVmInvisibleDiv.getBoundingClientRect()
     return {
+      left: `${boundingRect.left}px`,
       width: `${boundingRect.width}px`,
       height: `${boundingRect.height}px`
     }
@@ -55,80 +56,100 @@ const ExecutionSimulator = () => {
     <div
       className='simulatorContainer'
     >
-      <Box border={{ right: 1, bottom: 1 }}>
-        <Box
-          height='100%'
-          title='VM Code'
-          setContentBoundingDiv={divRefSetters.setVmStackBoundingDiv}
-          border={{ right: 1 }}
-          customContentStyle={{
-            flexDirection: 'column'
+      <Box
+        border={{ right: 1, bottom: 1 }}
+        width='25%'
+        title='VM Code'
+        setContentBoundingDiv={divRefSetters.setVmStackBoundingDiv}
+        customContentStyle={{
+          flexDirection: 'column'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%'
           }}
         >
-          <Stack
-            width='90%'
-            height='60%'
-            outerHeight='85%'
-            outer
-            content={vmCommands.map(com => com.toString())}
-            hasAction
-            onAction={provideNextVmCmd}
-            actionName='NEXT'
-            actionDisabled={isSimulating}
-            setBottomInvisibleDiv={divRefSetters.setTopVmInvisibleDiv}
-            setFirstStackItemDiv={divRefSetters.setTopVmCommandDiv}
-          />
           <div
             style={{
-              height: '15%',
-              width: '70%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              padding: '5px',
+              fontFamily: 'monospace',
               fontSize: 'small',
-              fontFamily: 'monospace'
+              color: 'yellow'
             }}
           >
-            <label htmlFor='files'>Vm Programs:</label>
-            <select
-              name='files' id='files'
-              disabled={isSimulating}
-              onChange={(event) => setVmFileIndex(event.target.value)}
-              value={vmFileIndex}
-            >
-              <option value='0'>Simple Add</option>
-              <option value='1'>Stack Test</option>
-              <option value='2'>Basic Test</option>
-              <option value='3'>Pointer Test</option>
-            </select>
+            Current Command
           </div>
-        </Box>
-        <Box
-          height='100%'
-          title='Current VM Command'
-          setContentBoundingDiv={divRefSetters.setCurrentInstrBoundingDiv}
-        >
-          <div className='currentVmCommand' style={{ ...getVmStackSize() }}>
+          <div
+            className='currentVmCommand'
+            style={{
+              ...getVmStackSize(),
+              position: 'absolute',
+              top: '75px'
+            }}
+          >
             {currentVmCommand ? currentVmCommand.toString() : ''}
           </div>
-        </Box>
+        </div>
+        <Stack
+          width='90%'
+          height='60%'
+          outerHeight='85%'
+          outer
+          content={vmCommands.map(com => com.toString())}
+          hasAction
+          onAction={provideNextVmCmd}
+          actionName='NEXT'
+          actionDisabled={isSimulating}
+          setBottomInvisibleDiv={divRefSetters.setTopVmInvisibleDiv}
+          setFirstStackItemDiv={divRefSetters.setTopVmCommandDiv}
+        />
+        <div
+          style={{
+            height: '15%',
+            width: '70%',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: 'small',
+            fontFamily: 'monospace'
+          }}
+        >
+          <label htmlFor='files'>Vm Programs:</label>
+          <select
+            name='files' id='files'
+            disabled={isSimulating}
+            onChange={(event) => setVmFileIndex(event.target.value)}
+            value={vmFileIndex}
+          >
+            <option value='0'>Simple Add</option>
+            <option value='1'>Stack Test</option>
+            <option value='2'>Basic Test</option>
+            <option value='3'>Pointer Test</option>
+          </select>
+        </div>
       </Box>
-      <Box border={{ bottom: 1 }}>
+      <Box border={{ bottom: 1 }} width='75%'>
         <Box
           height='100%'
           title='Hack Assembly'
+          width='20%'
           border={{ right: 1 }}
           setContentBoundingDiv={divRefSetters.setAsmStackBoundingDiv}
         >
           <Stack
-            width='70%'
+            outerWidth='90%'
+            width='80%'
             bottomGrowing
             content={asmGenerator.assembly}
             setTopInvisibleDiv={divRefSetters.setTopAsmInvisibleDiv}
             setFirstStackItemDiv={divRefSetters.setTopAsmCommandDiv}
           />
         </Box>
-        <Box height='100%' title='Hack CPU'>
+        <Box height='100%' width='80%' title='Hack CPU'>
           ASM Notes and Diagrams
         </Box>
       </Box>
@@ -204,7 +225,7 @@ const ExecutionSimulator = () => {
             }}
           >
             <Box
-              title='Simulated Features'
+              title='Non Simulated Features'
               titleHeight='40%'
               width='100%'
               height='100%'
@@ -219,7 +240,7 @@ const ExecutionSimulator = () => {
             >
               <span>
                 <input
-                  type='checkbox' checked={isSimulationModeOn} value='all' name='all'
+                  type='checkbox' checked={!isSimulationModeOn} value='all' name='all'
                   disabled={isSimulating}
                   onChange={() => modeSetters.isSimulationModeOn(!isSimulationModeOn)}
                 />
@@ -233,7 +254,7 @@ const ExecutionSimulator = () => {
                 <input
                   type='checkbox' value='asm' name='asm'
                   disabled={isSimulating}
-                  checked={isAsmSimulationOn}
+                  checked={!isAsmSimulationOn}
                   onChange={() => modeSetters.isAsmSimulationOn(!isAsmSimulationOn)}
                 />
                 <label htmlFor='asm'>asm</label>

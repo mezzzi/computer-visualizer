@@ -3,7 +3,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding-bottom: 10px;
+  padding-bottom: 5px;
   box-sizing: border-box;
 }
 
@@ -21,10 +21,12 @@
 }
 
 .stackButton {
-  height: 12%;
   background-color: green;
   color: black;
-  font-size: large;
+  font-size: small;
+  font-family: monospace;
+  letter-spacing: 10px;
+  font-weight: bold;
   cursor: pointer;
   border: none;
   margin: 2% 0;

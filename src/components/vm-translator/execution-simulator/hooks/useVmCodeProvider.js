@@ -1,10 +1,7 @@
 
 import { useReducer, useEffect, useContext } from 'react'
 import { DivRefContext } from '../providers/divRefProvider'
-import {
-  simulateDivMotion,
-  getCenteredRectCoors
-} from '../simulator'
+import { moveToTarget } from '../simulator'
 
 const ACTIONS = {
   VM_COMMANDS: 'vmCommands',
@@ -52,17 +49,16 @@ const useVmCodeProvider = ({
       if (isSimulationModeOn) {
         setIsSimulating(true)
         divs.topVmInvisibleDiv.scrollIntoView()
-        simulateDivMotion({
+        moveToTarget({
           sourceRectDiv: divs.vmCommandDiv,
-          sourceBoundingDiv: divs.vmStackBoundingDiv,
-          destinationRectCoors: getCenteredRectCoors(
-            divs.currentInstrnBoundingDiv.getBoundingClientRect(),
-            divs.vmCommandDiv.getBoundingClientRect()
-          ),
+          destinationRect: {
+            ...divs.vmCommandDiv.getBoundingClientRect(),
+            top: 75
+          },
           text: state.vmCommands[0].toString(),
-          speed: 5,
           id: 'movingCommand',
           clearOnEnd: true,
+          noSideWay: true,
           onSimulationEnd: () => {
             setters.currentVmCommand(command)
             setters.isNextVmCmdProvided(true)

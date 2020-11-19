@@ -1,8 +1,11 @@
 
 import { useReducer, useEffect, useContext } from 'react'
-import { DivRefContext } from '../providers/divRefProvider'
 import { moveFromBoundaryToTarget } from '../simulator'
 import Assembler from 'abstractions/software/assembler'
+import { COMMAND_TYPE } from 'abstractions/software/assembler/parser/types'
+
+import { DivRefContext } from '../providers/divRefProvider'
+import { AsmStepwiseContext } from '../providers/asmStepwiseProvider'
 
 const ACTIONS = {
   SET_ASSEMBLY: 'assembly',
@@ -27,10 +30,22 @@ const useAsmGenerator = ({
   setIsNextVmCmdProvided,
   isSimulationModeOn,
   isAsmSimulationOn,
+  setIsSimulating,
+  isAsmStepSimulationOn,
   translator,
   vmFileIndex
 }) => {
   const { divs } = useContext(DivRefContext)
+  const {
+    state: {
+      aRegister
+    },
+    setters: {
+      aRegister: setARegister,
+      dRegister: setDRegister
+    }
+  } = useContext(AsmStepwiseContext)
+
   const [state, dispatch] = useReducer(asmReducer, {
     assembly: [],
     assembler: null,
@@ -54,7 +69,8 @@ const useAsmGenerator = ({
       setters.assembler(assembler)
       if (isSimulationModeOn && isAsmSimulationOn) {
         setters.nextAsmBatch(asmBatch)
-        setters.nextAsmBatchIndex(0)
+        !isAsmStepSimulationOn && setters.nextAsmBatchIndex(0)
+        isAsmStepSimulationOn && setIsSimulating(true)
       } else {
         pushAssemblyBatch(asmBatch)
         setters.isAsmGenerated(true)
@@ -71,8 +87,21 @@ const useAsmGenerator = ({
           type: parser.commandType(),
           dest: parser.dest(),
           comp: parser.comp(),
-          jump: parser.jump()
+          jump: parser.jump(),
+          symbol: parser.symbol(),
+          address: parser.commandType() === COMMAND_TYPE.A_COMMAND &&
+          state.assembler.getAddress(parser.symbol())
         })
+        const commandType = parser.commandType()
+        const { assembler } = state
+        if (commandType === COMMAND_TYPE.A_COMMAND) {
+          setARegister(assembler.getAddress(parser.symbol()))
+        }
+        if (commandType === COMMAND_TYPE.C_COMMAND) {
+          if (parser.dest() === 'D' && parser.comp() === 'A') {
+            setDRegister(aRegister)
+          }
+        }
       }
       moveFromBoundaryToTarget({
         boundaryRect: divs.asmStackBoundingDiv.getBoundingClientRect(),
@@ -83,16 +112,22 @@ const useAsmGenerator = ({
         speed: 5,
         onSimulationEnd: () => {
           pushAssemblyBatch([nextAsmBatch[nextAsmBatchIndex]])
-          if (nextAsmBatchIndex === nextAsmBatch.length - 1) {
-            setters.nextAsmBatchIndex(-1)
-            setters.isAsmGenerated(true)
-          } else {
-            setters.nextAsmBatchIndex(nextAsmBatchIndex + 1)
-          }
+          !isAsmStepSimulationOn && provideNextAsmCommand()
         }
       })
     }
   }, [state.nextAsmBatchIndex])
+
+  const provideNextAsmCommand = () => {
+    const { nextAsmBatch, nextAsmBatchIndex } = state
+    if (nextAsmBatchIndex === nextAsmBatch.length - 1) {
+      setters.nextAsmBatchIndex(-1)
+      !isAsmStepSimulationOn && setters.isAsmGenerated(true)
+      isAsmStepSimulationOn && setIsSimulating(false)
+    } else {
+      setters.nextAsmBatchIndex(nextAsmBatchIndex + 1)
+    }
+  }
 
   const getSetter = type => (payload) => dispatch({ type, payload })
 
@@ -113,7 +148,8 @@ const useAsmGenerator = ({
 
   return {
     asmGenerator: state,
-    asmSetters: setters
+    asmSetters: setters,
+    provideNextAsmCommand
   }
 }
 export default useAsmGenerator

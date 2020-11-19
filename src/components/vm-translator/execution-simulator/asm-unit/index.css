@@ -22,3 +22,28 @@
   justify-content: center;
   align-items: center;
 }
+
+.symbolTable {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 10px;
+  font-family: monospace;
+  align-self: flex-start;
+}
+
+.symbolTableRow {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.symbolTableCell {
+  width: 20%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 25px;
+  border-left: 1px solid black;
+  border-top: 1px solid black;
+}

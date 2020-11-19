@@ -13,7 +13,8 @@ const useSimulator = () => {
   const {
     general: {
       translator, globalStack, vmFileIndex,
-      isSimulationModeOn, isSimulating, isAsmSimulationOn
+      isSimulationModeOn, isSimulating, isAsmSimulationOn,
+      isAsmStepSimulationOn
     },
     generalSetters: {
       globalStack: setGlobalStack, isSimulating: setIsSimulating,
@@ -32,11 +33,13 @@ const useSimulator = () => {
     vmCodeSetters
   } = useVmCodeProvider({ isSimulationModeOn, translator, setIsSimulating })
 
-  const { asmGenerator, asmSetters } = useAsmGenerator({
+  const { asmGenerator, asmSetters, provideNextAsmCommand } = useAsmGenerator({
     isSimulationModeOn,
     isAsmSimulationOn,
+    isAsmStepSimulationOn,
     translator,
     isNextVmCmdProvided,
+    setIsSimulating,
     setIsNextVmCmdProvided: vmCodeSetters.isNextVmCmdProvided,
     vmFileIndex
   })
@@ -92,6 +95,8 @@ const useSimulator = () => {
     segmentSetters,
     isSimulationModeOn,
     isAsmSimulationOn,
+    isAsmStepSimulationOn,
+    provideNextAsmCommand,
     isSimulating,
     modeSetters,
     arithmetic,

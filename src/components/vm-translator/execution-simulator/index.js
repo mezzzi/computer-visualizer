@@ -23,6 +23,8 @@ const ExecutionSimulator = () => {
     segments,
     segmentSetters,
     isSimulationModeOn,
+    isAsmStepSimulationOn,
+    provideNextAsmCommand,
     isAsmSimulationOn,
     isSimulating,
     modeSetters,
@@ -55,7 +57,9 @@ const ExecutionSimulator = () => {
       />
       <AsmUnit
         asmGenerator={asmGenerator} isSimulating={isSimulating}
-        itemSize={getGstackSize()}
+        itemSize={getGstackSize()} isAsmStepSimulationOn={isAsmStepSimulationOn}
+        isCurrentVmCommandNull={!currentVmCommand}
+        provideNextAsmCommand={provideNextAsmCommand}
       />
       <SegmentUnit
         segments={segments} segmentSetters={segmentSetters}
@@ -75,6 +79,7 @@ const ExecutionSimulator = () => {
           <div className='modeWrapper'>
             <ModeUnit
               isSimulationModeOn={isSimulationModeOn}
+              isAsmStepSimulationOn={isAsmStepSimulationOn}
               isAsmSimulationOn={isAsmSimulationOn}
               isSimulating={isSimulating}
               modeSetters={modeSetters}

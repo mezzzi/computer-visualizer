@@ -5,6 +5,7 @@ import Box from '../box'
 const AsmUnit = ({
   isSimulationModeOn,
   isAsmSimulationOn,
+  isAsmStepSimulationOn,
   isSimulating,
   modeSetters
 }) => {
@@ -53,8 +54,13 @@ const AsmUnit = ({
         <label htmlFor='pop'>pop</label>
       </span>
       <span>
-        <input type='checkbox' value='cpu' name='cpu' />
-        <label htmlFor='cpu'>cpu</label>
+        <input
+          type='checkbox' value='asms' name='asms'
+          disabled={isSimulating}
+          checked={!isAsmStepSimulationOn}
+          onChange={() => modeSetters.isAsmStepSimulationOn(!isAsmStepSimulationOn)}
+        />
+        <label htmlFor='asms'>asms</label>
       </span>
     </Box>
   )

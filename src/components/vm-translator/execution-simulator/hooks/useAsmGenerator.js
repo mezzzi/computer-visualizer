@@ -33,7 +33,8 @@ const useAsmGenerator = ({
   setIsSimulating,
   isAsmStepSimulationOn,
   translator,
-  vmFileIndex
+  vmFileIndex,
+  segmentSetters
 }) => {
   const { divs } = useContext(DivRefContext)
   const {
@@ -57,6 +58,10 @@ const useAsmGenerator = ({
   useEffect(() => {
     setters.assembly([])
   }, [vmFileIndex])
+
+  useEffect(() => {
+    segmentSetters.ram([{ item: 256, index: 0 }])
+  }, [])
 
   useEffect(() => {
     if (isNextVmCmdProvided) {

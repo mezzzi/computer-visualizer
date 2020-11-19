@@ -21,12 +21,11 @@ const AsmUnit = ({
   } = useContext(AsmStepwiseContext)
 
   return (
-    <Box border={{ bottom: 1 }} width='75%'>
+    <Box width='75%'>
       <Box
         height='100%'
         title='Hack Assembly'
         width='20%'
-        border={{ right: 1 }}
         setContentBoundingDiv={divRefSetters.setAsmStackBoundingDiv}
       >
         <Stack

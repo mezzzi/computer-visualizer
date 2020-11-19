@@ -40,8 +40,12 @@ input[type="checkbox"] {
 }
 
 input[type="checkbox"]:checked {
-  background-color: red;
+  background-color: green;
   outline: none;
+}
+
+input[type="checkbox"]:hover {
+  cursor: pointer;
 }
 
 select {

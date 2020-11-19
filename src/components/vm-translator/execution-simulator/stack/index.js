@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import './index.css'
 
 const Bucket = ({
@@ -17,8 +17,11 @@ const Bucket = ({
   setBottomInvisibleDiv,
   name,
   buttonHeight,
-  highlightTop = true
+  highlightTop = true,
+  editable = false,
+  editHandler = null
 }) => {
+  const [contentEditable, setContentEditable] = useState(false)
   const firstItemDivRef = useRef(null)
   const topInvisibleIDivRef = useRef(null)
   const bottomInvisibleIDivRef = useRef(null)
@@ -111,7 +114,16 @@ const Bucket = ({
                   >
                     {item.index}
                   </div>}
-                <div>
+                <div
+                  id={`cmd-${index}`}
+                  style={{ outline: 'none' }}
+                  contentEditable={contentEditable}
+                  onClick={editable &&
+                    ((event) => event.detail === 2 && setContentEditable(true))}
+                  onBlur={editable &&
+                    ((i) => () => editHandler(i,
+                      document.getElementById(`cmd-${index}`).innerText))(index)}
+                >
                   {item.item === undefined ? item : item.item}
                 </div>
               </div>

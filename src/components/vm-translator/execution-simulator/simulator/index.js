@@ -155,9 +155,11 @@ export const moveToTarget = ({
   matchTopOnEnd = true
 }) => {
   const sourceRect = sourceRectDiv.getBoundingClientRect()
+  const isUp = sourceRect.top > destinationRect.top
+
   const movingRect = {
     left: sourceRect.left,
-    top: sourceRect.top,
+    top: sourceRect.top + (isUp ? -sourceRect.height : sourceRect.height),
     width: sourceRect.width,
     height: sourceRect.height
   }
@@ -169,7 +171,6 @@ export const moveToTarget = ({
     text
   })
   let done = false
-  const isUp = sourceRect.top > destinationRect.top
 
   const simulatorInterval = setInterval(() => {
     done = isUp ? movingRect.top < destinationRect.top

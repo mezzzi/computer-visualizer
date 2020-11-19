@@ -13,7 +13,7 @@ import useSimulator from './hooks/useSimulator'
 import { DivRefContext } from './providers/divRefProvider'
 
 const ExecutionSimulator = () => {
-  const { divs } = useContext(DivRefContext)
+  const { divs, divRefSetters } = useContext(DivRefContext)
   const {
     vmCommands,
     currentVmCommand,
@@ -51,9 +51,12 @@ const ExecutionSimulator = () => {
       <HvmUnit
         vmCommands={vmCommands} currentVmCommand={currentVmCommand}
         vmFileIndex={vmFileIndex} setVmFileIndex={setVmFileIndex}
-        provideNextVmCmd={provideNextVmCmd}
+        provideNextVmCmd={provideNextVmCmd} isSimulating={isSimulating}
       />
-      <AsmUnit asmGenerator={asmGenerator} />
+      <AsmUnit
+        asmGenerator={asmGenerator} isSimulating={isSimulating}
+        itemSize={getGstackSize()}
+      />
       <SegmentUnit
         segments={segments} segmentSetters={segmentSetters}
         globalStack={globalStack}
@@ -62,8 +65,10 @@ const ExecutionSimulator = () => {
         <div className='arithmeticAndModeWrapper'>
           <div className='arithmeticWrapper'>
             <ArithmeticUnit
+              divRefSetters={divRefSetters}
               itemSize={getGstackSize()}
               arithmetic={arithmetic}
+              title='VM CPU'
               titleHeight='25%'
             />
           </div>

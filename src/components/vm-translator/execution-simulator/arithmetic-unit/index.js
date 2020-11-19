@@ -1,6 +1,5 @@
-import React, { useContext, useRef, useEffect } from 'react'
+import React, { useRef, useEffect } from 'react'
 import Box from '../box'
-import { DivRefContext } from '../providers/divRefProvider'
 import { getOperatorSymbol } from '../util'
 import './index.css'
 
@@ -28,41 +27,45 @@ const ArithmeticItem = ({ size, setDivRef, label, children }) => {
 const ArithmeticUnit = ({
   itemSize,
   arithmetic,
-  titleHeight
+  titleHeight,
+  title,
+  width = '100%',
+  alignTop = false,
+  customStyle,
+  divRefSetters = {}
 }) => {
-  const { divRefSetters } = useContext(DivRefContext)
   return (
     <Box
       height='100%'
-      width='100%'
-      title='VM CPU'
-      titleHeight={titleHeight}
+      width={width}
+      title={title || undefined}
+      titleHeight={title && titleHeight}
       setContentBoundingDiv={divRefSetters.setVmCpuBoundingDiv}
       customContentStyle={{
-        alignItems: 'flex-end'
+        alignItems: alignTop ? 'flex-start' : 'flex-end'
       }}
     >
       <div
         className='arithmeticBox'
-        style={{ width: '90%' }}
+        style={{ width: '90%', ...customStyle }}
       >
         <ArithmeticItem
           size={itemSize}
           setDivRef={divRefSetters.op1Div}
-          label={arithmetic.isUnary ? 'None' : 'Operand 1'}
+          label={arithmetic.isUnary ? 'None' : 'Op1'}
         >
           {arithmetic.isUnary ? '' : (arithmetic.op1 === null ? '' : arithmetic.op1)}
         </ArithmeticItem>
         <ArithmeticItem
           size={{ ...itemSize, width: '50px' }}
-          label='Op'
+          label='Opr'
         >
           {arithmetic.operator === null ? '' : getOperatorSymbol(arithmetic.operator)}
         </ArithmeticItem>
         <ArithmeticItem
           size={itemSize}
           setDivRef={divRefSetters.op2Div}
-          label={arithmetic.isUnary ? 'Operand 1' : 'Operand 2'}
+          label={arithmetic.isUnary ? 'Op1' : 'Op2'}
         >
           {arithmetic.isUnary ? (arithmetic.op1 === null
             ? '' : arithmetic.op1)

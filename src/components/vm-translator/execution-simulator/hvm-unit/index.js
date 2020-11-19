@@ -45,6 +45,7 @@ const HvmUnit = ({
         outerHeight='66%'
         outer
         content={vmCommands.map(com => com.toString())}
+        highlightTop={false}
         hasAction
         onAction={provideNextVmCmd}
         actionName='NEXT'

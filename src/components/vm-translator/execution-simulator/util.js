@@ -47,7 +47,7 @@ export const getOperatorSymbol = operator => {
     case COMMAND.NOT:
       return '~'
     default:
-      return 0
+      return ''
   }
 }
 

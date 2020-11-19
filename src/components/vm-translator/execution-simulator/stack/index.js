@@ -16,7 +16,8 @@ const Bucket = ({
   setTopInvisibleDiv,
   setBottomInvisibleDiv,
   name,
-  buttonHeight
+  buttonHeight,
+  highlightTop = true
 }) => {
   const firstItemDivRef = useRef(null)
   const topInvisibleIDivRef = useRef(null)
@@ -34,6 +35,20 @@ const Bucket = ({
       className='stackWrapper'
       style={{ width: outerWidth || '60%', height: outerHeight || '100%' }}
     >
+      {
+        hasAction && bottomGrowing &&
+          <button
+            disabled={actionDisabled || false}
+            className='stackButton'
+            onClick={onAction}
+            style={{
+              width: width || '60%',
+              height: buttonHeight || '15%'
+            }}
+          >
+            {actionName}
+          </button>
+      }
       {
         bottomGrowing && (
           <div className='stackBottom' />
@@ -79,7 +94,7 @@ const Bucket = ({
                 key={index}
                 id={name && `${name}${item.index}`}
                 style={{
-                  color: item.color || (index === 0 ? 'yellow' : 'green'),
+                  color: item.color || ((highlightTop && index === 0) ? 'yellow' : 'green'),
                   background: item.background || 'black',
                   ...(item.index !== undefined ? {
                     display: 'flex',
@@ -97,7 +112,7 @@ const Bucket = ({
                     {item.index}
                   </div>}
                 <div>
-                  {item.item || item}
+                  {item.item === undefined ? item : item.item}
                 </div>
               </div>
             ))
@@ -110,13 +125,11 @@ const Bucket = ({
         )
       }
       {
-        hasAction &&
+        hasAction && !bottomGrowing &&
           <button
             disabled={actionDisabled || false}
             className='stackButton'
-            onClick={() => onAction(
-              firstItemDivRef.current,
-              topInvisibleIDivRef.current)}
+            onClick={onAction}
             style={{
               width: width || '60%',
               height: buttonHeight || '15%'

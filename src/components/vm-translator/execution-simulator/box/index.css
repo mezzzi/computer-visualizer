@@ -3,7 +3,6 @@
   flex-direction: column;
   box-sizing: border-box;
   align-items: center;
-  overflow: hidden;
 }
 
 .boxTitle {

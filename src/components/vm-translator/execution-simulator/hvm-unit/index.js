@@ -3,11 +3,14 @@ import './index.css'
 import Box from '../box'
 import Stack from '../stack'
 
+import HVMTranslator from 'abstractions/software/vm-translator'
+
 import { DivRefContext } from '../providers/divRefProvider'
 
 const HvmUnit = ({
   currentVmCommand,
   vmCommands,
+  setTranslator,
   provideNextVmCmd,
   vmFileIndex,
   setVmFileIndex,
@@ -18,9 +21,17 @@ const HvmUnit = ({
   useEffect(() => {
     divRefSetters.currentVmCmdDiv(currentVmCmdRef.current)
   }, [])
+  const editHandler = (index, value) => {
+    const vmCommandsNew = [...vmCommands]
+    vmCommandsNew[index] = value.trim()
+    const translator = new HVMTranslator([{
+      className: 'VmClass',
+      file: vmCommandsNew.join('\n')
+    }])
+    setTranslator(translator)
+  }
   return (
     <Box
-      border={{ right: 1, bottom: 1 }}
       width='25%'
       title='VM Code'
       setContentBoundingDiv={divRefSetters.setVmStackBoundingDiv}
@@ -43,13 +54,14 @@ const HvmUnit = ({
         width='90%'
         height='70%'
         outerHeight='66%'
-        outer
         content={vmCommands.map(com => com.toString())}
         highlightTop={false}
         hasAction
         onAction={provideNextVmCmd}
         actionName='NEXT'
         actionDisabled={isSimulating}
+        editable
+        editHandler={editHandler}
         setBottomInvisibleDiv={divRefSetters.setTopVmInvisibleDiv}
         setFirstStackItemDiv={divRefSetters.setTopVmCommandDiv}
       />

@@ -14,7 +14,9 @@ const ACTIONS = {
   POINTER: 'pointer',
   POINTER_BOTTOM_INVISIBLE_DIV: 'pointerBottomInvisibleDiv',
   STATIC: 'static',
-  STATIC_BOTTOM_INVISIBLE_DIV: 'staticBottomInvisibleDiv'
+  STATIC_BOTTOM_INVISIBLE_DIV: 'staticBottomInvisibleDiv',
+  RAM: 'ram',
+  RAM_BOTTOM_INVISIBLE_DIV: 'ramBottomInvisibleDiv'
 }
 
 const segmentReducer = (state, { type, payload }) => {
@@ -40,7 +42,9 @@ const useSegmentReducer = (vmFileIndex) => {
     pointer: [],
     pointerBottomInvisibleDiv: null,
     static: [],
-    staticBottomInvisibleDiv: null
+    staticBottomInvisibleDiv: null,
+    ram: [],
+    ramBottomInvisibleDiv: null
   })
 
   useEffect(() => {
@@ -67,7 +71,9 @@ const useSegmentReducer = (vmFileIndex) => {
     pointer: getSetter('POINTER'),
     pointerBottomInvisibleDiv: getSetter('POINTER_BOTTOM_INVISIBLE_DIV'),
     static: getSetter('STATIC'),
-    staticBottomInvisibleDiv: getSetter('STATIC_BOTTOM_INVISIBLE_DIV')
+    staticBottomInvisibleDiv: getSetter('STATIC_BOTTOM_INVISIBLE_DIV'),
+    ram: getSetter('RAM'),
+    ramBottomInvisibleDiv: getSetter('RAM_BOTTOM_INVISIBLE_DIV')
   }
 
   return {

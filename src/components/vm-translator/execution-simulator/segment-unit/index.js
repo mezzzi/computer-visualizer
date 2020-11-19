@@ -52,7 +52,7 @@ const SegmentUnit = ({
         <Stack
           width='100%'
           outerWidth='80%'
-          content={[]}
+          content={segments.ram}
         />
       </Box>
     </Box>

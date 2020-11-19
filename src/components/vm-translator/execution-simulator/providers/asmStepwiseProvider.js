@@ -10,7 +10,9 @@ const ACTIONS = {
   SET_IS_UNARY: 'isUnary',
   SET_RESULT: 'result',
   SET_IS_OP1_SIMULATED: 'isOp1SimulationDone',
-  SET_IS_OP2_SIMULATED: 'isOp2SimulationDone'
+  SET_IS_OP2_SIMULATED: 'isOp2SimulationDone',
+  SET_VM_CMD_DESCRIPTION: 'vmCmdDescription',
+  SET_ASM_CMD_DESCRIPTION: 'asmCmdDescription'
 }
 
 const asmStepwiseReducer = (state, { type, payload }) => {
@@ -33,7 +35,9 @@ const initialState = {
   isUnary: false,
   result: null,
   isOp1SimulationDone: false,
-  isOp2SimulationDone: false
+  isOp2SimulationDone: false,
+  vmCmdDescription: null,
+  asmCmdDescription: null
 }
 
 const AsmStepwiseContext = React.createContext(initialState)
@@ -53,7 +57,9 @@ const AsmStepwiseProvider = (props) => {
     isUnary: getSetter('SET_IS_UNARY'),
     result: getSetter('SET_RESULT'),
     isOp1SimulationDone: getSetter('SET_IS_OP1_SIMULATED'),
-    isOp2SimulationDone: getSetter('SET_IS_OP2_SIMULATED')
+    isOp2SimulationDone: getSetter('SET_IS_OP2_SIMULATED'),
+    vmCmdDescription: getSetter('SET_VM_CMD_DESCRIPTION'),
+    asmCmdDescription: getSetter('SET_ASM_CMD_DESCRIPTION')
   }
 
   return (

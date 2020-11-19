@@ -18,7 +18,7 @@ const useSimulator = () => {
     },
     generalSetters: {
       globalStack: setGlobalStack, isSimulating: setIsSimulating,
-      vmFileIndex: setVmFileIndex,
+      vmFileIndex: setVmFileIndex, translator: setTranslator,
       ...modeSetters
     }
   } = useGeneralReducer()
@@ -41,7 +41,8 @@ const useSimulator = () => {
     isNextVmCmdProvided,
     setIsSimulating,
     setIsNextVmCmdProvided: vmCodeSetters.isNextVmCmdProvided,
-    vmFileIndex
+    vmFileIndex,
+    segmentSetters
   })
 
   usePushSimulator({
@@ -101,7 +102,8 @@ const useSimulator = () => {
     modeSetters,
     arithmetic,
     vmFileIndex,
-    setVmFileIndex
+    setVmFileIndex,
+    setTranslator
   }
 }
 

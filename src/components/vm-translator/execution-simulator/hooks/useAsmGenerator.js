@@ -34,16 +34,20 @@ const useAsmGenerator = ({
   isAsmStepSimulationOn,
   translator,
   vmFileIndex,
-  segmentSetters
+  setRam,
+  ram
 }) => {
   const { divs } = useContext(DivRefContext)
   const {
     state: {
-      aRegister
+      aRegister,
+      dRegister,
+      mValue
     },
     setters: {
       aRegister: setARegister,
-      dRegister: setDRegister
+      dRegister: setDRegister,
+      mValue: setMValue
     }
   } = useContext(AsmStepwiseContext)
 
@@ -60,7 +64,7 @@ const useAsmGenerator = ({
   }, [vmFileIndex])
 
   useEffect(() => {
-    segmentSetters.ram([{ item: 256, index: 0 }])
+    setRam([{ item: 256, index: 0 }])
   }, [])
 
   useEffect(() => {
@@ -86,25 +90,47 @@ const useAsmGenerator = ({
   useEffect(() => {
     const { nextAsmBatch, nextAsmBatchIndex } = state
     if (nextAsmBatchIndex > -1) {
-      if (state.assembler) {
+      if (state.assembler && isAsmStepSimulationOn) {
         const parser = state.assembler.step()
-        console.log({
-          type: parser.commandType(),
-          dest: parser.dest(),
-          comp: parser.comp(),
-          jump: parser.jump(),
-          symbol: parser.symbol(),
-          address: parser.commandType() === COMMAND_TYPE.A_COMMAND &&
-          state.assembler.getAddress(parser.symbol())
-        })
         const commandType = parser.commandType()
         const { assembler } = state
         if (commandType === COMMAND_TYPE.A_COMMAND) {
           setARegister(assembler.getAddress(parser.symbol()))
         }
         if (commandType === COMMAND_TYPE.C_COMMAND) {
-          if (parser.dest() === 'D' && parser.comp() === 'A') {
-            setDRegister(aRegister)
+          const dest = parser.dest()
+          const comp = parser.comp()
+          let value = null
+          if (comp === 'M') {
+            const targetRam = ram.find(
+              item => item.index === parseInt(aRegister))
+            value = targetRam && targetRam.item
+            value && setMValue(value)
+          }
+          if (comp === 'A') value = parseInt(aRegister)
+          if (comp === 'D') value = parseInt(dRegister)
+          if (comp.length === 3) {
+            let [op1, op, op2] = comp
+            const valueMap = {
+              A: aRegister, D: dRegister, M: mValue
+            }
+            op1 = valueMap[op1] || parseInt(op1)
+            op2 = valueMap[op2] || parseInt(op2)
+            // eslint-disable-next-line
+            value = eval(`${op1}${op}${op2}`)
+          }
+          dest === 'A' && setARegister(value)
+          dest === 'D' && setDRegister(value)
+          if (dest === 'M') {
+            const address = parseInt(aRegister)
+            const target = ram.find(item => item.index === address)
+            const updatedRam = [...ram]
+            target && updatedRam.splice(ram.indexOf(target), 1)
+            updatedRam.push({ item: value, index: address })
+            updatedRam.sort((a, b) => a.index < b.index ? 1 : (
+              a.index > b.index ? -1 : 0
+            ))
+            setRam(updatedRam)
           }
         }
       }
@@ -127,7 +153,7 @@ const useAsmGenerator = ({
     const { nextAsmBatch, nextAsmBatchIndex } = state
     if (nextAsmBatchIndex === nextAsmBatch.length - 1) {
       setters.nextAsmBatchIndex(-1)
-      !isAsmStepSimulationOn && setters.isAsmGenerated(true)
+      setters.isAsmGenerated(true)
       isAsmStepSimulationOn && setIsSimulating(false)
     } else {
       setters.nextAsmBatchIndex(nextAsmBatchIndex + 1)

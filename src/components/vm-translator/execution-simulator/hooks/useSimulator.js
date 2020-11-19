@@ -42,7 +42,8 @@ const useSimulator = () => {
     setIsSimulating,
     setIsNextVmCmdProvided: vmCodeSetters.isNextVmCmdProvided,
     vmFileIndex,
-    segmentSetters
+    ram: segments.ram,
+    setRam: segmentSetters.ram
   })
 
   usePushSimulator({

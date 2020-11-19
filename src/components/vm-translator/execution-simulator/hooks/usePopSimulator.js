@@ -20,7 +20,9 @@ const usePopSimulator = ({
     const segmentIndex = currentVmCommand.getArg2()
     const updatedSegment = [...segments[segmentName]]
     updatedSegment.push({ item: value, index: segmentIndex })
-    updatedSegment.sort()
+    updatedSegment.sort((a, b) => a.index < b.index ? 1 : (
+      a.index > b.index ? -1 : 0
+    ))
     segmentSetters[segmentName](updatedSegment)
   }
   useEffect(() => {

@@ -118,11 +118,13 @@ const Bucket = ({
                   id={`cmd-${index}`}
                   style={{ outline: 'none' }}
                   contentEditable={contentEditable}
-                  onClick={editable &&
-                    ((event) => event.detail === 2 && setContentEditable(true))}
-                  onBlur={editable &&
-                    ((i) => () => editHandler(i,
-                      document.getElementById(`cmd-${index}`).innerText))(index)}
+                  onClick={editable
+                    ? event => event.detail === 2 &&
+                    setContentEditable(true) : undefined}
+                  onBlur={editable
+                    ? ((i) => () => editHandler(i,
+                      document.getElementById(`cmd-${index}`).innerText))(index)
+                    : undefined}
                 >
                   {item.item === undefined ? item : item.item}
                 </div>

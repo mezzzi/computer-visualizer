@@ -1,6 +1,7 @@
 import { useReducer, useEffect } from 'react'
 import { SimpleAdd, StackTest, BasicTest, PointerTest } from '../files'
 import HVMTranslator from 'abstractions/software/vm-translator'
+import { getReducer, getSetters } from './util'
 
 const ACTIONS = {
   SET_VM_FILE_INDEX: 'vmFileIndex',
@@ -16,15 +17,7 @@ const ACTIONS = {
   SET_IS_SIMULATING: 'isSimulating'
 }
 
-const generalReducer = (state, { type, payload }) => {
-  if (!ACTIONS[type]) {
-    throw new Error(`UNKNOWN GENERAL ACTION TYPE:${type}`)
-  }
-  return {
-    ...state,
-    [ACTIONS[type]]: payload
-  }
-}
+const generalReducer = getReducer(ACTIONS)
 
 const useGeneralReducer = () => {
   const [general, dispatch] = useReducer(generalReducer, {
@@ -51,21 +44,7 @@ const useGeneralReducer = () => {
     setters.globalStack([])
   }, [general.vmFileIndex])
 
-  const getSetter = type => (payload) => dispatch({ type, payload })
-
-  const setters = {
-    vmFileIndex: getSetter('SET_VM_FILE_INDEX'),
-    globalStack: getSetter('SET_GLOBAL_STACK'),
-    translator: getSetter('SET_TRANSLATOR'),
-    isSimulationModeOn: getSetter('SET_SIMULATION_MODE_ON'),
-    isHvmSimulationOn: getSetter('SET_HVM_SIMULATION_ON'),
-    isAsmSimulationOn: getSetter('SET_ASM_SIMULATION_ON'),
-    isAsmStepSimulationOn: getSetter('SET_ASM_STEP_SIMULATION_ON'),
-    isArithmeticSimulationOn: getSetter('SET_ARITHMETIC_SIMULATION_ON'),
-    isPushSimulationOn: getSetter('SET_PUSH_SIMULATION_ON'),
-    isPopSimulationOn: getSetter('SET_POP_SIMULATION_ON'),
-    isSimulating: getSetter('SET_IS_SIMULATING')
-  }
+  const setters = getSetters(dispatch, ACTIONS)
 
   return {
     general,

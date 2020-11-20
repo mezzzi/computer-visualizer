@@ -32,15 +32,15 @@ const SegmentUnit = ({
         height='100%'
         title='Global Stack'
         border={{ right: 1 }}
-        setContentBoundingDiv={divRefSetters.setGlobalStackBoundingDiv}
+        setContentBoundingDiv={divRefSetters.globalStackBoundingDiv}
       >
         <Stack
           width='100%'
           outerWidth='80%'
           content={globalStack}
-          setTopInvisibleDiv={divRefSetters.setTopGstackInvisibleDiv}
-          setBottomInvisibleDiv={divRefSetters.setBottomGstackInvisibleDiv}
-          setFirstStackItemDiv={divRefSetters.setTopGlobalStackDiv}
+          setTopInvisibleDiv={divRefSetters.topGstackInvisibleDiv}
+          setBottomInvisibleDiv={divRefSetters.bottomGstackInvisibleDiv}
+          setFirstStackItemDiv={divRefSetters.topGlobalStackDiv}
         />
       </Box>
       <Box

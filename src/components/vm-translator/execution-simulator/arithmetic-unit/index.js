@@ -40,7 +40,7 @@ const ArithmeticUnit = ({
       width={width}
       title={title || undefined}
       titleHeight={title && titleHeight}
-      setContentBoundingDiv={divRefSetters.setVmCpuBoundingDiv}
+      setContentBoundingDiv={divRefSetters.vmCpuBoundingDiv}
       customContentStyle={{
         alignItems: alignTop ? 'flex-start' : 'flex-end'
       }}
@@ -51,7 +51,7 @@ const ArithmeticUnit = ({
       >
         <ArithmeticItem
           size={itemSize}
-          setDivRef={divRefSetters.op1Div}
+          setDivRef={divRefSetters.vmOp1Div}
           label={arithmetic.isUnary ? 'None' : 'Op1'}
         >
           {arithmetic.isUnary ? '' : (arithmetic.op1 === null ? '' : arithmetic.op1)}
@@ -64,7 +64,7 @@ const ArithmeticUnit = ({
         </ArithmeticItem>
         <ArithmeticItem
           size={itemSize}
-          setDivRef={divRefSetters.op2Div}
+          setDivRef={divRefSetters.vmOp2Div}
           label={arithmetic.isUnary ? 'Op1' : 'Op2'}
         >
           {arithmetic.isUnary ? (arithmetic.op1 === null
@@ -74,7 +74,7 @@ const ArithmeticUnit = ({
         <div style={{ marginTop: '5px' }}>=</div>
         <ArithmeticItem
           size={itemSize}
-          setDivRef={divRefSetters.resultDiv}
+          setDivRef={divRefSetters.vmResultDiv}
           label='Result'
         >
           {arithmetic.result === null ? '' : arithmetic.result}

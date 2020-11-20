@@ -1,4 +1,5 @@
 import React, { useReducer } from 'react'
+import { getReducer, getSetters, getInitialState } from '../hooks/util'
 
 const ACTIONS = {
   SET_A_REGISTER: 'aRegister',
@@ -15,53 +16,20 @@ const ACTIONS = {
   SET_ASM_CMD_DESCRIPTION: 'asmCmdDescription'
 }
 
-const asmStepwiseReducer = (state, { type, payload }) => {
-  if (!ACTIONS[type]) {
-    throw new Error(`UNKNOWN ASM STEPWISE ACTION TYPE:${type}`)
-  }
-  return {
-    ...state,
-    [ACTIONS[type]]: payload
-  }
-}
+const asmStepwiseReducer = getReducer(ACTIONS)
 
 const initialState = {
-  aRegister: null,
-  dRegister: null,
-  mValue: null,
-  op1: null,
-  op2: null,
-  operator: null,
+  ...getInitialState(ACTIONS),
   isUnary: false,
-  result: null,
   isOp1SimulationDone: false,
-  isOp2SimulationDone: false,
-  vmCmdDescription: null,
-  asmCmdDescription: null
+  isOp2SimulationDone: false
 }
 
 const AsmStepwiseContext = React.createContext(initialState)
 
 const AsmStepwiseProvider = (props) => {
   const [state, dispatch] = useReducer(asmStepwiseReducer, initialState)
-
-  const getSetter = type => (payload) => dispatch({ type, payload })
-
-  const setters = {
-    aRegister: getSetter('SET_A_REGISTER'),
-    dRegister: getSetter('SET_D_REGISTER'),
-    mValue: getSetter('SET_M_VALUE'),
-    op1: getSetter('SET_OP1'),
-    op2: getSetter('SET_OP2'),
-    operator: getSetter('SET_OPERATOR'),
-    isUnary: getSetter('SET_IS_UNARY'),
-    result: getSetter('SET_RESULT'),
-    isOp1SimulationDone: getSetter('SET_IS_OP1_SIMULATED'),
-    isOp2SimulationDone: getSetter('SET_IS_OP2_SIMULATED'),
-    vmCmdDescription: getSetter('SET_VM_CMD_DESCRIPTION'),
-    asmCmdDescription: getSetter('SET_ASM_CMD_DESCRIPTION')
-  }
-
+  const setters = getSetters(dispatch, ACTIONS)
   return (
     <AsmStepwiseContext.Provider value={{ state, setters }}>
       {props.children}

@@ -1,75 +1,44 @@
 import React, { useReducer } from 'react'
+import { getReducer, getSetters, getInitialState } from '../hooks/util'
 
 const ACTIONS = {
   SET_VM_STACK_BOUNDING_DIV: 'vmStackBoundingDiv',
   SET_ASM_STACK_BOUNDING_DIV: 'asmStackBoundingDiv',
   SET_GLOBAL_STACK_BOUNDING_DIV: 'globalStackBoundingDiv',
+  SET_RAM_BOUNDING_DIV: 'ramBoundingDiv',
   SET_CURRENT_INSTRN_BOUNDING_DIV: 'currentVmCmdDiv',
   SET_VM_CPU_BOUNDING_DIV: 'vmCpuBoundingDiv',
-  SET_TOP_VM_COMMAND_DIV: 'vmCommandDiv',
+  SET_TOP_VM_COMMAND_DIV: 'topVmCommandDiv',
   SET_TOP_VM_INVISIBLE_DIV: 'topVmInvisibleDiv',
-  SET_TOP_ASM_COMMAND_DIV: 'asmCommandDiv',
+  SET_TOP_ASM_COMMAND_DIV: 'topAsmCommandDiv',
   SET_TOP_ASM_INVISIBLE_DIV: 'topAsmInvisibleDiv',
   SET_TOP_GSTACK_DIV: 'topGlobalStackDiv',
   SET_TOP_GSTACK_INVISIBLE_DIV: 'topGstackInvisibleDiv',
   SET_BOTTOM_GSTACK_INVISIBLE_DIV: 'bottomGstackInvisibleDiv',
-  SET_OP1_DIV: 'op1Div',
-  SET_OP2_DIV: 'op2Div',
-  SET_RESULT_DIV: 'resultDiv'
+  SET_TOP_RAM_DIV: 'topRamDiv',
+  SET_TOP_RAM_INVISIBLE_DIV: 'topRamInvisibleDiv',
+  SET_BOTTOM_RAM_INVISIBLE_DIV: 'bottomRamInvisibleDiv',
+  SET_VM_OP1_DIV: 'vmOp1Div',
+  SET_VM_OP2_DIV: 'vmOp2Div',
+  SET_VM_RESULT_DIV: 'vmResultDiv',
+  SET_ASM_OP1_DIV: 'asmOp1Div',
+  SET_ASM_OP2_DIV: 'asmOp2Div',
+  SET_ASM_RESULT_DIV: 'asmResultDiv',
+  SET_A_REG_DIV: 'aRegDiv',
+  SET_D_REG_DIV: 'dRegDiv',
+  SET_M_VAL_DIV: 'mValDiv'
 }
 
-const divRefReducer = (state, { type, payload }) => {
-  if (!ACTIONS[type]) {
-    throw new Error(`UNKNOWN DIV REF ACTION TYPE:${type}`)
-  }
-  return {
-    ...state,
-    [ACTIONS[type]]: payload
-  }
-}
+const divRefReducer = getReducer(ACTIONS)
 
-const initialState = {
-  vmStackBoundingDiv: null,
-  asmStackBoundingDiv: null,
-  globalStackBoundingDiv: null,
-  currentVmCmdDiv: null,
-  vmCpuBoundingDiv: null,
-  vmCommandDiv: null,
-  topVmInvisibleDiv: null,
-  asmCommandDiv: null,
-  topAsmInvisibleDiv: null,
-  topGlobalStackDiv: null,
-  topGstackInvisibleDiv: null,
-  bottomGstackInvisibleDiv: null,
-  op1Div: null,
-  op2Div: null,
-  resultDiv: null
-}
+const initialState = getInitialState(ACTIONS)
 
 const DivRefContext = React.createContext(initialState)
 
 const DivRefProvider = (props) => {
   const [divs, dispatch] = useReducer(divRefReducer, initialState)
 
-  const getSetter = type => (payload) => dispatch({ type, payload })
-
-  const divRefSetters = {
-    setVmStackBoundingDiv: getSetter('SET_VM_STACK_BOUNDING_DIV'),
-    setAsmStackBoundingDiv: getSetter('SET_ASM_STACK_BOUNDING_DIV'),
-    setGlobalStackBoundingDiv: getSetter('SET_GLOBAL_STACK_BOUNDING_DIV'),
-    currentVmCmdDiv: getSetter('SET_CURRENT_INSTRN_BOUNDING_DIV'),
-    setVmCpuBoundingDiv: getSetter('SET_VM_CPU_BOUNDING_DIV'),
-    setTopVmCommandDiv: getSetter('SET_TOP_VM_COMMAND_DIV'),
-    setTopVmInvisibleDiv: getSetter('SET_TOP_VM_INVISIBLE_DIV'),
-    setTopAsmCommandDiv: getSetter('SET_TOP_ASM_COMMAND_DIV'),
-    setTopAsmInvisibleDiv: getSetter('SET_TOP_ASM_INVISIBLE_DIV'),
-    setTopGlobalStackDiv: getSetter('SET_TOP_GSTACK_DIV'),
-    setTopGstackInvisibleDiv: getSetter('SET_TOP_GSTACK_INVISIBLE_DIV'),
-    setBottomGstackInvisibleDiv: getSetter('SET_BOTTOM_GSTACK_INVISIBLE_DIV'),
-    op1Div: getSetter('SET_OP1_DIV'),
-    op2Div: getSetter('SET_OP2_DIV'),
-    resultDiv: getSetter('SET_RESULT_DIV')
-  }
+  const divRefSetters = getSetters(dispatch, ACTIONS)
 
   return (
     <DivRefContext.Provider value={{ divs, divRefSetters }}>

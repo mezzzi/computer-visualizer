@@ -7,6 +7,7 @@ import {
   getBinaryResult,
   getUnaryResult
 } from '../util'
+import { getInitialState, getReducer, getSetters } from './util'
 
 const ACTIONS = {
   SET_OP1: 'op1',
@@ -18,15 +19,7 @@ const ACTIONS = {
   SET_IS_OP2_SIMULATED: 'isOp2SimulationDone'
 }
 
-const arithemticReducer = (state, { type, payload }) => {
-  if (!ACTIONS[type]) {
-    throw new Error(`UNKNOWN ARITHMETIC ACTION TYPE:${type}`)
-  }
-  return {
-    ...state,
-    [ACTIONS[type]]: payload
-  }
-}
+const arithemticReducer = getReducer(ACTIONS)
 
 const useArithmeticSimulator = ({
   isAsmGenerated,
@@ -39,11 +32,8 @@ const useArithmeticSimulator = ({
   vmFileIndex
 }) => {
   const [state, dispatch] = useReducer(arithemticReducer, {
-    op1: null,
-    op2: null,
-    operator: null,
+    ...getInitialState(ACTIONS),
     isUnary: false,
-    result: null,
     isOp1SimulationDone: false,
     isOp2SimulationDone: false
   })
@@ -77,10 +67,7 @@ const useArithmeticSimulator = ({
   }
 
   useEffect(() => {
-    setters.op1(null)
-    setters.op2(null)
-    setters.operator(null)
-    setters.result(null)
+    resetArithmetic()
   }, [vmFileIndex])
 
   useEffect(() => {
@@ -106,7 +93,7 @@ const useArithmeticSimulator = ({
             simulateDivMotion({
               sourceRectDiv: divs.topGlobalStackDiv,
               sourceBoundingDiv: divs.globalStackBoundingDiv,
-              destinationRectDiv: divs.op2Div,
+              destinationRectDiv: divs.vmOp2Div,
               text: op2,
               speed: 5,
               onSimulationEnd: () => op2Processed(op2)
@@ -126,7 +113,7 @@ const useArithmeticSimulator = ({
             simulateDivMotion({
               sourceRectDiv: divs.topGlobalStackDiv,
               sourceBoundingDiv: divs.globalStackBoundingDiv,
-              destinationRectDiv: divs.op2Div,
+              destinationRectDiv: divs.vmOp2Div,
               text: op1,
               speed: 5,
               onSimulationEnd: () => unaryComputed(op1, commandType)
@@ -149,7 +136,7 @@ const useArithmeticSimulator = ({
         simulateDivMotion({
           sourceRectDiv: divs.topGlobalStackDiv,
           sourceBoundingDiv: divs.globalStackBoundingDiv,
-          destinationRectDiv: divs.op1Div,
+          destinationRectDiv: divs.vmOp1Div,
           text: op1,
           speed: 5,
           onSimulationEnd: () => binaryComputed(op1)
@@ -164,7 +151,7 @@ const useArithmeticSimulator = ({
       !isSimulationModeOn && updateResult()
       if (isSimulationModeOn) {
         simulateDivMotion({
-          sourceRectDiv: divs.resultDiv,
+          sourceRectDiv: divs.vmResultDiv,
           sourceBoundingDiv: divs.vmCpuBoundingDiv,
           destinationRectDiv: (divs.topGlobalStackDiv ||
             divs.topGstackInvisibleDiv),
@@ -181,23 +168,12 @@ const useArithmeticSimulator = ({
     }
   }, [state.isOp2SimulationDone])
 
-  const getSetter = type => (payload) => dispatch({ type, payload })
-
-  const setters = {
-    op1: getSetter('SET_OP1'),
-    op2: getSetter('SET_OP2'),
-    operator: getSetter('SET_OPERATOR'),
-    isUnary: getSetter('SET_IS_UNARY'),
-    result: getSetter('SET_RESULT'),
-    isOp1SimulationDone: getSetter('SET_IS_OP1_SIMULATED'),
-    isOp2SimulationDone: getSetter('SET_IS_OP2_SIMULATED')
-  }
+  const setters = getSetters(dispatch, ACTIONS)
 
   const resetArithmetic = () => {
-    setters.op1(null)
-    setters.op2(null)
-    setters.result(null)
-    setters.operator(null)
+    ['op1', 'op2', 'operator', 'result'].forEach(
+      attr => { setters[attr] = null }
+    )
   }
 
   return {

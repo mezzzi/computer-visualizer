@@ -26,7 +26,7 @@ const AsmUnit = ({
         height='100%'
         title='Hack Assembly'
         width='20%'
-        setContentBoundingDiv={divRefSetters.setAsmStackBoundingDiv}
+        setContentBoundingDiv={divRefSetters.asmStackBoundingDiv}
       >
         <Stack
           outerWidth='90%'
@@ -39,8 +39,8 @@ const AsmUnit = ({
           actionDisabled={!isAsmStepSimulationOn ||
           isCurrentVmCommandNull}
           buttonHeight='10%'
-          setTopInvisibleDiv={divRefSetters.setTopAsmInvisibleDiv}
-          setFirstStackItemDiv={divRefSetters.setTopAsmCommandDiv}
+          setTopInvisibleDiv={divRefSetters.topAsmInvisibleDiv}
+          setFirstStackItemDiv={divRefSetters.topAsmCommandDiv}
         />
       </Box>
       <Box

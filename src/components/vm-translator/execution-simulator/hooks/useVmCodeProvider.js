@@ -2,6 +2,7 @@
 import { useReducer, useEffect, useContext } from 'react'
 import { DivRefContext } from '../providers/divRefProvider'
 import { moveToTarget } from '../simulator'
+import { getReducer, getSetters } from './util'
 
 const ACTIONS = {
   VM_COMMANDS: 'vmCommands',
@@ -10,15 +11,7 @@ const ACTIONS = {
   SET_SHOULD_RUN_NEXT_VM_CMD: 'shouldProvideNextVmCmd'
 }
 
-const nextVmCmdReducer = (state, { type, payload }) => {
-  if (!ACTIONS[type]) {
-    throw new Error(`UNKNOWN NEXT CMD ACTION TYPE:${type}`)
-  }
-  return {
-    ...state,
-    [ACTIONS[type]]: payload
-  }
-}
+const nextVmCmdReducer = getReducer(ACTIONS)
 
 const useVmCodeProvider = ({
   isSimulationModeOn,
@@ -49,11 +42,11 @@ const useVmCodeProvider = ({
       if (isSimulationModeOn) {
         setIsSimulating(true)
         divs.topVmInvisibleDiv.scrollIntoView()
-        const sourceRect = divs.vmCommandDiv.getBoundingClientRect()
+        const sourceRect = divs.topVmCommandDiv.getBoundingClientRect()
         const destRect = divs.currentVmCmdDiv.getBoundingClientRect()
         const top = destRect.top + (destRect.height - sourceRect.height) / 2
         moveToTarget({
-          sourceRectDiv: divs.vmCommandDiv,
+          sourceRectDiv: divs.topVmCommandDiv,
           destinationRect: {
             ...sourceRect,
             top
@@ -74,14 +67,7 @@ const useVmCodeProvider = ({
     }
   }, [state.shouldProvideNextVmCmd])
 
-  const getSetter = type => (payload) => dispatch({ type, payload })
-
-  const setters = {
-    vmCommands: getSetter('VM_COMMANDS'),
-    currentVmCommand: getSetter('SET_CURRENT_VM_COMMAND'),
-    isNextVmCmdProvided: getSetter('SET_IS_NEXT_CMD_SIMULATED'),
-    shouldProvideNextVmCmd: getSetter('SET_SHOULD_RUN_NEXT_VM_CMD')
-  }
+  const setters = getSetters(dispatch, ACTIONS)
 
   return {
     vmCodeProvider: state,

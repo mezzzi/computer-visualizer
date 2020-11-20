@@ -34,7 +34,7 @@ const HvmUnit = ({
     <Box
       width='25%'
       title='VM Code'
-      setContentBoundingDiv={divRefSetters.setVmStackBoundingDiv}
+      setContentBoundingDiv={divRefSetters.vmStackBoundingDiv}
       customContentStyle={{
         flexDirection: 'column'
       }}
@@ -62,8 +62,8 @@ const HvmUnit = ({
         actionDisabled={isSimulating}
         editable
         editHandler={editHandler}
-        setBottomInvisibleDiv={divRefSetters.setTopVmInvisibleDiv}
-        setFirstStackItemDiv={divRefSetters.setTopVmCommandDiv}
+        setBottomInvisibleDiv={divRefSetters.topVmInvisibleDiv}
+        setFirstStackItemDiv={divRefSetters.topVmCommandDiv}
       />
       <div className='vmFileSelector'>
         <label htmlFor='files'>Vm Programs:</label>

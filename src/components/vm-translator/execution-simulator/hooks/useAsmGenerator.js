@@ -1,6 +1,8 @@
 
 import { useReducer, useEffect, useContext } from 'react'
-import { moveFromBoundaryToTarget } from '../simulator'
+import {
+  moveFromBoundaryToTarget, simulateDivMotion, moveFromTargetToBoundary
+} from '../simulator'
 import Assembler from 'abstractions/software/assembler'
 import { COMMAND_TYPE } from 'abstractions/software/assembler/parser/types'
 
@@ -40,8 +42,7 @@ const useAsmGenerator = ({
     },
     setters: {
       aRegister: setARegister,
-      dRegister: setDRegister,
-      mValue: setMValue
+      dRegister: setDRegister
     }
   } = useContext(AsmStepwiseContext)
 
@@ -111,6 +112,17 @@ const useAsmGenerator = ({
     }
   }
 
+  const setRamValue = (address, value) => {
+    const target = ram.find(item => item.index === address)
+    const updatedRam = [...ram]
+    target && updatedRam.splice(ram.indexOf(target), 1)
+    updatedRam.push({ item: value, index: address })
+    updatedRam.sort((a, b) => a.index < b.index ? 1 : (
+      a.index > b.index ? -1 : 0
+    ))
+    setRam(updatedRam)
+  }
+
   const simulateAsm = () => {
     if (state.assembler) {
       const parser = state.assembler.step()
@@ -120,6 +132,7 @@ const useAsmGenerator = ({
         setARegister(assembler.getAddress(parser.symbol()))
       }
       if (commandType === COMMAND_TYPE.C_COMMAND) {
+        const address = parseInt(aRegister)
         const dest = parser.dest()
         const comp = parser.comp()
         let value = null
@@ -127,10 +140,58 @@ const useAsmGenerator = ({
           const targetRam = ram.find(
             item => item.index === parseInt(aRegister))
           value = targetRam && targetRam.item
-          value && setMValue(value)
+          const targetRect = document.getElementById(
+            `ram${targetRam.index}`).getBoundingClientRect()
+          if (dest === 'A') {
+            moveFromTargetToBoundary({
+              text: value,
+              boundaryTop: divs.ramBoundingDiv.getBoundingClientRect().top,
+              targetRect,
+              isMovingUp: true,
+              onSimulationEnd: () => {
+                const targetRect = divs.aRegDiv.getBoundingClientRect()
+                moveFromTargetToBoundary({
+                  text: value,
+                  boundaryTop: targetRect.top - 130,
+                  targetRect,
+                  isMovingUp: false,
+                  speed: 25,
+                  onSimulationEnd: () => { setARegister(value) }
+                })
+              }
+            })
+            return
+          }
         }
         if (comp === 'A') value = parseInt(aRegister)
-        if (comp === 'D') value = parseInt(dRegister)
+        if (comp === 'D') {
+          value = parseInt(dRegister)
+          const targetRect = divs.dRegDiv.getBoundingClientRect()
+          if (dest === 'M') {
+            moveFromTargetToBoundary({
+              text: value,
+              boundaryTop: targetRect.top - 130,
+              targetRect,
+              isMovingUp: true,
+              speed: 25,
+              onSimulationEnd: () => {
+                const targetRect = divs.topRamInvisibleDiv.getBoundingClientRect()
+                moveFromTargetToBoundary({
+                  text: value,
+                  boundaryTop: divs.ramBoundingDiv.getBoundingClientRect().top,
+                  targetRect,
+                  isMovingUp: false,
+                  speed: 25,
+                  onSimulationEnd: () => {
+                    setRamValue(address, value)
+                  }
+                })
+              }
+            })
+            return
+          }
+          value = parseInt(dRegister)
+        }
         if (comp.length === 3) {
           let [op1, op, op2] = comp
           const valueMap = {
@@ -143,18 +204,21 @@ const useAsmGenerator = ({
         }
         dest === 'A' && setARegister(value)
         if (dest === 'D') {
-          setDRegister(value)
+          if (comp === 'A') {
+            simulateDivMotion({
+              text: value,
+              sourceRectDiv: divs.aRegDiv,
+              sourceBoundingTop:
+                divs.aRegDiv.getBoundingClientRect().top - 130,
+              destinationRectDiv: divs.dRegDiv,
+              clearOnEnd: true,
+              speed: 10,
+              onSimulationEnd: () => setDRegister(value)
+            })
+          }
         }
         if (dest === 'M') {
-          const address = parseInt(aRegister)
-          const target = ram.find(item => item.index === address)
-          const updatedRam = [...ram]
-          target && updatedRam.splice(ram.indexOf(target), 1)
-          updatedRam.push({ item: value, index: address })
-          updatedRam.sort((a, b) => a.index < b.index ? 1 : (
-            a.index > b.index ? -1 : 0
-          ))
-          setRam(updatedRam)
+          setRamValue(address, value)
         }
       }
     }

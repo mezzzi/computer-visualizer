@@ -32,6 +32,7 @@ const ArithmeticUnit = ({
   width = '100%',
   alignTop = false,
   customStyle,
+  customContentStyle = {},
   divRefSetters = {}
 }) => {
   return (
@@ -40,9 +41,10 @@ const ArithmeticUnit = ({
       width={width}
       title={title || undefined}
       titleHeight={title && titleHeight}
-      setContentBoundingDiv={divRefSetters.vmCpuBoundingDiv}
+      setContentBoundingDiv={divRefSetters.cpuBoundingDiv}
       customContentStyle={{
-        alignItems: alignTop ? 'flex-start' : 'flex-end'
+        alignItems: alignTop ? 'flex-start' : 'flex-end',
+        ...customContentStyle
       }}
     >
       <div
@@ -51,7 +53,7 @@ const ArithmeticUnit = ({
       >
         <ArithmeticItem
           size={itemSize}
-          setDivRef={divRefSetters.vmOp1Div}
+          setDivRef={divRefSetters.op1Div}
           label={arithmetic.isUnary ? 'None' : 'Op1'}
         >
           {arithmetic.isUnary ? '' : (arithmetic.op1 === null ? '' : arithmetic.op1)}
@@ -64,17 +66,17 @@ const ArithmeticUnit = ({
         </ArithmeticItem>
         <ArithmeticItem
           size={itemSize}
-          setDivRef={divRefSetters.vmOp2Div}
+          setDivRef={divRefSetters.op2Div}
           label={arithmetic.isUnary ? 'Op1' : 'Op2'}
         >
           {arithmetic.isUnary ? (arithmetic.op1 === null
             ? '' : arithmetic.op1)
             : (arithmetic.op2 === null ? '' : arithmetic.op2)}
         </ArithmeticItem>
-        <div style={{ marginTop: '5px' }}>=</div>
+        <div style={{ marginTop: '2px' }}>=</div>
         <ArithmeticItem
           size={itemSize}
-          setDivRef={divRefSetters.vmResultDiv}
+          setDivRef={divRefSetters.resultDiv}
           label='Result'
         >
           {arithmetic.result === null ? '' : arithmetic.result}

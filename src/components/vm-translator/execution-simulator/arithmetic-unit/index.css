@@ -22,9 +22,8 @@
 .arithmeticUnitLabel {
   display: flex;
   justify-content: center;
-  margin-top: 5px;
+  font-family: monospace;
   padding-top: 3px;
-  color: black;
-  border-top: 1px solid green;
+  color: green;
   width: 100%;
 }

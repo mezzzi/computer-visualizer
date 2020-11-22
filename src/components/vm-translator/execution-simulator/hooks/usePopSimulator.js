@@ -40,12 +40,7 @@ const usePopSimulator = ({
         !isSimulationModeOn && pushToSegment(value)
         if (isSimulationModeOn) {
           const segmentName = currentVmCommand.getArg1()
-          const segmentIndex = currentVmCommand.getArg2()
-          const segment = segments[segmentName]
-          const insertIndex = getSegmentIndex(segment, segmentIndex)
-          const targetDiv = (segment.length && insertIndex < segment.length)
-            ? document.getElementById(`${segmentName}${segment[insertIndex].index}`)
-            : segments[`${segmentName}BottomInvisibleDiv`]
+          const targetDiv = segments[`${segmentName}BottomInvisibleDiv`]
           simulateDivMotion({
             sourceRectDiv: divs.topGlobalStackDiv,
             sourceBoundingDiv: divs.globalStackBoundingDiv,
@@ -62,13 +57,6 @@ const usePopSimulator = ({
       }
     }
   }, [isAsmGenerated])
-}
-
-const getSegmentIndex = (segment, index) => {
-  const indexes = segment.map(item => item.index)
-  indexes.push(index)
-  indexes.sort()
-  return indexes.indexOf(index)
 }
 
 export default usePopSimulator

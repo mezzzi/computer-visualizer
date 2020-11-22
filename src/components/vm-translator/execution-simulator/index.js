@@ -71,7 +71,12 @@ const ExecutionSimulator = () => {
         <div className='arithmeticAndModeWrapper'>
           <div className='arithmeticWrapper'>
             <ArithmeticUnit
-              divRefSetters={divRefSetters}
+              divRefSetters={{
+                cpuBoundingDiv: divRefSetters.vmCpuBoundingDiv,
+                op1Div: divRefSetters.vmOp1Div,
+                op2Div: divRefSetters.vmOp2Div,
+                resultDiv: divRefSetters.vmResultDiv
+              }}
               itemSize={getGstackSize()}
               arithmetic={arithmetic}
               title='VM CPU'

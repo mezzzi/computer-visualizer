@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useRef, useEffect } from 'react'
 import './index.css'
 import Box from '../box'
 import Stack from '../stack'
@@ -16,10 +16,15 @@ const AsmUnit = ({
   arithmetic = {}
 }) => {
   const { divRefSetters } = useContext(DivRefContext)
+  useEffect(() => {
+    divRefSetters.aRegDiv(aRegDivRef.current)
+    divRefSetters.dRegDiv(dRegDivRef.current)
+  }, [])
   const {
-    state: { aRegister, dRegister, mValue }
+    state: { aRegister, dRegister }
   } = useContext(AsmStepwiseContext)
-
+  const aRegDivRef = useRef(null)
+  const dRegDivRef = useRef(null)
   return (
     <Box width='75%'>
       <Box
@@ -57,26 +62,22 @@ const AsmUnit = ({
           }}
         >
           <Box
+            width='58%'
             customContentStyle={{
-              justifyContent: 'space-around'
+              justifyContent: 'space-around',
+              width: '80%'
             }}
           >
             <div className='registerWrapper' style={{ height: itemSize.height }}>
               <div className='registerLabel'>A</div>
-              <div className='registerValue'>
+              <div className='registerValue' ref={aRegDivRef}>
                 {aRegister !== null ? aRegister : ''}
               </div>
             </div>
             <div className='registerWrapper' style={{ height: itemSize.height }}>
               <div className='registerLabel'>D</div>
-              <div className='registerValue'>
+              <div className='registerValue' ref={dRegDivRef}>
                 {dRegister !== null ? dRegister : ''}
-              </div>
-            </div>
-            <div className='registerWrapper' style={{ height: itemSize.height }}>
-              <div className='registerLabel'>M</div>
-              <div className='registerValue'>
-                {mValue !== null ? mValue : ''}
               </div>
             </div>
           </Box>
@@ -84,9 +85,19 @@ const AsmUnit = ({
             itemSize={itemSize}
             arithmetic={arithmetic}
             customStyle={{
-              marginBottom: 0
+              marginBottom: 0,
+              marginRight: '4%'
             }}
-            width='50%' alignTop
+            customContentStyle={{
+              justifyContent: 'flex-end'
+            }}
+            width='42%'
+            alignTop
+            divRefSetters={{
+              op1Div: divRefSetters.asmOp1Div,
+              op2Div: divRefSetters.asmOp2Div,
+              resultDiv: divRefSetters.asmResultDiv
+            }}
           />
         </div>
         <div className='symbolTable'>

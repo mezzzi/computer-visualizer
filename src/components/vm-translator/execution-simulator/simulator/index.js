@@ -26,6 +26,7 @@ export const drawDiv = ({ boundingRect, id, color, background, text }) => {
 export const simulateDivMotion = ({
   sourceRectDiv,
   sourceBoundingDiv,
+  sourceBoundingTop,
   destinationRectCoors,
   destinationRectDiv,
   color = 'yellow',
@@ -46,7 +47,8 @@ export const simulateDivMotion = ({
     width: sourceRect.width,
     height: sourceRect.height
   }
-  const bucketBoundingRect = sourceBoundingDiv.getBoundingClientRect()
+  const firstTopLimit = sourceBoundingTop ||
+    sourceBoundingDiv.getBoundingClientRect().top
   movingRect.top = movingRect.top - movingRect.height
 
   const movingDiv = drawDiv({
@@ -63,12 +65,12 @@ export const simulateDivMotion = ({
 
   const simulatorInterval = setInterval(() => {
     if (!upMoveDone) {
-      if (movingRect.top < bucketBoundingRect.top + movingRect.height / 2) {
+      if (movingRect.top < firstTopLimit + movingRect.height / 2) {
         upMoveDone = true
-      } else {
-        movingDiv.style.top = `${movingRect.top}px`
-        movingRect.top = movingRect.top - 5
+        return
       }
+      movingDiv.style.top = `${movingRect.top}px`
+      movingRect.top = movingRect.top - 5
     }
     if (upMoveDone && !sideWayMoveDone) {
       if (isDestinationToRight
@@ -76,12 +78,12 @@ export const simulateDivMotion = ({
         : movingRect.left < destinationRect.left) {
         movingDiv.style.left = `${destinationRect.left}px`
         sideWayMoveDone = true
-      } else {
-        movingDiv.style.left = `${movingRect.left}px`
-        movingRect.left = isDestinationToRight
-          ? movingRect.left + 5
-          : movingRect.left - 5
+        return
       }
+      movingDiv.style.left = `${movingRect.left}px`
+      movingRect.left = isDestinationToRight
+        ? movingRect.left + 5
+        : movingRect.left - 5
     }
     if (upMoveDone && sideWayMoveDone) {
       if (movingRect.top > destinationRect.top) {
@@ -91,10 +93,10 @@ export const simulateDivMotion = ({
         clearOnEnd && movingDiv.remove()
         clearInterval(simulatorInterval)
         onSimulationEnd && onSimulationEnd()
-      } else {
-        movingDiv.style.top = `${movingRect.top}px`
-        movingRect.top = movingRect.top + 5
+        return
       }
+      movingDiv.style.top = `${movingRect.top}px`
+      movingRect.top = movingRect.top + 5
     }
   }, speed)
 }
@@ -134,10 +136,52 @@ export const moveFromBoundaryToTarget = ({
       clearInterval(simulatorInterval)
       movingDiv.remove()
       onSimulationEnd && onSimulationEnd()
-    } else {
-      movingDiv.style.top = `${movingRect.top}px`
-      movingRect.top = isMovingUp ? movingRect.top - 5 : movingRect.top + 5
+      return
     }
+    movingDiv.style.top = `${movingRect.top}px`
+    movingRect.top = isMovingUp ? movingRect.top - 5 : movingRect.top + 5
+  }, speed)
+}
+
+export const moveFromTargetToBoundary = ({
+  targetRect,
+  boundaryTop,
+  isMovingUp,
+  color = 'yellow',
+  background = 'black',
+  text,
+  onSimulationEnd,
+  speed = 20
+}) => {
+  const movingRect = {
+    left: targetRect.left,
+    top: isMovingUp ? targetRect.top + targetRect.height
+      : boundaryTop,
+    width: targetRect.width,
+    height: targetRect.height
+  }
+  const id = new Date().getTime()
+  const movingDiv = drawDiv({
+    boundingRect: movingRect,
+    id,
+    color,
+    background,
+    text
+  })
+
+  let hasReachedDestination = false
+  const simulatorInterval = setInterval(() => {
+    hasReachedDestination = isMovingUp
+      ? movingRect.top < (boundaryTop + targetRect.height)
+      : movingRect.top > targetRect.top
+    if (hasReachedDestination) {
+      clearInterval(simulatorInterval)
+      movingDiv.remove()
+      onSimulationEnd && onSimulationEnd()
+      return
+    }
+    movingDiv.style.top = `${movingRect.top}px`
+    movingRect.top = isMovingUp ? movingRect.top - 5 : movingRect.top + 5
   }, speed)
 }
 
@@ -182,16 +226,9 @@ export const moveToTarget = ({
       clearOnEnd && movingDiv.remove()
       clearInterval(simulatorInterval)
       onSimulationEnd && onSimulationEnd()
-    } else {
-      movingDiv.style.top = `${movingRect.top}px`
-      movingRect.top = movingRect.top + (isUp ? -step : step)
+      return
     }
+    movingDiv.style.top = `${movingRect.top}px`
+    movingRect.top = movingRect.top + (isUp ? -step : step)
   }, speed)
-}
-
-export const getCenteredRectCoors = (boundingBox, rect) => {
-  return {
-    left: (boundingBox.left + boundingBox.width / 2) - (rect.width / 2),
-    top: (boundingBox.top + boundingBox.height / 2) - (rect.height / 2)
-  }
 }

@@ -1,7 +1,9 @@
 import { useReducer, useEffect } from 'react'
 import { getReducer, getInitialState, getSetters } from './util'
 
-const SEGMENTS = ['local', 'argument', 'this', 'that', 'temp', 'pointer', 'static', 'ram']
+const SEGMENTS = [
+  'local', 'argument', 'this', 'that', 'temp', 'pointer', 'static', 'ram'
+]
 
 const ACTIONS = {}
 SEGMENTS.forEach(segment => {

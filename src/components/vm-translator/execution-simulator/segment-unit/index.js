@@ -48,11 +48,16 @@ const SegmentUnit = ({
         title='RAM'
         width='16%'
         border={{ right: 1 }}
+        setContentBoundingDiv={divRefSetters.ramBoundingDiv}
       >
         <Stack
+          name='ram'
           width='100%'
           outerWidth='80%'
           content={segments.ram}
+          setTopInvisibleDiv={divRefSetters.topRamInvisibleDiv}
+          setBottomInvisibleDiv={divRefSetters.bottomRamInvisibleDiv}
+          setFirstStackItemDiv={divRefSetters.topRamDiv}
         />
       </Box>
     </Box>

@@ -13,7 +13,7 @@ import useSimulator from './hooks/useSimulator'
 import { DivRefContext } from './providers/divRefProvider'
 
 const ExecutionSimulator = () => {
-  const { divs, divRefSetters } = useContext(DivRefContext)
+  const { divs, divSetters } = useContext(DivRefContext)
   const {
     vmCommands,
     currentVmCommand,
@@ -39,8 +39,8 @@ const ExecutionSimulator = () => {
   }
 
   const getGstackSize = () => {
-    if (!divs.topGstackInvisibleDiv) return {}
-    const boundingRect = divs.topGstackInvisibleDiv.getBoundingClientRect()
+    if (!divs.globalStackBottomInvisibleDiv) return {}
+    const boundingRect = divs.globalStackBottomInvisibleDiv.getBoundingClientRect()
     return {
       width: `${boundingRect.width}px`,
       height: `${boundingRect.height}px`
@@ -71,11 +71,11 @@ const ExecutionSimulator = () => {
         <div className='arithmeticAndModeWrapper'>
           <div className='arithmeticWrapper'>
             <ArithmeticUnit
-              divRefSetters={{
-                cpuBoundingDiv: divRefSetters.vmCpuBoundingDiv,
-                op1Div: divRefSetters.vmOp1Div,
-                op2Div: divRefSetters.vmOp2Div,
-                resultDiv: divRefSetters.vmResultDiv
+              divSetters={{
+                cpuBoundingDiv: divSetters.vmCpuBoundingDiv,
+                op1Div: divSetters.vmOp1Div,
+                op2Div: divSetters.vmOp2Div,
+                resultDiv: divSetters.vmResultDiv
               }}
               itemSize={getGstackSize()}
               arithmetic={arithmetic}

@@ -40,9 +40,9 @@ const usePopSimulator = ({
         !isSimulationModeOn && pushToSegment(value)
         if (isSimulationModeOn) {
           const segmentName = currentVmCommand.getArg1()
-          const targetDiv = segments[`${segmentName}BottomInvisibleDiv`]
+          const targetDiv = divs[`${segmentName}BottomInvisibleDiv`]
           simulateDivMotion({
-            sourceRectDiv: divs.topGlobalStackDiv,
+            sourceRectDiv: divs.globalStackBottomInvisibleDiv,
             sourceBoundingDiv: divs.globalStackBoundingDiv,
             destinationRectDiv: targetDiv,
             text: value,

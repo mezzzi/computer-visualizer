@@ -9,7 +9,7 @@ const SegmentUnit = ({
   segmentSetters,
   globalStack
 }) => {
-  const { divRefSetters } = useContext(DivRefContext)
+  const { divSetters } = useContext(DivRefContext)
   return (
     <Box width='75%'>
       {
@@ -21,7 +21,7 @@ const SegmentUnit = ({
             boxProps={{ title: name.toUpperCase() }}
             stackProps={{
               name,
-              setBottomInvisibleDiv: segmentSetters[`${name}BottomInvisibleDiv`],
+              setBottomInvisibleDiv: divSetters[`${name}BottomInvisibleDiv`],
               content: segments[name]
             }}
           />
@@ -32,15 +32,13 @@ const SegmentUnit = ({
         height='100%'
         title='Global Stack'
         border={{ right: 1 }}
-        setContentBoundingDiv={divRefSetters.globalStackBoundingDiv}
+        setContentBoundingDiv={divSetters.globalStackBoundingDiv}
       >
         <Stack
           width='100%'
           outerWidth='80%'
           content={globalStack}
-          setTopInvisibleDiv={divRefSetters.topGstackInvisibleDiv}
-          setBottomInvisibleDiv={divRefSetters.bottomGstackInvisibleDiv}
-          setFirstStackItemDiv={divRefSetters.topGlobalStackDiv}
+          setBottomInvisibleDiv={divSetters.globalStackBottomInvisibleDiv}
         />
       </Box>
       <Box
@@ -48,16 +46,14 @@ const SegmentUnit = ({
         title='RAM'
         width='16%'
         border={{ right: 1 }}
-        setContentBoundingDiv={divRefSetters.ramBoundingDiv}
+        setContentBoundingDiv={divSetters.ramBoundingDiv}
       >
         <Stack
           name='ram'
           width='100%'
           outerWidth='80%'
           content={segments.ram}
-          setTopInvisibleDiv={divRefSetters.topRamInvisibleDiv}
-          setBottomInvisibleDiv={divRefSetters.bottomRamInvisibleDiv}
-          setFirstStackItemDiv={divRefSetters.topRamDiv}
+          setBottomInvisibleDiv={divSetters.bottomRamInvisibleDiv}
         />
       </Box>
     </Box>

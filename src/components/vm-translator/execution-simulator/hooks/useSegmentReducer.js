@@ -1,27 +1,16 @@
 import { useReducer, useEffect } from 'react'
-import { getReducer, getInitialState, getSetters } from './util'
-
-const SEGMENTS = [
-  'local', 'argument', 'this', 'that', 'temp', 'pointer', 'static', 'ram'
-]
+import {
+  getReducer, getInitialState, getSetters, SEGMENTS
+} from './util'
 
 const ACTIONS = {}
-SEGMENTS.forEach(segment => {
-  ACTIONS[segment.toUpperCase()] = segment
-  ACTIONS[`${segment.toUpperCase()}_BOTTOM_INVISIBLE_DIV`] =
-  `${segment}BottomInvisibleDiv`
-})
+SEGMENTS.forEach(segment => { ACTIONS[segment.toUpperCase()] = segment })
 
 const segmentReducer = getReducer(ACTIONS)
 
 const useSegmentReducer = (vmFileIndex) => {
   const [segments, dispatch] = useReducer(segmentReducer, {
-    ...getInitialState(ACTIONS),
-    ...(() => {
-      const segmentsDefault = {}
-      SEGMENTS.forEach(segment => { segmentsDefault[segment] = [] })
-      return segmentsDefault
-    })()
+    ...getInitialState(ACTIONS, [])
   })
 
   useEffect(() => {

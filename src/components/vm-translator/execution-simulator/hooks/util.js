@@ -1,3 +1,7 @@
+export const SEGMENTS = [
+  'local', 'argument', 'this', 'that', 'temp', 'pointer', 'static', 'ram'
+]
+
 const getSetter = (type, dispatch) => (payload) => dispatch({ type, payload })
 
 export const getSetters = (dispatch, ACTIONS) => {
@@ -18,8 +22,8 @@ export const getReducer = ACTIONS => (state, { type, payload }) => {
   }
 }
 
-export const getInitialState = ACTIONS => {
+export const getInitialState = (ACTIONS, defaultValue = null) => {
   const initialState = {}
-  Object.values(ACTIONS).forEach(val => { initialState[val] = null })
+  Object.values(ACTIONS).forEach(val => { initialState[val] = defaultValue })
   return initialState
 }

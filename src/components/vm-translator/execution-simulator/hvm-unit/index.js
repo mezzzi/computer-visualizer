@@ -16,10 +16,10 @@ const HvmUnit = ({
   setVmFileIndex,
   isSimulating
 }) => {
-  const { divRefSetters } = useContext(DivRefContext)
+  const { divSetters } = useContext(DivRefContext)
   const currentVmCmdRef = useRef(null)
   useEffect(() => {
-    divRefSetters.currentVmCmdDiv(currentVmCmdRef.current)
+    divSetters.currentVmCmdDiv(currentVmCmdRef.current)
   }, [])
   const editHandler = (index, value) => {
     const vmCommandsNew = [...vmCommands]
@@ -34,7 +34,7 @@ const HvmUnit = ({
     <Box
       width='25%'
       title='VM Code'
-      setContentBoundingDiv={divRefSetters.vmStackBoundingDiv}
+      setContentBoundingDiv={divSetters.vmStackBoundingDiv}
       customContentStyle={{
         flexDirection: 'column'
       }}
@@ -62,8 +62,7 @@ const HvmUnit = ({
         actionDisabled={isSimulating}
         editable
         editHandler={editHandler}
-        setBottomInvisibleDiv={divRefSetters.topVmInvisibleDiv}
-        setFirstStackItemDiv={divRefSetters.topVmCommandDiv}
+        setBottomInvisibleDiv={divSetters.bottomVmInvisibleDiv}
       />
       <div className='vmFileSelector'>
         <label htmlFor='files'>Vm Programs:</label>

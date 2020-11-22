@@ -15,13 +15,13 @@ const AsmUnit = ({
   itemSize,
   arithmetic = {}
 }) => {
-  const { divRefSetters } = useContext(DivRefContext)
+  const { divSetters } = useContext(DivRefContext)
   useEffect(() => {
-    divRefSetters.aRegDiv(aRegDivRef.current)
-    divRefSetters.dRegDiv(dRegDivRef.current)
+    divSetters.aRegDiv(aRegDivRef.current)
+    divSetters.dRegDiv(dRegDivRef.current)
   }, [])
   const {
-    state: { aRegister, dRegister }
+    state: { aRegister, dRegister, isAsmStepSimulating }
   } = useContext(AsmStepwiseContext)
   const aRegDivRef = useRef(null)
   const dRegDivRef = useRef(null)
@@ -31,7 +31,7 @@ const AsmUnit = ({
         height='100%'
         title='Hack Assembly'
         width='20%'
-        setContentBoundingDiv={divRefSetters.asmStackBoundingDiv}
+        setContentBoundingDiv={divSetters.asmStackBoundingDiv}
       >
         <Stack
           outerWidth='90%'
@@ -42,10 +42,9 @@ const AsmUnit = ({
           onAction={() => provideNextAsmCommand()}
           actionName='NEXT'
           actionDisabled={!isAsmStepSimulationOn ||
-          isCurrentVmCommandNull}
+          isCurrentVmCommandNull || isAsmStepSimulating}
           buttonHeight='10%'
-          setTopInvisibleDiv={divRefSetters.topAsmInvisibleDiv}
-          setFirstStackItemDiv={divRefSetters.topAsmCommandDiv}
+          setBottomInvisibleDiv={divSetters.bottomAsmInvisibleDiv}
         />
       </Box>
       <Box
@@ -93,10 +92,10 @@ const AsmUnit = ({
             }}
             width='42%'
             alignTop
-            divRefSetters={{
-              op1Div: divRefSetters.asmOp1Div,
-              op2Div: divRefSetters.asmOp2Div,
-              resultDiv: divRefSetters.asmResultDiv
+            divSetters={{
+              op1Div: divSetters.asmOp1Div,
+              op2Div: divSetters.asmOp2Div,
+              resultDiv: divSetters.asmResultDiv
             }}
           />
         </div>

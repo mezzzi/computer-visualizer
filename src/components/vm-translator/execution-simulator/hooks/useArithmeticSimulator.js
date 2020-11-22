@@ -91,7 +91,7 @@ const useArithmeticSimulator = ({
           !isSimulationModeOn && op2Processed(op2)
           if (isSimulationModeOn) {
             simulateDivMotion({
-              sourceRectDiv: divs.topGlobalStackDiv,
+              sourceRectDiv: divs.globalStackBottomInvisibleDiv,
               sourceBoundingDiv: divs.globalStackBoundingDiv,
               destinationRectDiv: divs.vmOp2Div,
               text: op2,
@@ -111,7 +111,7 @@ const useArithmeticSimulator = ({
           !isSimulationModeOn && unaryComputed(op1, commandType)
           if (isSimulationModeOn) {
             simulateDivMotion({
-              sourceRectDiv: divs.topGlobalStackDiv,
+              sourceRectDiv: divs.globalStackBottomInvisibleDiv,
               sourceBoundingDiv: divs.globalStackBoundingDiv,
               destinationRectDiv: divs.vmOp2Div,
               text: op1,
@@ -134,7 +134,7 @@ const useArithmeticSimulator = ({
       !isSimulationModeOn && binaryComputed(op1)
       if (isSimulationModeOn) {
         simulateDivMotion({
-          sourceRectDiv: divs.topGlobalStackDiv,
+          sourceRectDiv: divs.globalStackBottomInvisibleDiv,
           sourceBoundingDiv: divs.globalStackBoundingDiv,
           destinationRectDiv: divs.vmOp1Div,
           text: op1,
@@ -153,8 +153,8 @@ const useArithmeticSimulator = ({
         simulateDivMotion({
           sourceRectDiv: divs.vmResultDiv,
           sourceBoundingDiv: divs.vmCpuBoundingDiv,
-          destinationRectDiv: (divs.topGlobalStackDiv ||
-            divs.topGstackInvisibleDiv),
+          destinationRectDiv: (divs.globalStackBottomInvisibleDiv ||
+            divs.globalStackBottomInvisibleDiv),
           text: state.result,
           speed: 5,
           clearOnEnd: true,
@@ -172,7 +172,7 @@ const useArithmeticSimulator = ({
 
   const resetArithmetic = () => {
     ['op1', 'op2', 'operator', 'result'].forEach(
-      attr => { setters[attr] = null }
+      attr => { setters[attr](null) }
     )
   }
 

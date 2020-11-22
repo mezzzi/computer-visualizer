@@ -33,7 +33,7 @@ const ArithmeticUnit = ({
   alignTop = false,
   customStyle,
   customContentStyle = {},
-  divRefSetters = {}
+  divSetters = {}
 }) => {
   return (
     <Box
@@ -41,7 +41,7 @@ const ArithmeticUnit = ({
       width={width}
       title={title || undefined}
       titleHeight={title && titleHeight}
-      setContentBoundingDiv={divRefSetters.cpuBoundingDiv}
+      setContentBoundingDiv={divSetters.cpuBoundingDiv}
       customContentStyle={{
         alignItems: alignTop ? 'flex-start' : 'flex-end',
         ...customContentStyle
@@ -53,7 +53,7 @@ const ArithmeticUnit = ({
       >
         <ArithmeticItem
           size={itemSize}
-          setDivRef={divRefSetters.op1Div}
+          setDivRef={divSetters.op1Div}
           label={arithmetic.isUnary ? 'None' : 'Op1'}
         >
           {arithmetic.isUnary ? '' : (arithmetic.op1 === null ? '' : arithmetic.op1)}
@@ -66,7 +66,7 @@ const ArithmeticUnit = ({
         </ArithmeticItem>
         <ArithmeticItem
           size={itemSize}
-          setDivRef={divRefSetters.op2Div}
+          setDivRef={divSetters.op2Div}
           label={arithmetic.isUnary ? 'Op1' : 'Op2'}
         >
           {arithmetic.isUnary ? (arithmetic.op1 === null
@@ -76,7 +76,7 @@ const ArithmeticUnit = ({
         <div style={{ marginTop: '2px' }}>=</div>
         <ArithmeticItem
           size={itemSize}
-          setDivRef={divRefSetters.resultDiv}
+          setDivRef={divSetters.resultDiv}
           label='Result'
         >
           {arithmetic.result === null ? '' : arithmetic.result}

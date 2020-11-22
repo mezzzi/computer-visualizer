@@ -13,7 +13,6 @@ const Bucket = ({
   bottomGrowing,
   actionDisabled,
   setFirstStackItemDiv,
-  setTopInvisibleDiv,
   setBottomInvisibleDiv,
   name,
   buttonHeight,
@@ -23,11 +22,8 @@ const Bucket = ({
 }) => {
   const [contentEditable, setContentEditable] = useState(false)
   const firstItemDivRef = useRef(null)
-  const topInvisibleIDivRef = useRef(null)
   const bottomInvisibleIDivRef = useRef(null)
   useEffect(() => {
-    setTopInvisibleDiv &&
-      setTopInvisibleDiv(topInvisibleIDivRef.current)
     setBottomInvisibleDiv &&
       setBottomInvisibleDiv(bottomInvisibleIDivRef.current)
     setFirstStackItemDiv &&
@@ -75,6 +71,7 @@ const Bucket = ({
           {
             [-1, -2, -3].map((index) => (
               <div
+                id={name ? `${name}${index}` : `${index}~${new Date().getTime()}`}
                 className='stackItem'
                 key={index}
                 style={{
@@ -82,8 +79,10 @@ const Bucket = ({
                   background: 'transparent',
                   justifySelf: 'flex-end'
                 }}
-                ref={index === -3 ? topInvisibleIDivRef : (
+                ref={bottomGrowing ? (
                   index === -1 ? bottomInvisibleIDivRef : undefined
+                ) : (
+                  index === -3 ? bottomInvisibleIDivRef : undefined
                 )}
               >
                 ''
@@ -115,7 +114,7 @@ const Bucket = ({
                     {item.index}
                   </div>}
                 <div
-                  id={`cmd-${index}`}
+                  id={`${name || 'cmd'}-${index}`}
                   style={{ outline: 'none' }}
                   contentEditable={contentEditable}
                   onClick={editable
@@ -123,7 +122,8 @@ const Bucket = ({
                     setContentEditable(true) : undefined}
                   onBlur={editable
                     ? ((i) => () => editHandler(i,
-                      document.getElementById(`cmd-${index}`).innerText))(index)
+                      document.getElementById(`${name || 'cmd'}-${index}`)
+                        .innerText))(index)
                     : undefined}
                 >
                   {item.item === undefined ? item : item.item}

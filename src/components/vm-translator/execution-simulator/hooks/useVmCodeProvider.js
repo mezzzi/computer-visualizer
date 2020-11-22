@@ -41,12 +41,12 @@ const useVmCodeProvider = ({
       setters.vmCommands(updatedCommands)
       if (isSimulationModeOn) {
         setIsSimulating(true)
-        divs.topVmInvisibleDiv.scrollIntoView()
-        const sourceRect = divs.topVmCommandDiv.getBoundingClientRect()
+        divs.bottomVmInvisibleDiv.scrollIntoView()
+        const sourceRect = divs.bottomVmInvisibleDiv.getBoundingClientRect()
         const destRect = divs.currentVmCmdDiv.getBoundingClientRect()
         const top = destRect.top + (destRect.height - sourceRect.height) / 2
         moveToTarget({
-          sourceRectDiv: divs.topVmCommandDiv,
+          sourceRectDiv: divs.bottomVmInvisibleDiv,
           destinationRect: {
             ...sourceRect,
             top

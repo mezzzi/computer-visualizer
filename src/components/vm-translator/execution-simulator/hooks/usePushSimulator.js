@@ -33,7 +33,7 @@ const usePushSimulator = ({
           isSimulationModeOn && moveFromBoundaryToTarget({
             boundaryRect: divs.globalStackBoundingDiv.getBoundingClientRect(),
             targetRect: (
-              divs.topGlobalStackDiv || divs.topGstackInvisibleDiv
+              divs.globalStackBottomInvisibleDiv || divs.globalStackBottomInvisibleDiv
             ).getBoundingClientRect(),
             isMovingUp: false,
             text: segmentIndex,
@@ -59,7 +59,7 @@ const usePushSimulator = ({
           if (isSimulationModeOn) {
             let sourceDiv = null
             if (targetIndex + 1 < segment.length) {
-              sourceDiv = segments[`${segmentName}BottomInvisibleDiv`]
+              sourceDiv = divs[`${segmentName}BottomInvisibleDiv`]
             } else {
               if (!segment[targetIndex]) {
                 setIsSimulating(false)
@@ -71,8 +71,8 @@ const usePushSimulator = ({
             simulateDivMotion({
               sourceRectDiv: sourceDiv,
               sourceBoundingDiv: divs.globalStackBoundingDiv,
-              destinationRectDiv: (divs.topGlobalStackDiv ||
-                divs.bottomGstackInvisibleDiv),
+              destinationRectDiv: (divs.globalStackBottomInvisibleDiv ||
+                divs.globalStackBottomInvisibleDiv),
               text: target.item,
               speed: 5,
               clearOnEnd: true,

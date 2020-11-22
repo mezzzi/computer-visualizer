@@ -19,7 +19,7 @@ const AsmUnit = ({
         display: 'flex',
         justifyContent: 'space-around',
         alignItems: 'center',
-        width: '80%',
+        width: '70%',
         selfJustify: 'center',
         flexWrap: true
       }}

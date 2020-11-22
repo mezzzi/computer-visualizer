@@ -19,9 +19,7 @@ const ExecutionSimulator = () => {
     currentVmCommand,
     vmCodeSetters,
     asmGenerator,
-    globalStack,
     segments,
-    segmentSetters,
     isSimulationModeOn,
     isAsmStepSimulationOn,
     provideNextAsmCommand,
@@ -63,11 +61,8 @@ const ExecutionSimulator = () => {
         isCurrentVmCommandNull={!currentVmCommand}
         provideNextAsmCommand={provideNextAsmCommand}
       />
-      <SegmentUnit
-        segments={segments} segmentSetters={segmentSetters}
-        globalStack={globalStack}
-      />
-      <Box width='25%'>
+      <SegmentUnit segments={segments} />
+      <Box width='27%'>
         <div className='arithmeticAndModeWrapper'>
           <div className='arithmeticWrapper'>
             <ArithmeticUnit

@@ -12,12 +12,12 @@ import useArithmeticSimulator from './useArithmeticSimulator'
 const useSimulator = () => {
   const {
     general: {
-      translator, globalStack, vmFileIndex,
+      translator, vmFileIndex,
       isSimulationModeOn, isSimulating, isAsmSimulationOn,
       isAsmStepSimulationOn
     },
     generalSetters: {
-      globalStack: setGlobalStack, isSimulating: setIsSimulating,
+      isSimulating: setIsSimulating,
       vmFileIndex: setVmFileIndex, translator: setTranslator,
       ...modeSetters
     }
@@ -50,8 +50,6 @@ const useSimulator = () => {
     isAsmGenerated: asmGenerator.isAsmGenerated,
     setIsAsmGenerated: asmSetters.isAsmGenerated,
     currentVmCommand,
-    globalStack,
-    setGlobalStack,
     segments,
     segmentSetters,
     isSimulationModeOn,
@@ -62,8 +60,6 @@ const useSimulator = () => {
     isAsmGenerated: asmGenerator.isAsmGenerated,
     setIsAsmGenerated: asmSetters.isAsmGenerated,
     currentVmCommand,
-    globalStack,
-    setGlobalStack,
     segments,
     segmentSetters,
     isSimulationModeOn,
@@ -74,8 +70,8 @@ const useSimulator = () => {
     isAsmGenerated: asmGenerator.isAsmGenerated,
     setIsAsmGenerated: asmSetters.isAsmGenerated,
     currentVmCommand,
-    globalStack,
-    setGlobalStack,
+    globalStack: segments.globalStack,
+    setGlobalStack: segmentSetters.globalStack,
     isSimulationModeOn,
     setIsSimulating,
     vmFileIndex
@@ -92,7 +88,6 @@ const useSimulator = () => {
     currentVmCommand,
     vmCodeSetters,
     asmGenerator,
-    globalStack,
     segments,
     segmentSetters,
     isSimulationModeOn,

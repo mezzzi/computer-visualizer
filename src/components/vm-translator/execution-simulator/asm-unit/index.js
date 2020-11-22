@@ -61,10 +61,10 @@ const AsmUnit = ({
           }}
         >
           <Box
-            width='58%'
+            width='40%'
             customContentStyle={{
-              justifyContent: 'space-around',
-              width: '80%'
+              justifyContent: 'space-between',
+              width: '90%'
             }}
           >
             <div className='registerWrapper' style={{ height: itemSize.height }}>
@@ -88,9 +88,13 @@ const AsmUnit = ({
               marginRight: '4%'
             }}
             customContentStyle={{
-              justifyContent: 'flex-end'
+              justifyContent: 'flex-end',
+              width: '75%'
             }}
-            width='42%'
+            boxStyles={{
+              alignItems: 'flex-end'
+            }}
+            width='60%'
             alignTop
             divSetters={{
               op1Div: divSetters.asmOp1Div,

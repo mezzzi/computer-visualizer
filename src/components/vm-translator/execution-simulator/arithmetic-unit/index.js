@@ -33,12 +33,14 @@ const ArithmeticUnit = ({
   alignTop = false,
   customStyle,
   customContentStyle = {},
-  divSetters = {}
+  divSetters = {},
+  boxStyles = {}
 }) => {
   return (
     <Box
       height='100%'
       width={width}
+      boxStyles={boxStyles}
       title={title || undefined}
       titleHeight={title && titleHeight}
       setContentBoundingDiv={divSetters.cpuBoundingDiv}

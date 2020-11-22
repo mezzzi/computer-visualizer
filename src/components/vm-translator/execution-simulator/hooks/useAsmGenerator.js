@@ -181,7 +181,7 @@ const useAsmGenerator = ({
             isMovingUp: true,
             speed: 25,
             onSimulationEnd: () => {
-              const targetRect = divs.bottomRamInvisibleDiv.getBoundingClientRect()
+              const targetRect = divs.ramBottomInvisibleDiv.getBoundingClientRect()
               moveFromTargetToBoundary({
                 text: value,
                 boundaryTop: divs.ramBoundingDiv.getBoundingClientRect().top,

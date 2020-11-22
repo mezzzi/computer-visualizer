@@ -12,7 +12,6 @@ const Bucket = ({
   actionName,
   bottomGrowing,
   actionDisabled,
-  setFirstStackItemDiv,
   setBottomInvisibleDiv,
   name,
   buttonHeight,
@@ -21,13 +20,10 @@ const Bucket = ({
   editHandler = null
 }) => {
   const [contentEditable, setContentEditable] = useState(false)
-  const firstItemDivRef = useRef(null)
   const bottomInvisibleIDivRef = useRef(null)
   useEffect(() => {
     setBottomInvisibleDiv &&
       setBottomInvisibleDiv(bottomInvisibleIDivRef.current)
-    setFirstStackItemDiv &&
-      setFirstStackItemDiv(firstItemDivRef.current)
   }, [content.length])
   return (
     <div
@@ -79,11 +75,7 @@ const Bucket = ({
                   background: 'transparent',
                   justifySelf: 'flex-end'
                 }}
-                ref={bottomGrowing ? (
-                  index === -1 ? bottomInvisibleIDivRef : undefined
-                ) : (
-                  index === -3 ? bottomInvisibleIDivRef : undefined
-                )}
+                ref={index === -3 ? bottomInvisibleIDivRef : undefined}
               >
                 ''
               </div>
@@ -103,7 +95,6 @@ const Bucket = ({
                     justifyContent: 'space-between'
                   } : {})
                 }}
-                ref={index === 0 ? firstItemDivRef : undefined}
               >
                 {item.index !== undefined &&
                   <div

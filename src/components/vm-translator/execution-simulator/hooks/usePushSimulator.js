@@ -10,8 +10,6 @@ const usePushSimulator = ({
   isAsmGenerated,
   setIsAsmGenerated,
   currentVmCommand,
-  globalStack,
-  setGlobalStack,
   segments,
   segmentSetters,
   isSimulationModeOn,
@@ -22,7 +20,8 @@ const usePushSimulator = ({
   useEffect(() => {
     if (isAsmGenerated) {
       setIsAsmGenerated(false)
-      const updatedStack = [...globalStack]
+      const updatedStack = [...segments.globalStack]
+      const setGlobalStack = segmentSetters.globalStack
       const commandType = currentVmCommand.getCommandType()
       if (commandType === COMMAND.PUSH) {
         const segmentName = currentVmCommand.getArg1()

@@ -5,7 +5,6 @@ import { getReducer, getSetters } from './util'
 
 const ACTIONS = {
   SET_VM_FILE_INDEX: 'vmFileIndex',
-  SET_GLOBAL_STACK: 'globalStack',
   SET_TRANSLATOR: 'translator',
   SET_SIMULATION_MODE_ON: 'isSimulationModeOn',
   SET_HVM_SIMULATION_ON: 'isHvmSimulationOn',
@@ -22,7 +21,6 @@ const generalReducer = getReducer(ACTIONS)
 const useGeneralReducer = () => {
   const [general, dispatch] = useReducer(generalReducer, {
     vmFileIndex: 0,
-    globalStack: [],
     translator: null,
     isSimulationModeOn: true,
     isHvmSimulationOn: true,
@@ -41,7 +39,6 @@ const useGeneralReducer = () => {
       file: files[general.vmFileIndex]
     }])
     setters.translator(translator)
-    setters.globalStack([])
   }, [general.vmFileIndex])
 
   const setters = getSetters(dispatch, ACTIONS)

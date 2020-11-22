@@ -8,7 +8,7 @@ const StackBox = ({
 }) => (
   <Box
     height='100%'
-    width='10.5%'
+    width='11.11%'
     border={{ right: 1 }}
     {...boxProps}
   >

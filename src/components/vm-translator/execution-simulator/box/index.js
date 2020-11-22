@@ -9,7 +9,8 @@ const Box = ({
   setContentBoundingDiv,
   border = {},
   titleHeight,
-  customContentStyle
+  customContentStyle,
+  boxStyles = {}
 }) => {
   const contentDivRef = useRef(null)
   useEffect(() => {
@@ -23,7 +24,9 @@ const Box = ({
         borderLeft: border.left ? '1px solid black' : 'none',
         borderRight: border.right ? '1px solid black' : 'none',
         borderTop: border.top ? '1px solid black' : 'none',
-        borderBottom: border.bottom ? '1px solid black' : 'none'
+        borderBottom: border.bottom ? '1px solid black' : 'none',
+        alignItems: 'center',
+        ...boxStyles
       }}
       className='box'
     >

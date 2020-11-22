@@ -1,24 +1,24 @@
 import React, { useContext } from 'react'
 import Box from '../box'
-import Stack from '../stack'
 import StackBox from '../stackbox'
 import { DivRefContext } from '../providers/divRefProvider'
+import { SEGMENTS } from '../hooks/util'
 
 const SegmentUnit = ({
-  segments,
-  segmentSetters,
-  globalStack
+  segments
 }) => {
   const { divSetters } = useContext(DivRefContext)
   return (
-    <Box width='75%'>
+    <Box width='73%'>
       {
-        [
-          'temp', 'local', 'argument', 'this', 'that', 'pointer', 'static'
-        ].map((name, index) => (
+        SEGMENTS.map((name, index) => (
           <StackBox
             key={index}
-            boxProps={{ title: name.toUpperCase() }}
+            boxProps={{
+              setContentBoundingDiv: divSetters[`${name}BoundingDiv`],
+              title: name !== 'ram' && (
+                name !== 'globalStack' ? name.toUpperCase() : 'STACK')
+            }}
             stackProps={{
               name,
               setBottomInvisibleDiv: divSetters[`${name}BottomInvisibleDiv`],
@@ -27,35 +27,6 @@ const SegmentUnit = ({
           />
         ))
       }
-      <Box
-        width='10.5%'
-        height='100%'
-        title='Global Stack'
-        border={{ right: 1 }}
-        setContentBoundingDiv={divSetters.globalStackBoundingDiv}
-      >
-        <Stack
-          width='100%'
-          outerWidth='80%'
-          content={globalStack}
-          setBottomInvisibleDiv={divSetters.globalStackBottomInvisibleDiv}
-        />
-      </Box>
-      <Box
-        height='100%'
-        title='RAM'
-        width='16%'
-        border={{ right: 1 }}
-        setContentBoundingDiv={divSetters.ramBoundingDiv}
-      >
-        <Stack
-          name='ram'
-          width='100%'
-          outerWidth='80%'
-          content={segments.ram}
-          setBottomInvisibleDiv={divSetters.bottomRamInvisibleDiv}
-        />
-      </Box>
     </Box>
   )
 }

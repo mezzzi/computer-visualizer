@@ -1,5 +1,6 @@
 export const SEGMENTS = [
-  'local', 'argument', 'this', 'that', 'temp', 'pointer', 'static', 'ram'
+  'local', 'argument', 'this', 'that', 'temp',
+  'pointer', 'static', 'globalStack', 'ram'
 ]
 
 const getSetter = (type, dispatch) => (payload) => dispatch({ type, payload })

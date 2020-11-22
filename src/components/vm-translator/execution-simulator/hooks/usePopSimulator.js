@@ -7,8 +7,6 @@ const usePopSimulator = ({
   isAsmGenerated,
   setIsAsmGenerated,
   currentVmCommand,
-  globalStack,
-  setGlobalStack,
   segments,
   segmentSetters,
   isSimulationModeOn,
@@ -28,10 +26,11 @@ const usePopSimulator = ({
   useEffect(() => {
     if (isAsmGenerated) {
       setIsAsmGenerated(false)
-      const updatedStack = [...globalStack]
+      const updatedStack = [...segments.globalStack]
+      const setGlobalStack = segmentSetters.globalStack
       const commandType = currentVmCommand.getCommandType()
       if (commandType === COMMAND.POP) {
-        if (globalStack.length < 1) {
+        if (updatedStack.length < 1) {
           isSimulationModeOn && setIsSimulating(false)
           return
         }

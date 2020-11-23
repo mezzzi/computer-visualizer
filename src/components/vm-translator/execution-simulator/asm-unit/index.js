@@ -12,8 +12,7 @@ const AsmUnit = ({
   provideNextAsmCommand,
   isAsmStepSimulationOn,
   isCurrentVmCommandNull,
-  itemSize,
-  arithmetic = {}
+  itemSize
 }) => {
   const { divSetters } = useContext(DivRefContext)
   useEffect(() => {
@@ -21,7 +20,10 @@ const AsmUnit = ({
     divSetters.dRegDiv(dRegDivRef.current)
   }, [])
   const {
-    state: { aRegister, dRegister, isAsmStepSimulating }
+    state: {
+      aRegister, dRegister, isAsmStepSimulating,
+      isUnary, op1, op2, operator, result
+    }
   } = useContext(AsmStepwiseContext)
   const aRegDivRef = useRef(null)
   const dRegDivRef = useRef(null)
@@ -67,22 +69,38 @@ const AsmUnit = ({
               width: '90%'
             }}
           >
-            <div className='registerWrapper' style={{ height: itemSize.height }}>
-              <div className='registerLabel'>A</div>
-              <div className='registerValue' ref={aRegDivRef}>
+            <div className='registerWrapper'>
+              <div
+                className='registerLabel'
+                style={{
+                  width: `${parseFloat(itemSize.width) * 3 / 7}px`,
+                  height: itemSize.height
+                }}
+              >
+                A
+              </div>
+              <div className='registerValue' ref={aRegDivRef} style={{ ...itemSize }}>
                 {aRegister !== null ? aRegister : ''}
               </div>
             </div>
-            <div className='registerWrapper' style={{ height: itemSize.height }}>
-              <div className='registerLabel'>D</div>
-              <div className='registerValue' ref={dRegDivRef}>
+            <div className='registerWrapper'>
+              <div
+                className='registerLabel'
+                style={{
+                  width: `${parseFloat(itemSize.width) * 3 / 7}px`,
+                  height: itemSize.height
+                }}
+              >
+                D
+              </div>
+              <div className='registerValue' ref={dRegDivRef} style={{ ...itemSize }}>
                 {dRegister !== null ? dRegister : ''}
               </div>
             </div>
           </Box>
           <ArithmeticUnit
             itemSize={itemSize}
-            arithmetic={arithmetic}
+            arithmetic={{ isUnary, op1, op2, operator, result }}
             customStyle={{
               marginBottom: 0,
               marginRight: '4%'

@@ -1,14 +1,11 @@
 .registerWrapper {
   display: flex;
-  width: 30%;
   background: black;
   align-items: center;
   margin: 0 5%;
 }
 
 .registerLabel {
-  width: 30%;
-  height: 100%;
   background: red;
   color: black;
   display: flex;
@@ -17,8 +14,6 @@
 }
 
 .registerValue {
-  height: 100%;
-  width: 70%;
   display: flex;
   justify-content: center;
   align-items: center;

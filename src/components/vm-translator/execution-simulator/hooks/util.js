@@ -25,6 +25,6 @@ export const getReducer = ACTIONS => (state, { type, payload }) => {
 
 export const getInitialState = (ACTIONS, defaultValue = null) => {
   const initialState = {}
-  Object.values(ACTIONS).forEach(val => { initialState[val] = defaultValue })
+  Object.values(ACTIONS).forEach(key => { initialState[key] = defaultValue })
   return initialState
 }

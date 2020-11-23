@@ -10,7 +10,8 @@ const Box = ({
   border = {},
   titleHeight,
   customContentStyle,
-  boxStyles = {}
+  boxStyles = {},
+  titleStyle = {}
 }) => {
   const contentDivRef = useRef(null)
   useEffect(() => {
@@ -32,7 +33,14 @@ const Box = ({
     >
       {
         title && (
-          <div className='boxTitle' style={{ height: titleHeight || '15%' }}>
+          <div
+            className='boxTitle'
+            style={{
+              height: titleHeight || '15%',
+              backgroundColor: '#252323',
+              ...titleStyle
+            }}
+          >
             {title}
           </div>
         )

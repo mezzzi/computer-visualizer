@@ -20,16 +20,20 @@ const ExecutionSimulator = () => {
     vmCodeSetters,
     asmGenerator,
     segments,
-    isSimulationModeOn,
-    isAsmStepSimulationOn,
     provideNextAsmCommand,
-    isAsmSimulationOn,
-    isSimulating,
-    modeSetters,
     arithmetic,
     vmFileIndex,
     setVmFileIndex,
-    setTranslator
+    setTranslator,
+    asmStepwiseState,
+    simulationModes: {
+      isSimulating,
+      isSimulationModeOn,
+      isAsmSimulationOn,
+      isAsmStepSimulationOn,
+      isAsmSteppingFast
+    },
+    simulationModeSetters
   } = useSimulator()
 
   const provideNextVmCmd = () => {
@@ -60,6 +64,7 @@ const ExecutionSimulator = () => {
         itemSize={getGstackSize()} isAsmStepSimulationOn={isAsmStepSimulationOn}
         isCurrentVmCommandNull={!currentVmCommand}
         provideNextAsmCommand={provideNextAsmCommand}
+        asmStepwiseState={asmStepwiseState}
       />
       <SegmentUnit segments={segments} />
       <Box width='27%'>
@@ -84,7 +89,8 @@ const ExecutionSimulator = () => {
               isAsmStepSimulationOn={isAsmStepSimulationOn}
               isAsmSimulationOn={isAsmSimulationOn}
               isSimulating={isSimulating}
-              modeSetters={modeSetters}
+              isAsmSteppingFast={isAsmSteppingFast}
+              modeSetters={simulationModeSetters}
             />
           </div>
         </div>

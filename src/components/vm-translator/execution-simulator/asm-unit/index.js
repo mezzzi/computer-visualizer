@@ -5,26 +5,27 @@ import Stack from '../stack'
 import ArithmeticUnit from '../arithmetic-unit'
 
 import { DivRefContext } from '../providers/divRefProvider'
-import { AsmStepwiseContext } from '../providers/asmStepwiseProvider'
+import { GeneralContext } from '../providers/generalProvider'
 
 const AsmUnit = ({
   asmGenerator,
   provideNextAsmCommand,
   isAsmStepSimulationOn,
   isCurrentVmCommandNull,
-  itemSize
+  itemSize,
+  isSimulating,
+  asmStepwiseState
 }) => {
   const { divSetters } = useContext(DivRefContext)
+  const { state: { isCurrentAsmBatchExhausted } } = useContext(GeneralContext)
   useEffect(() => {
     divSetters.aRegDiv(aRegDivRef.current)
     divSetters.dRegDiv(dRegDivRef.current)
   }, [])
   const {
-    state: {
-      aRegister, dRegister, isAsmStepSimulating,
-      isUnary, op1, op2, operator, result
-    }
-  } = useContext(AsmStepwiseContext)
+    aRegister, dRegister,
+    isUnary, op1, op2, operator, result
+  } = asmStepwiseState
   const aRegDivRef = useRef(null)
   const dRegDivRef = useRef(null)
   return (
@@ -43,8 +44,8 @@ const AsmUnit = ({
           hasAction
           onAction={() => provideNextAsmCommand()}
           actionName='NEXT'
-          actionDisabled={!isAsmStepSimulationOn ||
-          isCurrentVmCommandNull || isAsmStepSimulating}
+          actionDisabled={!isAsmStepSimulationOn || isCurrentAsmBatchExhausted ||
+          isCurrentVmCommandNull || isSimulating}
           buttonHeight='10%'
           setBottomInvisibleDiv={divSetters.bottomAsmInvisibleDiv}
         />

@@ -1,8 +1,23 @@
+import { COMMAND } from 'abstractions/software/vm-translator/command/types'
+
 export const SEGMENTS = [
   'local', 'argument', 'this', 'that', 'temp',
   'pointer', 'static', 'globalStack', 'ram'
 ]
 
+export const ARITHMETIC_SYMBOLS = ['+', '-', '~', '&', '|', '!']
+export const isArithmeticSymbol = symbol => ARITHMETIC_SYMBOLS.includes(symbol)
+export const getSymbolCommandType = ({ symbol, isUnary }) => {
+  return isUnary ? {
+    '~': COMMAND.NEGATE,
+    '!': COMMAND.NOT
+  }[symbol] : {
+    '+': COMMAND.ADD,
+    '-': COMMAND.SUBTRACT,
+    '&': COMMAND.AND,
+    '|': COMMAND.OR
+  }[symbol]
+}
 const getSetter = (type, dispatch) => (payload) => dispatch({ type, payload })
 
 export const getSetters = (dispatch, ACTIONS) => {

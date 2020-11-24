@@ -2,11 +2,12 @@ import React from 'react'
 import './index.css'
 import Box from '../box'
 
-const AsmUnit = ({
+const ModeUnit = ({
   isSimulationModeOn,
   isAsmSimulationOn,
   isAsmStepSimulationOn,
   isSimulating,
+  isAsmSteppingFast,
   modeSetters
 }) => {
   return (
@@ -62,8 +63,17 @@ const AsmUnit = ({
         />
         <label htmlFor='asms'>asms</label>
       </span>
+      <span>
+        <input
+          type='checkbox' value='asmf' name='asmf'
+          disabled={isSimulating}
+          checked={!isAsmSteppingFast}
+          onChange={() => modeSetters.isAsmSteppingFast(!isAsmSteppingFast)}
+        />
+        <label htmlFor='asmf'>asmf</label>
+      </span>
     </Box>
   )
 }
 
-export default AsmUnit
+export default ModeUnit

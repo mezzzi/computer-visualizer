@@ -11,7 +11,6 @@ import CompilerSecondStage from 'components/CompilerSecondStage'
 import { TealButton } from 'components/Buttons'
 import DrawerItem from 'components/DrawerItem'
 import ExecutionSimulator from 'components/vm-translator/execution-simulator'
-
 function App () {
   const [visible, setVisible] = useState(false)
 

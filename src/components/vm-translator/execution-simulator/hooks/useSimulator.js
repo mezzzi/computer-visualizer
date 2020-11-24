@@ -4,6 +4,7 @@ import useGeneralReducer from './useGeneralReducer'
 import useSegmentReducer from './useSegmentReducer'
 
 import useAsmGenerator from './useAsmGenerator'
+import useAsmStepwiseSimulator from './useAsmStepwiseSimulator'
 import useVmCodeProvider from './useVmCodeProvider'
 import usePushSimulator from './usePushSimulator'
 import usePopSimulator from './usePopSimulator'
@@ -13,17 +14,20 @@ const useSimulator = () => {
   const {
     general: {
       translator, vmFileIndex,
-      isSimulationModeOn, isSimulating, isAsmSimulationOn,
-      isAsmStepSimulationOn
+      ...simulationModes
     },
     generalSetters: {
-      isSimulating: setIsSimulating,
       vmFileIndex: setVmFileIndex, translator: setTranslator,
-      ...modeSetters
+      ...simulationModeSetters
     }
   } = useGeneralReducer()
 
   const { segments, segmentSetters } = useSegmentReducer(vmFileIndex)
+
+  const commonModesAndSetters = {
+    isSimulationModeOn: simulationModes.isSimulationModeOn,
+    setIsSimulating: simulationModeSetters.isSimulating
+  }
 
   const {
     vmCodeProvider: {
@@ -31,19 +35,32 @@ const useSimulator = () => {
       isNextVmCmdProvided, shouldProvideNextVmCmd
     },
     vmCodeSetters
-  } = useVmCodeProvider({ isSimulationModeOn, translator, setIsSimulating })
+  } = useVmCodeProvider({
+    translator,
+    ...commonModesAndSetters
+  })
+
+  const {
+    state: asmStepwiseState,
+    simulateAsm,
+    resetAsmArithmetic
+  } = useAsmStepwiseSimulator({
+    ram: segments.ram,
+    setRam: segmentSetters.ram,
+    vmFileIndex,
+    setIsSimulating: simulationModeSetters.isSimulating,
+    isAsmSteppingFast: simulationModes.isAsmSteppingFast
+  })
 
   const { asmGenerator, asmSetters, provideNextAsmCommand } = useAsmGenerator({
-    isSimulationModeOn,
-    isAsmSimulationOn,
-    isAsmStepSimulationOn,
+    simulationModes,
+    simulationModeSetters,
     translator,
     isNextVmCmdProvided,
-    setIsSimulating,
     setIsNextVmCmdProvided: vmCodeSetters.isNextVmCmdProvided,
     vmFileIndex,
-    ram: segments.ram,
-    setRam: segmentSetters.ram
+    simulateAsm,
+    resetAsmArithmetic
   })
 
   usePushSimulator({
@@ -52,8 +69,7 @@ const useSimulator = () => {
     currentVmCommand,
     segments,
     segmentSetters,
-    isSimulationModeOn,
-    setIsSimulating
+    ...commonModesAndSetters
   })
 
   usePopSimulator({
@@ -62,8 +78,7 @@ const useSimulator = () => {
     currentVmCommand,
     segments,
     segmentSetters,
-    isSimulationModeOn,
-    setIsSimulating
+    ...commonModesAndSetters
   })
 
   const { arithmetic, resetArithmetic } = useArithmeticSimulator({
@@ -72,9 +87,8 @@ const useSimulator = () => {
     currentVmCommand,
     globalStack: segments.globalStack,
     setGlobalStack: segmentSetters.globalStack,
-    isSimulationModeOn,
-    setIsSimulating,
-    vmFileIndex
+    vmFileIndex,
+    ...commonModesAndSetters
   })
 
   useEffect(() => {
@@ -90,16 +104,14 @@ const useSimulator = () => {
     asmGenerator,
     segments,
     segmentSetters,
-    isSimulationModeOn,
-    isAsmSimulationOn,
-    isAsmStepSimulationOn,
     provideNextAsmCommand,
-    isSimulating,
-    modeSetters,
     arithmetic,
     vmFileIndex,
     setVmFileIndex,
-    setTranslator
+    setTranslator,
+    asmStepwiseState,
+    simulationModes,
+    simulationModeSetters
   }
 }
 

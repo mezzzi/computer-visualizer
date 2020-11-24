@@ -56,6 +56,7 @@ const useVmCodeProvider = ({
           clearOnEnd: true,
           noSideWay: true,
           onSimulationEnd: () => {
+            setIsSimulating(false)
             setters.currentVmCommand(command)
             setters.isNextVmCmdProvided(true)
           }

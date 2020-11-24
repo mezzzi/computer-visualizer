@@ -6,6 +6,7 @@ import Stack from '../stack'
 import HVMTranslator from 'abstractions/software/vm-translator'
 
 import { DivRefContext } from '../providers/divRefProvider'
+import { GeneralContext } from '../providers/generalProvider'
 
 const HvmUnit = ({
   currentVmCommand,
@@ -17,6 +18,7 @@ const HvmUnit = ({
   isSimulating
 }) => {
   const { divSetters } = useContext(DivRefContext)
+  const { state: { isCurrentAsmBatchExhausted } } = useContext(GeneralContext)
   const currentVmCmdRef = useRef(null)
   useEffect(() => {
     divSetters.currentVmCmdDiv(currentVmCmdRef.current)
@@ -59,7 +61,7 @@ const HvmUnit = ({
         hasAction
         onAction={provideNextVmCmd}
         actionName='NEXT'
-        actionDisabled={isSimulating}
+        actionDisabled={isSimulating || !isCurrentAsmBatchExhausted}
         editable
         editHandler={editHandler}
         setBottomInvisibleDiv={divSetters.bottomVmInvisibleDiv}

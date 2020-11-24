@@ -16,13 +16,21 @@ const SegmentUnit = ({
             key={index}
             boxProps={{
               setContentBoundingDiv: divSetters[`${name}BoundingDiv`],
-              title: name !== 'globalStack' ? name.toUpperCase() : 'STACK',
-              titleStyle: name === 'ram' && { backgroundColor: 'transparent' }
+              title: name !== 'ram' &&
+                (name !== 'globalStack' ? name.toUpperCase() : 'STACK')
             }}
             stackProps={{
               name,
               setBottomInvisibleDiv: divSetters[`${name}BottomInvisibleDiv`],
-              content: segments[name]
+              content: segments[name],
+              ...(
+                name === 'ram' ? {
+                  hasAction: true,
+                  actionName: 'RAM',
+                  actionDisabled: true,
+                  buttonHeight: '10%'
+                } : {}
+              )
             }}
           />
         ))

@@ -15,7 +15,8 @@ const HvmUnit = ({
   provideNextVmCmd,
   vmFileIndex,
   setVmFileIndex,
-  isSimulating
+  isSimulating,
+  resetVmFile
 }) => {
   const { divSetters } = useContext(DivRefContext)
   const { state: { isCurrentAsmBatchExhausted } } = useContext(GeneralContext)
@@ -67,18 +68,25 @@ const HvmUnit = ({
         setBottomInvisibleDiv={divSetters.bottomVmInvisibleDiv}
       />
       <div className='vmFileSelector'>
-        <label htmlFor='files'>Vm Programs:</label>
+        <label htmlFor='files'>Vm Codes:</label>
         <select
           name='files' id='files'
           disabled={isSimulating}
-          onChange={(event) => setVmFileIndex(event.target.value)}
+          onChange={(event) => setVmFileIndex(parseInt(event.target.value))}
           value={vmFileIndex}
         >
           <option value='0'>Simple Add</option>
           <option value='1'>Stack Test</option>
           <option value='2'>Basic Test</option>
           <option value='3'>Pointer Test</option>
+          <option value='4'>Static Test</option>
         </select>
+        <button
+          className='resetButton'
+          onClick={() => resetVmFile()}
+        >
+          {'<<'}
+        </button>
       </div>
     </Box>
   )

@@ -10,6 +10,7 @@ import { GeneralContext } from '../providers/generalProvider'
 const AsmUnit = ({
   asmGenerator,
   provideNextAsmCommand,
+  isAllSimulationOn,
   isAsmStepSimulationOn,
   isCurrentVmCommandNull,
   itemSize,
@@ -45,7 +46,7 @@ const AsmUnit = ({
           onAction={() => provideNextAsmCommand()}
           actionName='NEXT'
           actionDisabled={!isAsmStepSimulationOn || isCurrentAsmBatchExhausted ||
-          isCurrentVmCommandNull || isSimulating}
+          isCurrentVmCommandNull || isSimulating || isAllSimulationOn}
           buttonHeight='10%'
           setBottomInvisibleDiv={divSetters.bottomAsmInvisibleDiv}
         />
@@ -124,12 +125,20 @@ const AsmUnit = ({
         </div>
         <div className='symbolTable'>
           <div className='symbolTableRow'>
-            <div className='symbolTableCell'>Symbol</div>
+            <div className='symbolTableCell'>Sym</div>
             <div className='symbolTableCell'>SP</div>
+            <div className='symbolTableCell'>LCL</div>
+            <div className='symbolTableCell'>ARG</div>
+            <div className='symbolTableCell'>THIS</div>
+            <div className='symbolTableCell'>THAT</div>
           </div>
           <div className='symbolTableRow'>
-            <div className='symbolTableCell'>Address</div>
+            <div className='symbolTableCell'>Addr</div>
             <div className='symbolTableCell'>0</div>
+            <div className='symbolTableCell'>1</div>
+            <div className='symbolTableCell'>2</div>
+            <div className='symbolTableCell'>3</div>
+            <div className='symbolTableCell'>4</div>
           </div>
         </div>
       </Box>

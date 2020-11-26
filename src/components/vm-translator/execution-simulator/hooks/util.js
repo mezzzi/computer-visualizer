@@ -5,11 +5,11 @@ export const SEGMENTS = [
   'pointer', 'static', 'globalStack', 'ram'
 ]
 
-export const ARITHMETIC_SYMBOLS = ['+', '-', '~', '&', '|', '!']
+export const ARITHMETIC_SYMBOLS = ['+', '-', '&', '|', '!']
 export const isArithmeticSymbol = symbol => ARITHMETIC_SYMBOLS.includes(symbol)
 export const getSymbolCommandType = ({ symbol, isUnary }) => {
   return isUnary ? {
-    '~': COMMAND.NEGATE,
+    '-': COMMAND.NEGATE,
     '!': COMMAND.NOT
   }[symbol] : {
     '+': COMMAND.ADD,

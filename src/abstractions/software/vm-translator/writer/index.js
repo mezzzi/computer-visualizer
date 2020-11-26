@@ -159,7 +159,6 @@ class HVMCodeWriter {
       command.setArg2(0)
       this.writeCall(command)
     }
-    this.flushAssemblyBuffer()
   }
 
   /**

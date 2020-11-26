@@ -10,6 +10,7 @@ const usePopSimulator = ({
   segments,
   segmentSetters,
   isSimulationModeOn,
+  isPopSimulationOn,
   setIsSimulating
 }) => {
   const { divs } = useContext(DivRefContext)
@@ -24,37 +25,32 @@ const usePopSimulator = ({
     segmentSetters[segmentName](updatedSegment)
   }
   useEffect(() => {
-    if (isAsmGenerated) {
-      setIsAsmGenerated(false)
-      const updatedStack = [...segments.globalStack]
-      const setGlobalStack = segmentSetters.globalStack
-      const commandType = currentVmCommand.getCommandType()
-      if (commandType === COMMAND.POP) {
-        if (updatedStack.length < 1) {
-          isSimulationModeOn && setIsSimulating(false)
-          return
-        }
-        const value = updatedStack.shift()
-        setGlobalStack(updatedStack)
-        !isSimulationModeOn && pushToSegment(value)
-        if (isSimulationModeOn) {
-          const segmentName = currentVmCommand.getArg1()
-          const targetDiv = divs[`${segmentName}BottomInvisibleDiv`]
-          simulateDivMotion({
-            sourceRectDiv: divs.globalStackBottomInvisibleDiv,
-            sourceBoundingDiv: divs.globalStackBoundingDiv,
-            destinationRectDiv: targetDiv,
-            text: value,
-            speed: 5,
-            clearOnEnd: true,
-            onSimulationEnd: () => {
-              pushToSegment(value)
-              setIsSimulating(false)
-            }
-          })
-        }
-      }
+    if (!isAsmGenerated) return
+    setIsAsmGenerated(false)
+    const updatedStack = [...segments.globalStack]
+    const setGlobalStack = segmentSetters.globalStack
+    const commandType = currentVmCommand.getCommandType()
+    if (commandType !== COMMAND.POP) return
+    if (updatedStack.length < 1) {
+      isSimulationModeOn && setIsSimulating(false)
+      return
     }
+    const value = updatedStack.shift()
+    setGlobalStack(updatedStack)
+    const shouldSimulate = isSimulationModeOn && isPopSimulationOn
+    shouldSimulate ? simulateDivMotion({
+      sourceRectDiv: divs.globalStackBottomInvisibleDiv,
+      sourceBoundingDiv: divs.globalStackBoundingDiv,
+      destinationRectDiv:
+        divs[`${currentVmCommand.getArg1()}BottomInvisibleDiv`],
+      text: value,
+      speed: 5,
+      clearOnEnd: true,
+      onSimulationEnd: () => {
+        pushToSegment(value)
+        setIsSimulating(false)
+      }
+    }) : pushToSegment(value)
   }, [isAsmGenerated])
 }
 

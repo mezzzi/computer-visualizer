@@ -31,10 +31,20 @@
 
 .vmFileSelector {
   height: 14%;
-  width: 70%;
+  width: 75%;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: small;
   font-family: monospace;
+}
+
+.resetButton {
+  background-color: black;
+  border: none;
+  outline: none;
+  color: red;
+  font-family: monospace;
+  padding: 5px 10px;
+  cursor: pointer;  
 }

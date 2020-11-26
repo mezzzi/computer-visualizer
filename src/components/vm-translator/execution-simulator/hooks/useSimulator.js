@@ -19,7 +19,8 @@ const useSimulator = () => {
     generalSetters: {
       vmFileIndex: setVmFileIndex, translator: setTranslator,
       ...simulationModeSetters
-    }
+    },
+    resetVmFile
   } = useGeneralReducer()
 
   const { segments, segmentSetters } = useSegmentReducer(vmFileIndex)
@@ -42,7 +43,7 @@ const useSimulator = () => {
 
   const {
     state: asmStepwiseState,
-    simulateAsm,
+    simulateAsmExecution,
     resetAsmArithmetic
   } = useAsmStepwiseSimulator({
     ram: segments.ram,
@@ -59,7 +60,7 @@ const useSimulator = () => {
     isNextVmCmdProvided,
     setIsNextVmCmdProvided: vmCodeSetters.isNextVmCmdProvided,
     vmFileIndex,
-    simulateAsm,
+    simulateAsmExecution,
     resetAsmArithmetic
   })
 
@@ -69,6 +70,7 @@ const useSimulator = () => {
     currentVmCommand,
     segments,
     segmentSetters,
+    isPushSimulationOn: simulationModes.isPushSimulationOn,
     ...commonModesAndSetters
   })
 
@@ -78,6 +80,7 @@ const useSimulator = () => {
     currentVmCommand,
     segments,
     segmentSetters,
+    isPopSimulationOn: simulationModes.isPopSimulationOn,
     ...commonModesAndSetters
   })
 
@@ -88,6 +91,7 @@ const useSimulator = () => {
     globalStack: segments.globalStack,
     setGlobalStack: segmentSetters.globalStack,
     vmFileIndex,
+    isArithmeticSimulationOn: simulationModes.isArithmeticSimulationOn,
     ...commonModesAndSetters
   })
 
@@ -111,7 +115,8 @@ const useSimulator = () => {
     setTranslator,
     asmStepwiseState,
     simulationModes,
-    simulationModeSetters
+    simulationModeSetters,
+    resetVmFile
   }
 }
 

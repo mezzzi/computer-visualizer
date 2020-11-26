@@ -1,5 +1,5 @@
 
-import { useReducer, useEffect, useContext } from 'react'
+import { useReducer, useEffect, useContext, useCallback } from 'react'
 
 import Assembler from 'abstractions/software/assembler'
 import { moveFromBoundaryToTarget } from '../simulator'
@@ -9,10 +9,8 @@ import { getReducer, getSetters } from './util'
 
 const ACTIONS = {
   SET_ASSEMBLY: 'assembly',
-  SET_ASSEMBLER: 'assembler',
   SET_NEXT_ASM_BATCH: 'nextAsmBatch',
-  SET_NEXT_ASM_BATCH_INDEX: 'nextAsmBatchIndex',
-  SET_IS_ASM_SIMULATED: 'isAsmGenerated'
+  SET_IS_ASM_GENERATED: 'isAsmGenerated'
 }
 
 const asmReducer = getReducer(ACTIONS)
@@ -20,9 +18,10 @@ const asmReducer = getReducer(ACTIONS)
 const useAsmGenerator = ({
   simulationModes: {
     isSimulationModeOn,
-    isAsmSimulationOn,
+    isAllSimulationOn,
     isAsmStepSimulationOn,
-    isAsmSteppingFast
+    isAsmSteppingFast,
+    isAsmCodeSimulationOn
   },
   simulationModeSetters: {
     isSimulating: setIsSimulating
@@ -31,20 +30,31 @@ const useAsmGenerator = ({
   setIsNextVmCmdProvided,
   translator,
   vmFileIndex,
-  simulateAsm,
+  simulateAsmExecution,
   resetAsmArithmetic
 }) => {
   const [state, dispatch] = useReducer(asmReducer, {
     assembly: [],
-    assembler: null,
     nextAsmBatch: [],
-    nextAsmBatchIndex: -1,
     isAsmGenerated: false
   })
 
   const { divs } = useContext(DivRefContext)
   const {
-    setters: { isCurrentAsmBatchExhausted: setIsCurrentAsmBatchExhausted }
+    state: {
+      assembler,
+      asmBatchIndex,
+      isLooping,
+      isSkipping,
+      jumpAddress
+    },
+    setters: {
+      isCurrentAsmBatchExhausted: setIsCurrentAsmBatchExhausted,
+      assembler: setAssembler,
+      asmBatchIndex: setAsmBatchIndex,
+      isLooping: setIsLooping,
+      isSkipping: setIsSkipping
+    }
   } = useContext(GeneralContext)
 
   useEffect(() => {
@@ -52,68 +62,94 @@ const useAsmGenerator = ({
   }, [vmFileIndex])
 
   useEffect(() => {
-    if (isNextVmCmdProvided) {
-      setIsNextVmCmdProvided(false)
-      const asmBatch = translator.step()
-      const assembler = new Assembler(
-        asmBatch.join('\n')
-      )
-      assembler.beforeStep()
-      setters.assembler(assembler)
-      if (isSimulationModeOn && isAsmSimulationOn) {
-        setters.nextAsmBatch(asmBatch)
-        !isAsmStepSimulationOn && setters.nextAsmBatchIndex(0)
-        isAsmStepSimulationOn && setIsCurrentAsmBatchExhausted(false)
-      } else {
-        pushAssemblyBatch(asmBatch)
-        setters.isAsmGenerated(true)
-      }
+    if (!isNextVmCmdProvided) return
+    setIsNextVmCmdProvided(false)
+    const asmBatch = translator.step()
+    const assembler = new Assembler(
+      asmBatch.join('\n')
+    )
+    assembler.beforeStep()
+    setAssembler(assembler)
+    if (!isSimulationModeOn || !isAsmCodeSimulationOn) {
+      pushAssemblyBatch(asmBatch)
+      return setters.isAsmGenerated(true)
     }
+    setters.nextAsmBatch(asmBatch)
+    const autoProvideNextAsm = !isAsmStepSimulationOn ||
+      isAllSimulationOn
+    if (autoProvideNextAsm) return setAsmBatchIndex(0)
+    // the following activates the asm bucket's next button
+    // which should be active only when not auto providing next asm
+    setIsCurrentAsmBatchExhausted(false)
   }, [isNextVmCmdProvided])
 
   useEffect(() => {
-    const { nextAsmBatch, nextAsmBatchIndex } = state
-    if (nextAsmBatchIndex > -1) {
-      setIsSimulating(true)
-      setIsCurrentAsmBatchExhausted(false)
-      const onSimEnd = () => {
-        pushAssemblyBatch([nextAsmBatch[nextAsmBatchIndex]])
-        resetAsmArithmetic()
-        isAsmStepSimulationOn && simulateAsm(state.assembler)
-        !isAsmStepSimulationOn && provideNextAsmCommand()
+    const { nextAsmBatch, assembly } = state
+    if (asmBatchIndex <= -1) return
+    setIsSimulating(true)
+    setIsCurrentAsmBatchExhausted(false)
+    const onAsmGenerationSimEnd = () => {
+      // operations to be done once the asm command is simulated
+      // into the asm bucket
+      !isLooping && pushAssemblyBatch([nextAsmBatch[asmBatchIndex]])
+      resetAsmArithmetic()
+      const shouldSimulateExec = (isAsmStepSimulationOn ||
+      isAllSimulationOn) && !isSkipping
+      isSkipping && assembler.step()
+      let now = {}
+      if (shouldSimulateExec) {
+        now = simulateAsmExecution() || {}
       }
-      !isAsmSteppingFast && moveFromBoundaryToTarget({
-        boundaryRect: divs.asmStackBoundingDiv.getBoundingClientRect(),
-        targetRect: divs.bottomAsmInvisibleDiv.getBoundingClientRect(),
-        isMovingUp: true,
-        text: nextAsmBatch[nextAsmBatchIndex],
-        speed: 5,
-        onSimulationEnd: onSimEnd
-      })
-      isAsmSteppingFast && onSimEnd()
+      const shouldSkipNext = isSkipping || now.shouldSkip
+      const autoProvideNextAsm = !isAsmStepSimulationOn ||
+      isAllSimulationOn || shouldSkipNext
+      autoProvideNextAsm && provideNextAsmCommand()
     }
-  }, [state.nextAsmBatchIndex])
+    if (isLooping) {
+      const updatedAssembly = assembly.map((item, index) => {
+        if (index !== asmBatchIndex) return { ...item, color: 'green' }
+        return { ...item, color: 'yellow' }
+      })
+      setters.assembly(updatedAssembly)
+      const targetDiv = document.getElementById(`asm${asmBatchIndex}`)
+      targetDiv.scrollIntoView()
+      return onAsmGenerationSimEnd()
+    }
+    return !isAsmSteppingFast ? moveFromBoundaryToTarget({
+      boundaryRect: divs.asmStackBoundingDiv.getBoundingClientRect(),
+      targetRect: divs.bottomAsmInvisibleDiv.getBoundingClientRect(),
+      isMovingUp: true,
+      text: nextAsmBatch[asmBatchIndex],
+      speed: 5,
+      onSimulationEnd: onAsmGenerationSimEnd
+    }) : onAsmGenerationSimEnd()
+  }, [asmBatchIndex])
 
   const provideNextAsmCommand = () => {
-    const { nextAsmBatch, nextAsmBatchIndex } = state
-    if (nextAsmBatchIndex === nextAsmBatch.length - 1) {
-      setters.nextAsmBatchIndex(-1)
-      setters.isAsmGenerated(true)
-      isAsmStepSimulationOn && setIsSimulating(false)
-      setIsCurrentAsmBatchExhausted(true)
-    } else {
-      setters.nextAsmBatchIndex(nextAsmBatchIndex + 1)
+    const { nextAsmBatch } = state
+    if (asmBatchIndex !== nextAsmBatch.length - 1) {
+      if (isLooping && asmBatchIndex > jumpAddress) {
+        setIsLooping(false)
+      }
+      if (isSkipping && asmBatchIndex + 1 > jumpAddress) {
+        setIsSkipping(false)
+      }
+      return setAsmBatchIndex(asmBatchIndex + 1)
     }
+    setAsmBatchIndex(-1)
+    setters.isAsmGenerated(true)
+    isAsmStepSimulationOn && setIsSimulating(false)
+    setIsCurrentAsmBatchExhausted(true)
   }
 
   const setters = getSetters(dispatch, ACTIONS)
 
-  const pushAssemblyBatch = (asmBatch) => {
+  const pushAssemblyBatch = useCallback((asmBatch) => {
     const updatedAssembly = [...state.assembly.reverse().map(
       item => ({ ...item, color: 'green' }))]
     updatedAssembly.push(...asmBatch.map(item => ({ item, color: 'yellow' })))
     setters.assembly(updatedAssembly.reverse())
-  }
+  }, [state.assembly])
 
   return {
     asmGenerator: state,

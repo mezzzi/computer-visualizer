@@ -28,6 +28,7 @@ const useArithmeticSimulator = ({
   globalStack,
   setGlobalStack,
   isSimulationModeOn,
+  isArithmeticSimulationOn,
   setIsSimulating,
   vmFileIndex
 }) => {
@@ -71,101 +72,89 @@ const useArithmeticSimulator = ({
   }, [vmFileIndex])
 
   useEffect(() => {
-    if (isAsmGenerated) {
-      setIsAsmGenerated(false)
-      const updatedStack = [...globalStack]
-      const commandType = currentVmCommand.getCommandType()
-      const isCurrentUnary = isUnaryOp(commandType)
-      const isCurrentBinary = isBinaryOp(commandType)
-      if (isCurrentUnary || isCurrentBinary) {
-        setters.operator(commandType)
-        setters.isUnary(isCurrentUnary)
-        if (isCurrentBinary) {
-          if (globalStack.length < 2) {
-            isSimulationModeOn && setIsSimulating(false)
-            return
-          }
-          const op2 = updatedStack.shift()
-          setGlobalStack(updatedStack)
-          setters.operator(commandType)
-          !isSimulationModeOn && op2Processed(op2)
-          if (isSimulationModeOn) {
-            simulateDivMotion({
-              sourceRectDiv: divs.globalStackBottomInvisibleDiv,
-              sourceBoundingDiv: divs.globalStackBoundingDiv,
-              destinationRectDiv: divs.vmOp2Div,
-              text: op2,
-              speed: 5,
-              onSimulationEnd: () => op2Processed(op2)
-            })
-          }
-        }
-        if (isCurrentUnary) {
-          if (globalStack.length < 1) {
-            setIsSimulating(false)
-            return
-          }
-          const op1 = updatedStack.shift()
-          setGlobalStack(updatedStack)
-          setters.operator(commandType)
-          !isSimulationModeOn && unaryComputed(op1, commandType)
-          if (isSimulationModeOn) {
-            simulateDivMotion({
-              sourceRectDiv: divs.globalStackBottomInvisibleDiv,
-              sourceBoundingDiv: divs.globalStackBoundingDiv,
-              destinationRectDiv: divs.vmOp2Div,
-              text: op1,
-              speed: 5,
-              onSimulationEnd: () => unaryComputed(op1, commandType)
-            })
-          }
-        }
+    if (!isAsmGenerated) return
+    setIsAsmGenerated(false)
+    const updatedStack = [...globalStack]
+    const commandType = currentVmCommand.getCommandType()
+    const isCurrentUnary = isUnaryOp(commandType)
+    const isCurrentBinary = isBinaryOp(commandType)
+    if (!isCurrentUnary && !isCurrentBinary) return
+    setters.operator(commandType)
+    setters.isUnary(isCurrentUnary)
+    if (isCurrentBinary) {
+      if (globalStack.length < 2) {
+        isSimulationModeOn && setIsSimulating(false)
+        return
       }
+      const op2 = updatedStack.shift()
+      setGlobalStack(updatedStack)
+      setters.operator(commandType)
+      return (isSimulationModeOn && isArithmeticSimulationOn)
+        ? simulateDivMotion({
+          sourceRectDiv: divs.globalStackBottomInvisibleDiv,
+          sourceBoundingDiv: divs.globalStackBoundingDiv,
+          destinationRectDiv: divs.vmOp2Div,
+          text: op2,
+          speed: 5,
+          onSimulationEnd: () => op2Processed(op2)
+        }) : op2Processed(op2)
+    }
+    if (isCurrentUnary) {
+      if (globalStack.length < 1) {
+        setIsSimulating(false)
+        return
+      }
+      const op1 = updatedStack.shift()
+      setGlobalStack(updatedStack)
+      setters.operator(commandType)
+      return (isSimulationModeOn && isArithmeticSimulationOn)
+        ? simulateDivMotion({
+          sourceRectDiv: divs.globalStackBottomInvisibleDiv,
+          sourceBoundingDiv: divs.globalStackBoundingDiv,
+          destinationRectDiv: divs.vmOp2Div,
+          text: op1,
+          speed: 5,
+          onSimulationEnd: () => unaryComputed(op1, commandType)
+        }) : unaryComputed(op1, commandType)
     }
   }, [isAsmGenerated])
 
   useEffect(() => {
-    if (state.isOp1SimulationDone) {
-      setters.isOp1SimulationDone(false)
-      if (globalStack.length === 0) return
-      const updatedStack = [...globalStack]
-      const op1 = updatedStack.shift()
-      setGlobalStack(updatedStack)
-      !isSimulationModeOn && binaryComputed(op1)
-      if (isSimulationModeOn) {
-        simulateDivMotion({
-          sourceRectDiv: divs.globalStackBottomInvisibleDiv,
-          sourceBoundingDiv: divs.globalStackBoundingDiv,
-          destinationRectDiv: divs.vmOp1Div,
-          text: op1,
-          speed: 5,
-          onSimulationEnd: () => binaryComputed(op1)
-        })
-      }
-    }
+    if (!state.isOp1SimulationDone) return
+    setters.isOp1SimulationDone(false)
+    if (globalStack.length === 0) return
+    const updatedStack = [...globalStack]
+    const op1 = updatedStack.shift()
+    setGlobalStack(updatedStack)
+    return (isSimulationModeOn && isArithmeticSimulationOn)
+      ? simulateDivMotion({
+        sourceRectDiv: divs.globalStackBottomInvisibleDiv,
+        sourceBoundingDiv: divs.globalStackBoundingDiv,
+        destinationRectDiv: divs.vmOp1Div,
+        text: op1,
+        speed: 5,
+        onSimulationEnd: () => binaryComputed(op1)
+      }) : binaryComputed(op1)
   }, [state.isOp1SimulationDone])
 
   useEffect(() => {
-    if (state.isOp2SimulationDone) {
-      setters.isOp2SimulationDone(false)
-      !isSimulationModeOn && updateResult()
-      if (isSimulationModeOn) {
-        simulateDivMotion({
-          sourceRectDiv: divs.vmResultDiv,
-          sourceBoundingDiv: divs.vmCpuBoundingDiv,
-          destinationRectDiv: (divs.globalStackBottomInvisibleDiv ||
-            divs.globalStackBottomInvisibleDiv),
-          text: state.result,
-          speed: 5,
-          clearOnEnd: true,
-          matchTopOnEnd: false,
-          onSimulationEnd: () => {
-            updateResult()
-            setIsSimulating(false)
-          }
-        })
-      }
-    }
+    if (!state.isOp2SimulationDone) return
+    setters.isOp2SimulationDone(false)
+    return (isSimulationModeOn && isArithmeticSimulationOn)
+      ? simulateDivMotion({
+        sourceRectDiv: divs.vmResultDiv,
+        sourceBoundingDiv: divs.vmCpuBoundingDiv,
+        destinationRectDiv: (divs.globalStackBottomInvisibleDiv ||
+          divs.globalStackBottomInvisibleDiv),
+        text: state.result,
+        speed: 5,
+        clearOnEnd: true,
+        matchTopOnEnd: false,
+        onSimulationEnd: () => {
+          updateResult()
+          setIsSimulating(false)
+        }
+      }) : updateResult()
   }, [state.isOp2SimulationDone])
 
   const setters = getSetters(dispatch, ACTIONS)

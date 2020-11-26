@@ -7,9 +7,9 @@ class HVMTranslator {
    * @param {{className: string, file: string}[]} fileInfos an array of HVM files
    * and their class names
    */
-  constructor (fileInfos) {
+  constructor (fileInfos, hasSysInit = false) {
     this.vmParser = new HVMParser(fileInfos)
-    this.assemblyWriter = new HVMCodeWriter(this.vmParser.hasSysInit())
+    this.assemblyWriter = new HVMCodeWriter(hasSysInit)
   }
 
   translate () {
@@ -59,7 +59,9 @@ class HVMTranslator {
    * Stepwise translate
    */
   step () {
-    this.assemblyWriter.writeInit()
+    if (this.assemblyWriter.getAssemblyLength() === 0) {
+      this.assemblyWriter.writeInit()
+    }
     if (!this.vmParser.hasMoreCommands()) return false
     this.vmParser.advance()
     const command = this.vmParser.getCurrentCommand()

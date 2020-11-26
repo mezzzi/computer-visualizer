@@ -26,14 +26,9 @@ const ExecutionSimulator = () => {
     setVmFileIndex,
     setTranslator,
     asmStepwiseState,
-    simulationModes: {
-      isSimulating,
-      isSimulationModeOn,
-      isAsmSimulationOn,
-      isAsmStepSimulationOn,
-      isAsmSteppingFast
-    },
-    simulationModeSetters
+    simulationModes,
+    simulationModeSetters,
+    resetVmFile
   } = useSimulator()
 
   const provideNextVmCmd = () => {
@@ -56,15 +51,20 @@ const ExecutionSimulator = () => {
       <HvmUnit
         vmCommands={vmCommands} currentVmCommand={currentVmCommand}
         vmFileIndex={vmFileIndex} setVmFileIndex={setVmFileIndex}
-        provideNextVmCmd={provideNextVmCmd} isSimulating={isSimulating}
+        provideNextVmCmd={provideNextVmCmd}
+        isSimulating={simulationModes.isSimulating}
         setTranslator={setTranslator}
+        resetVmFile={resetVmFile}
       />
       <AsmUnit
-        asmGenerator={asmGenerator} isSimulating={isSimulating}
-        itemSize={getGstackSize()} isAsmStepSimulationOn={isAsmStepSimulationOn}
+        asmGenerator={asmGenerator}
+        isSimulating={simulationModes.isSimulating}
+        itemSize={getGstackSize()}
+        isAsmStepSimulationOn={simulationModes.isAsmStepSimulationOn}
         isCurrentVmCommandNull={!currentVmCommand}
         provideNextAsmCommand={provideNextAsmCommand}
         asmStepwiseState={asmStepwiseState}
+        isAllSimulationOn={simulationModes.isAllSimulationOn}
       />
       <SegmentUnit segments={segments} />
       <Box width='27%'>
@@ -85,11 +85,7 @@ const ExecutionSimulator = () => {
           </div>
           <div className='modeWrapper'>
             <ModeUnit
-              isSimulationModeOn={isSimulationModeOn}
-              isAsmStepSimulationOn={isAsmStepSimulationOn}
-              isAsmSimulationOn={isAsmSimulationOn}
-              isSimulating={isSimulating}
-              isAsmSteppingFast={isAsmSteppingFast}
+              simulationModes={simulationModes}
               modeSetters={simulationModeSetters}
             />
           </div>

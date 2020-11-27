@@ -1,10 +1,13 @@
-import { useReducer, useEffect } from 'react'
+import { useReducer, useEffect, useContext } from 'react'
 import { SimpleAdd, StackTest, BasicTest, PointerTest, StaticTest } from '../files'
 import HVMTranslator from 'abstractions/software/vm-translator'
+import Assembler from 'abstractions/software/assembler'
 import { getReducer, getSetters } from './util'
+import { GeneralContext } from '../providers/generalProvider'
 
 const ACTIONS = {
   SET_VM_FILE_INDEX: 'vmFileIndex',
+  SET_RESET: 'reset',
   SET_TRANSLATOR: 'translator',
   SET_SIMULATION_MODE_ON: 'isSimulationModeOn',
   SET_HVM_SIMULATION_ON: 'isHvmSimulationOn',
@@ -22,6 +25,7 @@ const generalReducer = getReducer(ACTIONS)
 
 const useGeneralReducer = () => {
   const [general, dispatch] = useReducer(generalReducer, {
+    reset: false,
     vmFileIndex: 0,
     translator: null,
     isSimulationModeOn: true,
@@ -35,6 +39,13 @@ const useGeneralReducer = () => {
     isAllSimulationOn: false,
     isSimulating: false
   })
+  const {
+    setters: {
+      assembler: setMainAssembler,
+      currentAsmIndex: setCurrentAsmIndex,
+      assemblerLineCount: setAssemblerLineCount
+    }
+  } = useContext(GeneralContext)
 
   useEffect(() => {
     resetVmFile()
@@ -46,7 +57,17 @@ const useGeneralReducer = () => {
       className: 'VmClass',
       file: files[general.vmFileIndex]
     }])
+    const sameTranslator = new HVMTranslator([{
+      className: 'VmClass',
+      file: files[general.vmFileIndex]
+    }])
+    const mainAssembler = new Assembler(sameTranslator.translate())
+    mainAssembler.beforeStep()
+    setMainAssembler(mainAssembler)
+    setCurrentAsmIndex(0)
+    setAssemblerLineCount(0)
     setters.translator(translator)
+    setters.reset(!general.reset)
   }
 
   const setters = getSetters(dispatch, ACTIONS)

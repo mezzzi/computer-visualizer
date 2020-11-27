@@ -15,6 +15,7 @@ const nextVmCmdReducer = getReducer(ACTIONS)
 
 const useVmCodeProvider = ({
   isSimulationModeOn,
+  isAllSimulationOn,
   translator,
   setIsSimulating
 }) => {
@@ -31,41 +32,38 @@ const useVmCodeProvider = ({
     setters.currentVmCommand(null)
   }, [translator])
 
+  const onHvmCodeSimEnd = (command) => {
+    setters.currentVmCommand(command)
+    setters.isNextVmCmdProvided(true)
+    setIsSimulating(false)
+  }
+
   useEffect(() => {
-    if (state.shouldProvideNextVmCmd) {
-      setters.shouldProvideNextVmCmd(false)
-      setters.currentVmCommand(null)
-      if (state.vmCommands.length < 1) return
-      const updatedCommands = [...state.vmCommands]
-      const command = updatedCommands.shift()
-      setters.vmCommands(updatedCommands)
-      if (isSimulationModeOn) {
-        setIsSimulating(true)
-        divs.bottomVmInvisibleDiv.scrollIntoView()
-        const sourceRect = divs.bottomVmInvisibleDiv.getBoundingClientRect()
-        const destRect = divs.currentVmCmdDiv.getBoundingClientRect()
-        const top = destRect.top + (destRect.height - sourceRect.height) / 2
-        moveToTarget({
-          sourceRectDiv: divs.bottomVmInvisibleDiv,
-          destinationRect: {
-            ...sourceRect,
-            top
-          },
-          text: state.vmCommands[0].toString(),
-          id: 'movingCommand',
-          clearOnEnd: true,
-          noSideWay: true,
-          onSimulationEnd: () => {
-            setIsSimulating(false)
-            setters.currentVmCommand(command)
-            setters.isNextVmCmdProvided(true)
-          }
-        })
-      } else {
-        setters.currentVmCommand(command)
-        setters.isNextVmCmdProvided(true)
-      }
-    }
+    if (!state.shouldProvideNextVmCmd) return
+    setters.shouldProvideNextVmCmd(false)
+    setters.currentVmCommand(null)
+    if (state.vmCommands.length < 1) return
+    const updatedCommands = [...state.vmCommands]
+    const command = updatedCommands.shift()
+    setters.vmCommands(updatedCommands)
+    if (!isSimulationModeOn) return onHvmCodeSimEnd(command)
+    setIsSimulating(true)
+    divs.bottomVmInvisibleDiv.scrollIntoView()
+    const sourceRect = divs.bottomVmInvisibleDiv.getBoundingClientRect()
+    const destRect = divs.currentVmCmdDiv.getBoundingClientRect()
+    const top = destRect.top + (destRect.height - sourceRect.height) / 2
+    return (isSimulationModeOn && !isAllSimulationOn) ? moveToTarget({
+      sourceRectDiv: divs.bottomVmInvisibleDiv,
+      destinationRect: {
+        ...sourceRect,
+        top
+      },
+      text: state.vmCommands[0].toString(),
+      id: 'movingCommand',
+      clearOnEnd: true,
+      noSideWay: true,
+      onSimulationEnd: onHvmCodeSimEnd(command)
+    }) : onHvmCodeSimEnd(command)
   }, [state.shouldProvideNextVmCmd])
 
   const setters = getSetters(dispatch, ACTIONS)

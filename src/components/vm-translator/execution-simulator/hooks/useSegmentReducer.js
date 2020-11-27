@@ -8,14 +8,14 @@ SEGMENTS.forEach(segment => { ACTIONS[segment.toUpperCase()] = segment })
 
 const segmentReducer = getReducer(ACTIONS)
 
-const useSegmentReducer = (vmFileIndex) => {
+const useSegmentReducer = ({ vmFileIndex, reset }) => {
   const [segments, dispatch] = useReducer(segmentReducer, {
     ...getInitialState(ACTIONS, [])
   })
 
   useEffect(() => {
     SEGMENTS.forEach(segment => {
-      segment !== 'ram' && setters[segment]([])
+      setters[segment]([])
     })
     if (vmFileIndex === 2) {
       // Ram initialization for Basic Test
@@ -26,7 +26,7 @@ const useSegmentReducer = (vmFileIndex) => {
         { item: 3010, index: 4 }
       ])
     }
-  }, [vmFileIndex])
+  }, [vmFileIndex, reset])
 
   const setters = getSetters(dispatch, ACTIONS)
 

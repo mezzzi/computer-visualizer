@@ -13,7 +13,7 @@ import useArithmeticSimulator from './useArithmeticSimulator'
 const useSimulator = () => {
   const {
     general: {
-      translator, vmFileIndex,
+      translator, vmFileIndex, reset,
       ...simulationModes
     },
     generalSetters: {
@@ -23,11 +23,16 @@ const useSimulator = () => {
     resetVmFile
   } = useGeneralReducer()
 
-  const { segments, segmentSetters } = useSegmentReducer(vmFileIndex)
+  const setIsSimulating = (mode, isAuthoritative = false) => {
+    if (simulationModes.isAllSimulationOn && mode === false && !isAuthoritative) return
+    simulationModeSetters.isSimulating(mode)
+  }
+
+  const { segments, segmentSetters } = useSegmentReducer({ vmFileIndex, reset })
 
   const commonModesAndSetters = {
     isSimulationModeOn: simulationModes.isSimulationModeOn,
-    setIsSimulating: simulationModeSetters.isSimulating
+    setIsSimulating
   }
 
   const {
@@ -38,6 +43,7 @@ const useSimulator = () => {
     vmCodeSetters
   } = useVmCodeProvider({
     translator,
+    isAllSimulationOn: simulationModes.isAllSimulationOn,
     ...commonModesAndSetters
   })
 
@@ -48,18 +54,18 @@ const useSimulator = () => {
   } = useAsmStepwiseSimulator({
     ram: segments.ram,
     setRam: segmentSetters.ram,
-    vmFileIndex,
-    setIsSimulating: simulationModeSetters.isSimulating,
+    reset,
+    setIsSimulating,
     isAsmSteppingFast: simulationModes.isAsmSteppingFast
   })
 
   const { asmGenerator, asmSetters, provideNextAsmCommand } = useAsmGenerator({
     simulationModes,
-    simulationModeSetters,
+    setIsSimulating,
     translator,
     isNextVmCmdProvided,
     setIsNextVmCmdProvided: vmCodeSetters.isNextVmCmdProvided,
-    vmFileIndex,
+    reset,
     simulateAsmExecution,
     resetAsmArithmetic
   })
@@ -90,7 +96,7 @@ const useSimulator = () => {
     currentVmCommand,
     globalStack: segments.globalStack,
     setGlobalStack: segmentSetters.globalStack,
-    vmFileIndex,
+    reset,
     isArithmeticSimulationOn: simulationModes.isArithmeticSimulationOn,
     ...commonModesAndSetters
   })

@@ -14,6 +14,10 @@ class AssemblerParser {
     return this.instructions.length > 0
   }
 
+  getInstructions () {
+    return this.instructions
+  }
+
   /**
    * reads the next command from the input and makes it the current command
    */

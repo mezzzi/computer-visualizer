@@ -18,13 +18,17 @@ const usePushSimulator = ({
 }) => {
   const { divs } = useContext(DivRefContext)
 
+  const onPushSimEnd = (updatedStack) => {
+    updatedStack && segmentSetters.globalStack(updatedStack)
+    setIsSimulating(false, true)
+  }
+
   useEffect(() => {
     if (!isAsmGenerated) return
     setIsAsmGenerated(false)
-    const updatedStack = [...segments.globalStack]
-    const setGlobalStack = segmentSetters.globalStack
     const commandType = currentVmCommand.getCommandType()
     if (commandType !== COMMAND.PUSH) return
+    const updatedStack = [...segments.globalStack]
     const segmentName = currentVmCommand.getArg1()
     const segmentIndex = currentVmCommand.getArg2()
     const shouldSimulate = isSimulationModeOn && isPushSimulationOn
@@ -38,11 +42,8 @@ const usePushSimulator = ({
         isMovingUp: false,
         text: segmentIndex,
         speed: 5,
-        onSimulationEnd: () => {
-          setGlobalStack(updatedStack)
-          setIsSimulating(false)
-        }
-      }) : setGlobalStack(updatedStack)
+        onSimulationEnd: () => onPushSimEnd(updatedStack)
+      }) : onPushSimEnd(updatedStack)
     }
     const segment = segments[segmentName]
     const segmentSetter = segmentSetters[segmentName]
@@ -50,24 +51,20 @@ const usePushSimulator = ({
     const updatedSegment = [...segment]
     const target = updatedSegment.find(
       item => item.index === segmentIndex)
-    if (target === undefined) return setIsSimulating(false)
+    if (target === undefined) return onPushSimEnd()
     const targetIndex = updatedSegment.indexOf(target)
     updatedSegment.splice(targetIndex, 1)
     segmentSetter(updatedSegment)
     updatedStack.unshift(target.item)
-    if (!shouldSimulate) return setGlobalStack(updatedStack)
-    simulateDivMotion({
+    return shouldSimulate ? simulateDivMotion({
       sourceRectDiv: divs[`${segmentName}BottomInvisibleDiv`],
       sourceBoundingDiv: divs.globalStackBoundingDiv,
       destinationRectDiv: divs.globalStackBottomInvisibleDiv,
       text: target.item,
       speed: 5,
       clearOnEnd: true,
-      onSimulationEnd: () => {
-        setGlobalStack(updatedStack)
-        setIsSimulating(false)
-      }
-    })
+      onSimulationEnd: () => onPushSimEnd(updatedStack)
+    }) : onPushSimEnd(updatedStack)
   }, [isAsmGenerated])
 }
 

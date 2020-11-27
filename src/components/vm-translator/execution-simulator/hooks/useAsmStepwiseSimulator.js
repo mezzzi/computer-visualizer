@@ -26,7 +26,7 @@ const ACTIONS = {
 const asmStepwiseReducer = getReducer(ACTIONS)
 
 const useAsmStepwiseSimulator = ({
-  ram, setRam, vmFileIndex, setIsSimulating, isAsmSteppingFast
+  ram, setRam, reset, setIsSimulating, isAsmSteppingFast
 }) => {
   const [state, dispatch] = useReducer(asmStepwiseReducer, {
     ...getInitialState(ACTIONS),
@@ -35,21 +35,24 @@ const useAsmStepwiseSimulator = ({
   const {
     state: {
       assembler,
+      currentAsmIndex,
       asmBatchIndex
     },
     setters: {
+      currentAsmIndex: setCurrentAsmIndex,
       assembler: setAssembler,
       jumpAddress: setJumpAddress,
       isLooping: setIsLooping,
       isSkipping: setIsSkipping,
       isCurrentAsmBatchExhausted: setIsCurrentAsmBatchExhausted
-    }
+    },
+    stepAssembler
   } = useContext(GeneralContext)
   const { divs } = useContext(DivRefContext)
 
   useEffect(() => {
     setIsCurrentAsmBatchExhausted(true)
-  }, [vmFileIndex])
+  }, [reset])
 
   const setRamValue = (address, value) => {
     const target = ram.find(item => item.index === address)
@@ -62,7 +65,9 @@ const useAsmStepwiseSimulator = ({
     setRam(updatedRam)
   }
 
-  const onAsmSimulationEnd = () => setIsSimulating(false)
+  const onAsmSimulationEnd = () => {
+    return setIsSimulating(false)
+  }
 
   const simulateAsmExecution = () => {
     if (!assembler) return
@@ -74,8 +79,9 @@ const useAsmStepwiseSimulator = ({
       dRegister: setDRegister,
       ...arithmeticSetters
     } = setters
-    const parser = assembler.step()
+    const parser = stepAssembler()
     const commandType = parser.commandType()
+
     if (commandType === COMMAND_TYPE.L_COMMAND) {
       return onAsmSimulationEnd()
     }
@@ -103,7 +109,7 @@ const useAsmStepwiseSimulator = ({
         }
         if (!conditions[jump]) return onAsmSimulationEnd()
         setJumpAddress(address)
-        if (address > asmBatchIndex) {
+        if (address > currentAsmIndex) {
           setIsSkipping(true)
           return { shouldSkip: true }
         }
@@ -160,9 +166,6 @@ const useAsmStepwiseSimulator = ({
       const isUnary = op2 === undefined
       if (op !== undefined) {
         setIsUnary(isUnary)
-        // op1Value === 1 && arithmeticSetters.op1(1)
-        // opValue === 1 && arithmeticSetters.op2(1)
-        // op2Value === 1 && arithmeticSetters.op2(1)
         setOperator(getSymbolCommandType({
           symbol: isUnary ? op1 : op,
           isUnary

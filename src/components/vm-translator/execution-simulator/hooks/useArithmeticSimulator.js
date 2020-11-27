@@ -30,7 +30,7 @@ const useArithmeticSimulator = ({
   isSimulationModeOn,
   isArithmeticSimulationOn,
   setIsSimulating,
-  vmFileIndex
+  reset
 }) => {
   const [state, dispatch] = useReducer(arithemticReducer, {
     ...getInitialState(ACTIONS),
@@ -69,7 +69,7 @@ const useArithmeticSimulator = ({
 
   useEffect(() => {
     resetArithmetic()
-  }, [vmFileIndex])
+  }, [reset])
 
   useEffect(() => {
     if (!isAsmGenerated) return
@@ -82,10 +82,7 @@ const useArithmeticSimulator = ({
     setters.operator(commandType)
     setters.isUnary(isCurrentUnary)
     if (isCurrentBinary) {
-      if (globalStack.length < 2) {
-        isSimulationModeOn && setIsSimulating(false)
-        return
-      }
+      if (globalStack.length < 2) return setIsSimulating(false, true)
       const op2 = updatedStack.shift()
       setGlobalStack(updatedStack)
       setters.operator(commandType)
@@ -100,10 +97,7 @@ const useArithmeticSimulator = ({
         }) : op2Processed(op2)
     }
     if (isCurrentUnary) {
-      if (globalStack.length < 1) {
-        setIsSimulating(false)
-        return
-      }
+      if (globalStack.length < 1) return setIsSimulating(false, true)
       const op1 = updatedStack.shift()
       setGlobalStack(updatedStack)
       setters.operator(commandType)
@@ -137,6 +131,10 @@ const useArithmeticSimulator = ({
       }) : binaryComputed(op1)
   }, [state.isOp1SimulationDone])
 
+  const onResultSimDone = () => {
+    updateResult()
+    setIsSimulating(false, true)
+  }
   useEffect(() => {
     if (!state.isOp2SimulationDone) return
     setters.isOp2SimulationDone(false)
@@ -150,11 +148,8 @@ const useArithmeticSimulator = ({
         speed: 5,
         clearOnEnd: true,
         matchTopOnEnd: false,
-        onSimulationEnd: () => {
-          updateResult()
-          setIsSimulating(false)
-        }
-      }) : updateResult()
+        onSimulationEnd: () => onResultSimDone()
+      }) : onResultSimDone()
   }, [state.isOp2SimulationDone])
 
   const setters = getSetters(dispatch, ACTIONS)

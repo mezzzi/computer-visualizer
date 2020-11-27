@@ -90,7 +90,10 @@ const ModeUnit = ({
           disabled={isSimulating || isAllSimulationOn}
           checked={isSimulationModeOn && isAsmSteppingFast}
           onChange={() => {
-            !isAsmSteppingFast && modeSetters.isAsmStepSimulationOn(true)
+            if (!isAsmSteppingFast) {
+              modeSetters.isAsmStepSimulationOn(true)
+              modeSetters.isAsmCodeSimulationOn(true)
+            }
             modeSetters.isAsmSteppingFast(!isAsmSteppingFast)
           }}
         />
@@ -106,6 +109,7 @@ const ModeUnit = ({
               modeSetters.isArithmeticSimulationOn(true)
               modeSetters.isPopSimulationOn(true)
               modeSetters.isPushSimulationOn(true)
+              modeSetters.isAsmCodeSimulationOn(false)
             }
             modeSetters.isArithmeticSimulationOn(true)
             modeSetters.isAsmStepSimulationOn(!isAllSimulationOn)

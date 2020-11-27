@@ -24,16 +24,21 @@ const usePopSimulator = ({
     ))
     segmentSetters[segmentName](updatedSegment)
   }
+  const onPopSimEnd = (value) => {
+    value && pushToSegment(value)
+    setIsSimulating(false, true)
+  }
+
   useEffect(() => {
     if (!isAsmGenerated) return
     setIsAsmGenerated(false)
-    const updatedStack = [...segments.globalStack]
-    const setGlobalStack = segmentSetters.globalStack
     const commandType = currentVmCommand.getCommandType()
     if (commandType !== COMMAND.POP) return
+    const updatedStack = [...segments.globalStack]
+    const setGlobalStack = segmentSetters.globalStack
     if (updatedStack.length < 1) {
       isSimulationModeOn && setIsSimulating(false)
-      return
+      return onPopSimEnd()
     }
     const value = updatedStack.shift()
     setGlobalStack(updatedStack)
@@ -46,11 +51,8 @@ const usePopSimulator = ({
       text: value,
       speed: 5,
       clearOnEnd: true,
-      onSimulationEnd: () => {
-        pushToSegment(value)
-        setIsSimulating(false)
-      }
-    }) : pushToSegment(value)
+      onSimulationEnd: () => onPopSimEnd(value)
+    }) : onPopSimEnd(value)
   }, [isAsmGenerated])
 }
 

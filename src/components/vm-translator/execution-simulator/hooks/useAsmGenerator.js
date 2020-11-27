@@ -2,6 +2,7 @@
 import { useReducer, useEffect, useContext, useCallback } from 'react'
 
 import Assembler from 'abstractions/software/assembler'
+import { COMMAND_TYPE } from 'abstractions/software/assembler/parser/types'
 import { moveFromBoundaryToTarget } from '../simulator'
 import { DivRefContext } from '../providers/divRefProvider'
 import { GeneralContext } from '../providers/generalProvider'
@@ -20,16 +21,13 @@ const useAsmGenerator = ({
     isSimulationModeOn,
     isAllSimulationOn,
     isAsmStepSimulationOn,
-    isAsmSteppingFast,
     isAsmCodeSimulationOn
   },
-  simulationModeSetters: {
-    isSimulating: setIsSimulating
-  },
+  setIsSimulating,
   isNextVmCmdProvided,
   setIsNextVmCmdProvided,
   translator,
-  vmFileIndex,
+  reset,
   simulateAsmExecution,
   resetAsmArithmetic
 }) => {
@@ -42,24 +40,29 @@ const useAsmGenerator = ({
   const { divs } = useContext(DivRefContext)
   const {
     state: {
-      assembler,
       asmBatchIndex,
+      currentAsmIndex,
       isLooping,
       isSkipping,
-      jumpAddress
+      jumpAddress,
+      assemblerLineCount
     },
     setters: {
       isCurrentAsmBatchExhausted: setIsCurrentAsmBatchExhausted,
-      assembler: setAssembler,
       asmBatchIndex: setAsmBatchIndex,
       isLooping: setIsLooping,
-      isSkipping: setIsSkipping
-    }
+      isSkipping: setIsSkipping,
+      currentAsmIndex: setCurrentAsmIndex,
+      batchAssembler: setBatchAssembler,
+      assemblerLineCount: setAssemblerLineCount
+    },
+    stepAssembler,
+    synchronizeAssembler
   } = useContext(GeneralContext)
 
   useEffect(() => {
     setters.assembly([])
-  }, [vmFileIndex])
+  }, [reset])
 
   useEffect(() => {
     if (!isNextVmCmdProvided) return
@@ -69,10 +72,11 @@ const useAsmGenerator = ({
       asmBatch.join('\n')
     )
     assembler.beforeStep()
-    setAssembler(assembler)
-    if (!isSimulationModeOn || !isAsmCodeSimulationOn) {
+    setBatchAssembler(assembler)
+    synchronizeAssembler()
+    if (!isSimulationModeOn) {
       pushAssemblyBatch(asmBatch)
-      return setters.isAsmGenerated(true)
+      return onAsmGenerationEnd()
     }
     setters.nextAsmBatch(asmBatch)
     const autoProvideNextAsm = !isAsmStepSimulationOn ||
@@ -95,7 +99,7 @@ const useAsmGenerator = ({
       resetAsmArithmetic()
       const shouldSimulateExec = (isAsmStepSimulationOn ||
       isAllSimulationOn) && !isSkipping
-      isSkipping && assembler.step()
+      isSkipping && stepAssembler()
       let now = {}
       if (shouldSimulateExec) {
         now = simulateAsmExecution() || {}
@@ -115,7 +119,7 @@ const useAsmGenerator = ({
       targetDiv.scrollIntoView()
       return onAsmGenerationSimEnd()
     }
-    return !isAsmSteppingFast ? moveFromBoundaryToTarget({
+    return isAsmCodeSimulationOn ? moveFromBoundaryToTarget({
       boundaryRect: divs.asmStackBoundingDiv.getBoundingClientRect(),
       targetRect: divs.bottomAsmInvisibleDiv.getBoundingClientRect(),
       isMovingUp: true,
@@ -125,19 +129,24 @@ const useAsmGenerator = ({
     }) : onAsmGenerationSimEnd()
   }, [asmBatchIndex])
 
+  const onAsmGenerationEnd = () => {
+    setters.isAsmGenerated(true)
+    setAssemblerLineCount(assemblerLineCount + state.nextAsmBatch.length)
+  }
+
   const provideNextAsmCommand = () => {
     const { nextAsmBatch } = state
     if (asmBatchIndex !== nextAsmBatch.length - 1) {
-      if (isLooping && asmBatchIndex > jumpAddress) {
+      if (isLooping && currentAsmIndex > jumpAddress) {
         setIsLooping(false)
       }
-      if (isSkipping && asmBatchIndex + 1 > jumpAddress) {
+      if (isSkipping && currentAsmIndex === jumpAddress) {
         setIsSkipping(false)
       }
       return setAsmBatchIndex(asmBatchIndex + 1)
     }
     setAsmBatchIndex(-1)
-    setters.isAsmGenerated(true)
+    onAsmGenerationEnd()
     isAsmStepSimulationOn && setIsSimulating(false)
     setIsCurrentAsmBatchExhausted(true)
   }

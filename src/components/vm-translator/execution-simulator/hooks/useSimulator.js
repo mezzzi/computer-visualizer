@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-import useGeneralReducer from './useGeneralReducer'
+import useModeReducer from './useModeReducer'
 import useSegmentReducer from './useSegmentReducer'
 
 import useAsmGenerator from './useAsmGenerator'
@@ -12,23 +12,16 @@ import useArithmeticSimulator from './useArithmeticSimulator'
 
 const useSimulator = () => {
   const {
-    general: {
-      translator, vmFileIndex, reset,
-      ...simulationModes
-    },
-    generalSetters: {
-      vmFileIndex: setVmFileIndex, translator: setTranslator,
-      ...simulationModeSetters
-    },
-    resetVmFile
-  } = useGeneralReducer()
+    simulationModes,
+    simulationModeSetters
+  } = useModeReducer()
 
   const setIsSimulating = (mode, isAuthoritative = false) => {
     if (simulationModes.isAllSimulationOn && mode === false && !isAuthoritative) return
     simulationModeSetters.isSimulating(mode)
   }
 
-  const { segments, segmentSetters } = useSegmentReducer({ vmFileIndex, reset })
+  const { segments, segmentSetters } = useSegmentReducer()
 
   const commonModesAndSetters = {
     isSimulationModeOn: simulationModes.isSimulationModeOn,
@@ -42,7 +35,6 @@ const useSimulator = () => {
     },
     vmCodeSetters
   } = useVmCodeProvider({
-    translator,
     isAllSimulationOn: simulationModes.isAllSimulationOn,
     ...commonModesAndSetters
   })
@@ -54,7 +46,6 @@ const useSimulator = () => {
   } = useAsmStepwiseSimulator({
     ram: segments.ram,
     setRam: segmentSetters.ram,
-    reset,
     setIsSimulating,
     isAsmSteppingFast: simulationModes.isAsmSteppingFast
   })
@@ -62,10 +53,8 @@ const useSimulator = () => {
   const { asmGenerator, asmSetters, provideNextAsmCommand } = useAsmGenerator({
     simulationModes,
     setIsSimulating,
-    translator,
     isNextVmCmdProvided,
     setIsNextVmCmdProvided: vmCodeSetters.isNextVmCmdProvided,
-    reset,
     simulateAsmExecution,
     resetAsmArithmetic
   })
@@ -96,7 +85,6 @@ const useSimulator = () => {
     currentVmCommand,
     globalStack: segments.globalStack,
     setGlobalStack: segmentSetters.globalStack,
-    reset,
     isArithmeticSimulationOn: simulationModes.isArithmeticSimulationOn,
     ...commonModesAndSetters
   })
@@ -116,13 +104,9 @@ const useSimulator = () => {
     segmentSetters,
     provideNextAsmCommand,
     arithmetic,
-    vmFileIndex,
-    setVmFileIndex,
-    setTranslator,
     asmStepwiseState,
     simulationModes,
-    simulationModeSetters,
-    resetVmFile
+    simulationModeSetters
   }
 }
 

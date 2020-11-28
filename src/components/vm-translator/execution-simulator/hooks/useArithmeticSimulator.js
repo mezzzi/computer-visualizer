@@ -1,6 +1,7 @@
 import { useEffect, useContext, useReducer } from 'react'
 import { simulateDivMotion } from '../simulator'
 import { DivRefContext } from '../providers/divRefProvider'
+import { GeneralContext } from '../providers/generalProvider'
 import {
   isBinaryOp,
   isUnaryOp,
@@ -29,8 +30,7 @@ const useArithmeticSimulator = ({
   setGlobalStack,
   isSimulationModeOn,
   isArithmeticSimulationOn,
-  setIsSimulating,
-  reset
+  setIsSimulating
 }) => {
   const [state, dispatch] = useReducer(arithemticReducer, {
     ...getInitialState(ACTIONS),
@@ -40,6 +40,7 @@ const useArithmeticSimulator = ({
   })
 
   const { divs } = useContext(DivRefContext)
+  const { state: { reset } } = useContext(GeneralContext)
 
   const op2Processed = (op2) => {
     setters.op2(op2)

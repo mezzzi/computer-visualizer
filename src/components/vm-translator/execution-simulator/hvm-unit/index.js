@@ -3,36 +3,32 @@ import './index.css'
 import Box from '../box'
 import Stack from '../stack'
 
-import HVMTranslator from 'abstractions/software/vm-translator'
-
 import { DivRefContext } from '../providers/divRefProvider'
 import { GeneralContext } from '../providers/generalProvider'
 
 const HvmUnit = ({
   currentVmCommand,
   vmCommands,
-  setTranslator,
   provideNextVmCmd,
-  vmFileIndex,
-  setVmFileIndex,
-  isSimulating,
-  resetVmFile
+  isSimulating
 }) => {
   const { divSetters } = useContext(DivRefContext)
-  const { state: { isCurrentAsmBatchExhausted } } = useContext(GeneralContext)
+  const {
+    state: { isCurrentAsmBatchExhausted, vmFileIndex },
+    setters: { vmFileIndex: setVmFileIndex },
+    resetVmFile
+  } = useContext(GeneralContext)
   const currentVmCmdRef = useRef(null)
+
   useEffect(() => {
     divSetters.currentVmCmdDiv(currentVmCmdRef.current)
   }, [])
   const editHandler = (index, value) => {
     const vmCommandsNew = [...vmCommands]
     vmCommandsNew[index] = value.trim()
-    const translator = new HVMTranslator([{
-      className: 'VmClass',
-      file: vmCommandsNew.join('\n')
-    }])
-    setTranslator(translator)
+    resetVmFile(vmCommandsNew.join('\n'))
   }
+
   return (
     <Box
       width='25%'

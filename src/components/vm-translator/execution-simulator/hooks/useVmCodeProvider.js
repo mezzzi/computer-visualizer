@@ -3,6 +3,7 @@ import { useReducer, useEffect, useContext } from 'react'
 import { DivRefContext } from '../providers/divRefProvider'
 import { moveToTarget } from '../simulator'
 import { getReducer, getSetters } from './util'
+import { GeneralContext } from '../providers/generalProvider'
 
 const ACTIONS = {
   VM_COMMANDS: 'vmCommands',
@@ -16,16 +17,16 @@ const nextVmCmdReducer = getReducer(ACTIONS)
 const useVmCodeProvider = ({
   isSimulationModeOn,
   isAllSimulationOn,
-  translator,
   setIsSimulating
 }) => {
-  const { divs } = useContext(DivRefContext)
   const [state, dispatch] = useReducer(nextVmCmdReducer, {
     vmCommands: [],
     currentVmCommand: null,
     isNextVmCmdProvided: false,
     shouldProvideNextVmCmd: false
   })
+  const { divs } = useContext(DivRefContext)
+  const { state: { translator } } = useContext(GeneralContext)
 
   useEffect(() => {
     translator && setters.vmCommands(translator.getCommands())

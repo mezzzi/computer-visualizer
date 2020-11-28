@@ -2,7 +2,6 @@
 import { useReducer, useEffect, useContext, useCallback } from 'react'
 
 import Assembler from 'abstractions/software/assembler'
-import { COMMAND_TYPE } from 'abstractions/software/assembler/parser/types'
 import { moveFromBoundaryToTarget } from '../simulator'
 import { DivRefContext } from '../providers/divRefProvider'
 import { GeneralContext } from '../providers/generalProvider'
@@ -26,8 +25,6 @@ const useAsmGenerator = ({
   setIsSimulating,
   isNextVmCmdProvided,
   setIsNextVmCmdProvided,
-  translator,
-  reset,
   simulateAsmExecution,
   resetAsmArithmetic
 }) => {
@@ -40,8 +37,10 @@ const useAsmGenerator = ({
   const { divs } = useContext(DivRefContext)
   const {
     state: {
+      reset,
+      translator,
       asmBatchIndex,
-      currentAsmIndex,
+      lastRunRomAddress,
       isLooping,
       isSkipping,
       jumpAddress,
@@ -52,12 +51,10 @@ const useAsmGenerator = ({
       asmBatchIndex: setAsmBatchIndex,
       isLooping: setIsLooping,
       isSkipping: setIsSkipping,
-      currentAsmIndex: setCurrentAsmIndex,
       batchAssembler: setBatchAssembler,
       assemblerLineCount: setAssemblerLineCount
     },
-    stepAssembler,
-    synchronizeAssembler
+    stepAssembler
   } = useContext(GeneralContext)
 
   useEffect(() => {
@@ -67,13 +64,16 @@ const useAsmGenerator = ({
   useEffect(() => {
     if (!isNextVmCmdProvided) return
     setIsNextVmCmdProvided(false)
+    // This is the crucial determiner
+    const shouldSimulateExec = (isAsmStepSimulationOn ||
+      isAllSimulationOn) && !isSkipping
+    console.log('SHOULD EXEC: ', shouldSimulateExec)
     const asmBatch = translator.step()
     const assembler = new Assembler(
       asmBatch.join('\n')
     )
     assembler.beforeStep()
     setBatchAssembler(assembler)
-    synchronizeAssembler()
     if (!isSimulationModeOn) {
       pushAssemblyBatch(asmBatch)
       return onAsmGenerationEnd()
@@ -104,6 +104,10 @@ const useAsmGenerator = ({
       if (shouldSimulateExec) {
         now = simulateAsmExecution() || {}
       }
+      // get looping address
+      // translate upto rammed count
+      // mark that address, that is your loop address ....
+      // why not keep track of rammed asm, and loop from there
       const shouldSkipNext = isSkipping || now.shouldSkip
       const autoProvideNextAsm = !isAsmStepSimulationOn ||
       isAllSimulationOn || shouldSkipNext
@@ -137,10 +141,10 @@ const useAsmGenerator = ({
   const provideNextAsmCommand = () => {
     const { nextAsmBatch } = state
     if (asmBatchIndex !== nextAsmBatch.length - 1) {
-      if (isLooping && currentAsmIndex > jumpAddress) {
+      if (isLooping && lastRunRomAddress > jumpAddress) {
         setIsLooping(false)
       }
-      if (isSkipping && currentAsmIndex === jumpAddress) {
+      if (isSkipping && lastRunRomAddress === jumpAddress) {
         setIsSkipping(false)
       }
       return setAsmBatchIndex(asmBatchIndex + 1)

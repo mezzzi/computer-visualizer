@@ -22,13 +22,9 @@ const ExecutionSimulator = () => {
     segments,
     provideNextAsmCommand,
     arithmetic,
-    vmFileIndex,
-    setVmFileIndex,
-    setTranslator,
     asmStepwiseState,
     simulationModes,
-    simulationModeSetters,
-    resetVmFile
+    simulationModeSetters
   } = useSimulator()
 
   const provideNextVmCmd = () => {
@@ -50,11 +46,8 @@ const ExecutionSimulator = () => {
     >
       <HvmUnit
         vmCommands={vmCommands} currentVmCommand={currentVmCommand}
-        vmFileIndex={vmFileIndex} setVmFileIndex={setVmFileIndex}
         provideNextVmCmd={provideNextVmCmd}
         isSimulating={simulationModes.isSimulating}
-        setTranslator={setTranslator}
-        resetVmFile={resetVmFile}
       />
       <AsmUnit
         asmGenerator={asmGenerator}

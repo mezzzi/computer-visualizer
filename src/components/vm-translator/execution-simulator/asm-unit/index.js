@@ -46,7 +46,7 @@ const AsmUnit = ({
           onAction={() => provideNextAsmCommand()}
           actionName='NEXT'
           actionDisabled={!isAsmStepSimulationOn || isCurrentAsmBatchExhausted ||
-          isCurrentVmCommandNull || isSimulating || isAllSimulationOn}
+          isSimulating || isAllSimulationOn}
           buttonHeight='10%'
           setBottomInvisibleDiv={divSetters.bottomAsmInvisibleDiv}
         />

@@ -1,17 +1,19 @@
-import { useReducer, useEffect } from 'react'
+import { useReducer, useEffect, useContext } from 'react'
 import {
   getReducer, getInitialState, getSetters, SEGMENTS
 } from './util'
+import { GeneralContext } from '../providers/generalProvider'
 
 const ACTIONS = {}
 SEGMENTS.forEach(segment => { ACTIONS[segment.toUpperCase()] = segment })
 
 const segmentReducer = getReducer(ACTIONS)
 
-const useSegmentReducer = ({ vmFileIndex, reset }) => {
+const useSegmentReducer = () => {
   const [segments, dispatch] = useReducer(segmentReducer, {
     ...getInitialState(ACTIONS, [])
   })
+  const { state: { vmFileIndex, reset } } = useContext(GeneralContext)
 
   useEffect(() => {
     SEGMENTS.forEach(segment => {

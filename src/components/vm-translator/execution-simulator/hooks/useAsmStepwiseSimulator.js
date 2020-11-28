@@ -26,7 +26,7 @@ const ACTIONS = {
 const asmStepwiseReducer = getReducer(ACTIONS)
 
 const useAsmStepwiseSimulator = ({
-  ram, setRam, reset, setIsSimulating, isAsmSteppingFast
+  ram, setRam, setIsSimulating, isAsmSteppingFast
 }) => {
   const [state, dispatch] = useReducer(asmStepwiseReducer, {
     ...getInitialState(ACTIONS),
@@ -34,12 +34,11 @@ const useAsmStepwiseSimulator = ({
   })
   const {
     state: {
+      reset,
       assembler,
-      currentAsmIndex,
-      asmBatchIndex
+      lastRunRomAddress
     },
     setters: {
-      currentAsmIndex: setCurrentAsmIndex,
       assembler: setAssembler,
       jumpAddress: setJumpAddress,
       isLooping: setIsLooping,
@@ -109,7 +108,7 @@ const useAsmStepwiseSimulator = ({
         }
         if (!conditions[jump]) return onAsmSimulationEnd()
         setJumpAddress(address)
-        if (address > currentAsmIndex) {
+        if (address > lastRunRomAddress) {
           setIsSkipping(true)
           return { shouldSkip: true }
         }

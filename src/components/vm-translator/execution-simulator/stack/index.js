@@ -67,7 +67,7 @@ const Bucket = ({
           {
             [-1, -2, -3].map((index) => (
               <div
-                id={name ? `${name}${index}` : `${index}~${new Date().getTime()}`}
+                id={name ? `${name}~${index}` : `${index}~${new Date().getTime()}`}
                 className='stackItem'
                 key={index}
                 style={{
@@ -102,7 +102,7 @@ const Bucket = ({
                       color: 'black', backgroundColor: 'yellow', padding: '0 5px'
                     }}
                   >
-                    {item.index}
+                    {item.label || item.index}
                   </div>}
                 <div
                   id={`${name || 'cmd'}-${index}`}

@@ -46,15 +46,9 @@ const usePushSimulator = ({
       }) : onPushSimEnd(updatedStack)
     }
     const segment = segments[segmentName]
-    const segmentSetter = segmentSetters[segmentName]
-
-    const updatedSegment = [...segment]
-    const target = updatedSegment.find(
+    const target = segment.find(
       item => item.index === segmentIndex)
     if (target === undefined) return onPushSimEnd()
-    const targetIndex = updatedSegment.indexOf(target)
-    updatedSegment.splice(targetIndex, 1)
-    segmentSetter(updatedSegment)
     updatedStack.unshift(target.item)
     return shouldSimulate ? simulateDivMotion({
       sourceRectDiv: divs[`${segmentName}BottomInvisibleDiv`],

@@ -17,15 +17,10 @@ const usePopSimulator = ({
   const pushToSegment = (value) => {
     const segmentName = currentVmCommand.getArg1()
     const segmentIndex = currentVmCommand.getArg2()
-    const updatedSegment = [...segments[segmentName]]
-    updatedSegment.push({ item: value, index: segmentIndex })
-    updatedSegment.sort((a, b) => a.index < b.index ? 1 : (
-      a.index > b.index ? -1 : 0
-    ))
-    segmentSetters[segmentName](updatedSegment)
+    segmentSetters[segmentName](segmentIndex, value)
   }
   const onPopSimEnd = (value) => {
-    value && pushToSegment(value)
+    value !== undefined && pushToSegment(value)
     setIsSimulating(false, true)
   }
 

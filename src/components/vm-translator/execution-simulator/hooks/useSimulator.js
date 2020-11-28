@@ -8,6 +8,7 @@ import useAsmStepwiseSimulator from './useAsmStepwiseSimulator'
 import useVmCodeProvider from './useVmCodeProvider'
 import usePushSimulator from './usePushSimulator'
 import usePopSimulator from './usePopSimulator'
+import useControlFlowReducer from './useControlFlowReducer'
 import useArithmeticSimulator from './useArithmeticSimulator'
 
 const useSimulator = () => {
@@ -17,7 +18,10 @@ const useSimulator = () => {
   } = useModeReducer()
 
   const setIsSimulating = (mode, isAuthoritative = false) => {
-    if (simulationModes.isAllSimulationOn && mode === false && !isAuthoritative) return
+    if (simulationModes.isAllSimulationOn &&
+      mode === false && !isAuthoritative) {
+      return
+    }
     simulationModeSetters.isSimulating(mode)
   }
 
@@ -30,12 +34,11 @@ const useSimulator = () => {
 
   const {
     vmCodeProvider: {
-      vmCommands, currentVmCommand,
+      vmCommands, currentVmCommand, isVmCodeExhausted,
       isNextVmCmdProvided, shouldProvideNextVmCmd
     },
     vmCodeSetters
   } = useVmCodeProvider({
-    isAllSimulationOn: simulationModes.isAllSimulationOn,
     ...commonModesAndSetters
   })
 
@@ -45,12 +48,14 @@ const useSimulator = () => {
     resetAsmArithmetic
   } = useAsmStepwiseSimulator({
     ram: segments.ram,
-    setRam: segmentSetters.ram,
+    setRamValue: segmentSetters.ram,
     setIsSimulating,
     isAsmSteppingFast: simulationModes.isAsmSteppingFast
   })
 
-  const { asmGenerator, asmSetters, provideNextAsmCommand } = useAsmGenerator({
+  const {
+    asmGenerator, asmSetters, provideNextAsmCommand
+  } = useAsmGenerator({
     simulationModes,
     setIsSimulating,
     isNextVmCmdProvided,
@@ -79,6 +84,15 @@ const useSimulator = () => {
     ...commonModesAndSetters
   })
 
+  useControlFlowReducer({
+    isAsmGenerated: asmGenerator.isAsmGenerated,
+    setIsAsmGenerated: asmSetters.isAsmGenerated,
+    currentVmCommand,
+    vmCommands,
+    globalStack: segments.globalStack,
+    ...commonModesAndSetters
+  })
+
   const { arithmetic, resetArithmetic } = useArithmeticSimulator({
     isAsmGenerated: asmGenerator.isAsmGenerated,
     setIsAsmGenerated: asmSetters.isAsmGenerated,
@@ -98,6 +112,7 @@ const useSimulator = () => {
   return {
     vmCommands,
     currentVmCommand,
+    isVmCodeExhausted,
     vmCodeSetters,
     asmGenerator,
     segments,

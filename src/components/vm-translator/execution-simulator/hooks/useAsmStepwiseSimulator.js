@@ -25,7 +25,7 @@ const ACTIONS = {
 const asmStepwiseReducer = getReducer(ACTIONS)
 
 const useAsmStepwiseSimulator = ({
-  ram, setRam, setIsSimulating, isAsmSteppingFast
+  ram, setRamValue, setIsSimulating, isAsmSteppingFast
 }) => {
   const [state, dispatch] = useReducer(asmStepwiseReducer, {
     ...getInitialState(ACTIONS),
@@ -41,10 +41,10 @@ const useAsmStepwiseSimulator = ({
       jumpAddress: setJumpAddress,
       isLooping: setIsLooping,
       isSkipping: setIsSkipping,
-      lastRunRomAddress: setLastRunRomAddress,
       isCurrentAsmBatchExhausted: setIsCurrentAsmBatchExhausted
     },
-    stepAssembler
+    stepAssembler,
+    rewindAssembler
   } = useContext(GeneralContext)
   const { divs } = useContext(DivRefContext)
 
@@ -57,17 +57,6 @@ const useAsmStepwiseSimulator = ({
     setters.operator(null)
     setters.result(null)
   }, [reset])
-
-  const setRamValue = (address, value) => {
-    const target = ram.find(item => item.index === address)
-    const updatedRam = [...ram]
-    target && updatedRam.splice(ram.indexOf(target), 1)
-    updatedRam.push({ item: value, index: address })
-    updatedRam.sort((a, b) => a.index < b.index ? 1 : (
-      a.index > b.index ? -1 : 0
-    ))
-    setRam(updatedRam)
-  }
 
   const onAsmSimulationEnd = () => {
     return setIsSimulating(false)
@@ -85,7 +74,6 @@ const useAsmStepwiseSimulator = ({
     } = setters
     const parser = stepAssembler()
     const commandType = parser.commandType()
-
     if (commandType === COMMAND_TYPE.L_COMMAND) {
       return onAsmSimulationEnd()
     }
@@ -109,20 +97,23 @@ const useAsmStepwiseSimulator = ({
           JLT: compValue < 0,
           JGT: compValue > 0,
           JEQ: compValue === 0,
+          JNE: compValue !== 0,
           JMP: true
         }
-        if (!conditions[jump]) return onAsmSimulationEnd()
+        if (!conditions[jump]) {
+          setIsLooping(false)
+          return onAsmSimulationEnd()
+        }
         const jumpAddress = address
         if (jumpAddress > lastRunRomAddress) {
           setJumpAddress(jumpAddress)
           setIsSkipping(true)
           return { shouldSkip: true }
         }
-        // we are looping back
-        // retune the assembler
-        setLastRunRomAddress(jumpAddress)
-        setJumpAddress(lastRunRomAddress)
-        return setIsLooping(true)
+        // we are looping back, retune the assembler
+        rewindAssembler(jumpAddress)
+        setIsLooping(true)
+        return onAsmSimulationEnd()
       }
       const dest = parser.dest()
       let value = null

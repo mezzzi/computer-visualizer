@@ -21,7 +21,8 @@ const useAsmGenerator = ({
     isSimulationModeOn,
     isAllSimulationOn,
     isAsmStepSimulationOn,
-    isAsmCodeSimulationOn
+    isAsmCodeSimulationOn,
+    isAsmSteppingFast
   },
   setIsSimulating,
   isNextVmCmdProvided,
@@ -40,21 +41,24 @@ const useAsmGenerator = ({
     state: {
       reset,
       translator,
+      mainAssembly,
       asmBatchIndex,
+      asmBatchCount,
       lastRunRomAddress,
       isLooping,
       isSkipping,
       jumpAddress,
       assemblerParseCount,
-      assemblerLineCount
+      assemblerLineCount,
+      isCurrentAsmBatchExhausted
     },
     setters: {
       isCurrentAsmBatchExhausted: setIsCurrentAsmBatchExhausted,
       asmBatchIndex: setAsmBatchIndex,
+      asmBatchCount: setAsmBatchCount,
       isLooping: setIsLooping,
       isSkipping: setIsSkipping,
       jumpAddress: setJumpAddress,
-      batchAssembler: setBatchAssembler,
       assemblerLineCount: setAssemblerLineCount
     },
     stepAssembler
@@ -65,34 +69,38 @@ const useAsmGenerator = ({
   }, [reset])
 
   useEffect(() => {
+    if (isAllSimulationOn && !isCurrentAsmBatchExhausted) {
+      provideNextAsmCommand()
+    }
+  }, [isAllSimulationOn])
+
+  useEffect(() => {
     if (!isNextVmCmdProvided) return
     setIsNextVmCmdProvided(false)
     const asmBatch = translator.step()
+    const batchCount = asmBatch.length
     const shouldSimulateExec = (isAsmStepSimulationOn ||
-      isAllSimulationOn) && !isSkipping
+      isAllSimulationOn || isAsmSteppingFast) && !isSkipping
     const unexecutedAsm = assemblerLineCount - assemblerParseCount
-    const shouldLoopBack = shouldSimulateExec && unexecutedAsm > 0
+    const shouldLoopBack = !isLooping && shouldSimulateExec && unexecutedAsm > 0
     if (shouldLoopBack) {
       setIsLooping(shouldLoopBack)
+      const nonParsedBatch = []
       const asmLines = state.assembly.map(({ item }) => item).reverse()
-      const jumpAddress = lastRunRomAddress + getNonLabelCount(asmLines)
-      setJumpAddress(jumpAddress)
       for (let i = 0; i < unexecutedAsm; i++) {
-        asmBatch.unshift(asmLines.pop())
+        nonParsedBatch.unshift(asmLines.pop())
       }
+      const jumpAddress = lastRunRomAddress + getNonLabelCount(nonParsedBatch)
+      setJumpAddress(jumpAddress)
     }
-    const assembler = new Assembler(
-      asmBatch.join('\n')
-    )
-    assembler.beforeStep()
-    setBatchAssembler(assembler)
+    setAsmBatchCount(
+      shouldLoopBack ? batchCount + unexecutedAsm : batchCount)
     if (!isSimulationModeOn) {
       pushAssemblyBatch(asmBatch)
       return onAsmGenerationEnd()
     }
     setters.nextAsmBatch(asmBatch)
-    const autoProvideNextAsm = !isAsmStepSimulationOn ||
-      isAllSimulationOn
+    const autoProvideNextAsm = isAllSimulationOn || !isAsmStepSimulationOn
     if (autoProvideNextAsm) return setAsmBatchIndex(0)
     // the following activates the asm bucket's next button
     // which should be active only when not auto providing next asm
@@ -100,43 +108,34 @@ const useAsmGenerator = ({
   }, [isNextVmCmdProvided])
 
   useEffect(() => {
-    const { nextAsmBatch, assembly } = state
     if (asmBatchIndex <= -1) return
     setIsSimulating(true)
     setIsCurrentAsmBatchExhausted(false)
+    const isParsed = isAsmStepSimulationOn ||
+      isAllSimulationOn || isAsmSteppingFast
+    const currentAsm = mainAssembly[
+      isParsed ? assemblerParseCount : asmBatchIndex]
     const onAsmGenerationSimEnd = () => {
-      !isLooping && pushAssemblyBatch([nextAsmBatch[asmBatchIndex]])
+      !isLooping && pushAssemblyBatch([currentAsm])
       resetAsmArithmetic()
       const shouldSimulateExec = (isAsmStepSimulationOn ||
-      isAllSimulationOn) && !isSkipping
+      isAllSimulationOn || isAsmSteppingFast) && !isSkipping
       isSkipping && stepAssembler()
       let now = {}
       if (shouldSimulateExec) {
         now = simulateAsmExecution() || {}
       }
       const shouldSkipNext = isSkipping || now.shouldSkip
-      const autoProvideNextAsm = !isAsmStepSimulationOn ||
-      isAllSimulationOn || shouldSkipNext
+      const autoProvideNextAsm = isAllSimulationOn ||
+        !isAsmStepSimulationOn || shouldSkipNext
       autoProvideNextAsm && provideNextAsmCommand()
     }
-    if (isLooping) {
-      const updatedAssembly = assembly.map((item, index) => {
-        if (index !== (assembly.length - assemblerParseCount - 1)) {
-          return { ...item, color: 'green' }
-        }
-        return { ...item, color: 'yellow' }
-      })
-      setters.assembly(updatedAssembly)
-      const targetDiv = document.getElementById(
-        `asm${assemblerParseCount - 1}`)
-      targetDiv && targetDiv.scrollIntoView()
-      return onAsmGenerationSimEnd()
-    }
-    return isAsmCodeSimulationOn ? moveFromBoundaryToTarget({
+    isLooping && highlightCurrentAsmCmd()
+    return (isAsmCodeSimulationOn && !isLooping) ? moveFromBoundaryToTarget({
       boundaryRect: divs.asmStackBoundingDiv.getBoundingClientRect(),
       targetRect: divs.bottomAsmInvisibleDiv.getBoundingClientRect(),
       isMovingUp: true,
-      text: nextAsmBatch[asmBatchIndex],
+      text: currentAsm,
       speed: 5,
       onSimulationEnd: onAsmGenerationSimEnd
     }) : onAsmGenerationSimEnd()
@@ -144,14 +143,14 @@ const useAsmGenerator = ({
 
   const onAsmGenerationEnd = () => {
     setters.isAsmGenerated(true)
+    if (isLooping) return
     const asmLineCount = assemblerParseCount > assemblerLineCount
       ? assemblerParseCount : assemblerLineCount + state.nextAsmBatch.length
     setAssemblerLineCount(asmLineCount)
   }
 
   const provideNextAsmCommand = () => {
-    const { nextAsmBatch } = state
-    if (asmBatchIndex !== nextAsmBatch.length - 1) {
+    if (asmBatchIndex < asmBatchCount - 1) {
       if ((isSkipping || isLooping) && lastRunRomAddress === jumpAddress) {
         setIsSkipping(false)
         setIsLooping(false)
@@ -162,6 +161,21 @@ const useAsmGenerator = ({
     onAsmGenerationEnd()
     isAsmStepSimulationOn && setIsSimulating(false)
     setIsCurrentAsmBatchExhausted(true)
+  }
+
+  const highlightCurrentAsmCmd = () => {
+    const { assembly } = state
+    const targetIndex = assembly.length - assemblerParseCount - 1
+    const updatedAssembly = assembly.map((item, index) => {
+      if (index !== targetIndex) {
+        return { ...item, color: 'green' }
+      }
+      return { ...item, color: 'yellow' }
+    })
+    setters.assembly(updatedAssembly)
+    const targetDiv = document.getElementById(
+      `asm-${targetIndex}`)
+    targetDiv && targetDiv.scrollIntoView()
   }
 
   const setters = getSetters(dispatch, ACTIONS)

@@ -41,6 +41,7 @@ const AsmUnit = ({
           outerWidth='90%'
           width='80%'
           name='asm'
+          highlightTop={false}
           bottomGrowing
           content={asmGenerator.assembly}
           hasAction

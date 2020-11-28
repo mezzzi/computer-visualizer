@@ -8,6 +8,7 @@ import { GeneralContext } from '../providers/generalProvider'
 
 const HvmUnit = ({
   currentVmCommand,
+  isVmCodeExhausted,
   vmCommands,
   provideNextVmCmd,
   isSimulating
@@ -53,12 +54,13 @@ const HvmUnit = ({
         width='90%'
         height='70%'
         outerHeight='66%'
-        content={vmCommands.map(com => com.toString())}
+        name='hvm'
+        content={vmCommands}
         highlightTop={false}
         hasAction
         onAction={provideNextVmCmd}
         actionName='NEXT'
-        actionDisabled={isSimulating || !isCurrentAsmBatchExhausted}
+        actionDisabled={isSimulating || !isCurrentAsmBatchExhausted || isVmCodeExhausted}
         editable
         editHandler={editHandler}
         setBottomInvisibleDiv={divSetters.bottomVmInvisibleDiv}
@@ -76,6 +78,7 @@ const HvmUnit = ({
           <option value='2'>Basic Test</option>
           <option value='3'>Pointer Test</option>
           <option value='4'>Static Test</option>
+          <option value='5'>Basic Loop</option>
         </select>
         <button
           className='resetButton'

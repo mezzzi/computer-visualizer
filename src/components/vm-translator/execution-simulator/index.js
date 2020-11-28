@@ -17,6 +17,7 @@ const ExecutionSimulator = () => {
   const {
     vmCommands,
     currentVmCommand,
+    isVmCodeExhausted,
     vmCodeSetters,
     asmGenerator,
     segments,
@@ -46,7 +47,7 @@ const ExecutionSimulator = () => {
     >
       <HvmUnit
         vmCommands={vmCommands} currentVmCommand={currentVmCommand}
-        provideNextVmCmd={provideNextVmCmd}
+        provideNextVmCmd={provideNextVmCmd} isVmCodeExhausted={isVmCodeExhausted}
         isSimulating={simulationModes.isSimulating}
       />
       <AsmUnit

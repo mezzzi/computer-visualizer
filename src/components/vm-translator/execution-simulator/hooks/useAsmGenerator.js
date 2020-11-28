@@ -6,6 +6,7 @@ import { moveFromBoundaryToTarget } from '../simulator'
 import { DivRefContext } from '../providers/divRefProvider'
 import { GeneralContext } from '../providers/generalProvider'
 import { getReducer, getSetters } from './util'
+import { COMMAND_TYPE } from 'abstractions/software/assembler/parser/types'
 
 const ACTIONS = {
   SET_ASSEMBLY: 'assembly',
@@ -44,6 +45,7 @@ const useAsmGenerator = ({
       isLooping,
       isSkipping,
       jumpAddress,
+      assemblerParseCount,
       assemblerLineCount
     },
     setters: {
@@ -51,6 +53,7 @@ const useAsmGenerator = ({
       asmBatchIndex: setAsmBatchIndex,
       isLooping: setIsLooping,
       isSkipping: setIsSkipping,
+      jumpAddress: setJumpAddress,
       batchAssembler: setBatchAssembler,
       assemblerLineCount: setAssemblerLineCount
     },
@@ -64,11 +67,20 @@ const useAsmGenerator = ({
   useEffect(() => {
     if (!isNextVmCmdProvided) return
     setIsNextVmCmdProvided(false)
-    // This is the crucial determiner
+    const asmBatch = translator.step()
     const shouldSimulateExec = (isAsmStepSimulationOn ||
       isAllSimulationOn) && !isSkipping
-    console.log('SHOULD EXEC: ', shouldSimulateExec)
-    const asmBatch = translator.step()
+    const unexecutedAsm = assemblerLineCount - assemblerParseCount
+    const shouldLoopBack = shouldSimulateExec && unexecutedAsm > 0
+    if (shouldLoopBack) {
+      setIsLooping(shouldLoopBack)
+      const asmLines = state.assembly.map(({ item }) => item).reverse()
+      const jumpAddress = lastRunRomAddress + getNonLabelCount(asmLines)
+      setJumpAddress(jumpAddress)
+      for (let i = 0; i < unexecutedAsm; i++) {
+        asmBatch.unshift(asmLines.pop())
+      }
+    }
     const assembler = new Assembler(
       asmBatch.join('\n')
     )
@@ -93,8 +105,6 @@ const useAsmGenerator = ({
     setIsSimulating(true)
     setIsCurrentAsmBatchExhausted(false)
     const onAsmGenerationSimEnd = () => {
-      // operations to be done once the asm command is simulated
-      // into the asm bucket
       !isLooping && pushAssemblyBatch([nextAsmBatch[asmBatchIndex]])
       resetAsmArithmetic()
       const shouldSimulateExec = (isAsmStepSimulationOn ||
@@ -104,10 +114,6 @@ const useAsmGenerator = ({
       if (shouldSimulateExec) {
         now = simulateAsmExecution() || {}
       }
-      // get looping address
-      // translate upto rammed count
-      // mark that address, that is your loop address ....
-      // why not keep track of rammed asm, and loop from there
       const shouldSkipNext = isSkipping || now.shouldSkip
       const autoProvideNextAsm = !isAsmStepSimulationOn ||
       isAllSimulationOn || shouldSkipNext
@@ -115,12 +121,15 @@ const useAsmGenerator = ({
     }
     if (isLooping) {
       const updatedAssembly = assembly.map((item, index) => {
-        if (index !== asmBatchIndex) return { ...item, color: 'green' }
+        if (index !== (assembly.length - assemblerParseCount - 1)) {
+          return { ...item, color: 'green' }
+        }
         return { ...item, color: 'yellow' }
       })
       setters.assembly(updatedAssembly)
-      const targetDiv = document.getElementById(`asm${asmBatchIndex}`)
-      targetDiv.scrollIntoView()
+      const targetDiv = document.getElementById(
+        `asm${assemblerParseCount - 1}`)
+      targetDiv && targetDiv.scrollIntoView()
       return onAsmGenerationSimEnd()
     }
     return isAsmCodeSimulationOn ? moveFromBoundaryToTarget({
@@ -135,17 +144,17 @@ const useAsmGenerator = ({
 
   const onAsmGenerationEnd = () => {
     setters.isAsmGenerated(true)
-    setAssemblerLineCount(assemblerLineCount + state.nextAsmBatch.length)
+    const asmLineCount = assemblerParseCount > assemblerLineCount
+      ? assemblerParseCount : assemblerLineCount + state.nextAsmBatch.length
+    setAssemblerLineCount(asmLineCount)
   }
 
   const provideNextAsmCommand = () => {
     const { nextAsmBatch } = state
     if (asmBatchIndex !== nextAsmBatch.length - 1) {
-      if (isLooping && lastRunRomAddress > jumpAddress) {
-        setIsLooping(false)
-      }
-      if (isSkipping && lastRunRomAddress === jumpAddress) {
+      if ((isSkipping || isLooping) && lastRunRomAddress === jumpAddress) {
         setIsSkipping(false)
+        setIsLooping(false)
       }
       return setAsmBatchIndex(asmBatchIndex + 1)
     }
@@ -159,7 +168,7 @@ const useAsmGenerator = ({
 
   const pushAssemblyBatch = useCallback((asmBatch) => {
     const updatedAssembly = [...state.assembly.reverse().map(
-      item => ({ ...item, color: 'green' }))]
+      (item, line) => ({ ...item, color: 'green', line }))]
     updatedAssembly.push(...asmBatch.map(item => ({ item, color: 'yellow' })))
     setters.assembly(updatedAssembly.reverse())
   }, [state.assembly])
@@ -170,4 +179,18 @@ const useAsmGenerator = ({
     provideNextAsmCommand
   }
 }
+
+const getNonLabelCount = assembly => {
+  const assembler = new Assembler(assembly.join('\n'))
+  assembler.beforeStep()
+  let nonLabelCount = 0
+  let parser = null
+  for (let i = 0; i < assembly.length; i++) {
+    parser = assembler.step()
+    nonLabelCount = parser.commandType() === COMMAND_TYPE.L_COMMAND
+      ? nonLabelCount : nonLabelCount + 1
+  }
+  return nonLabelCount
+}
+
 export default useAsmGenerator

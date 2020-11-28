@@ -40,6 +40,7 @@ const AsmUnit = ({
         <Stack
           outerWidth='90%'
           width='80%'
+          name='asm'
           bottomGrowing
           content={asmGenerator.assembly}
           hasAction

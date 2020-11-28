@@ -8,7 +8,6 @@ import { simulateDivMotion } from '../simulator'
 import { DivRefContext } from '../providers/divRefProvider'
 import { GeneralContext } from '../providers/generalProvider'
 
-import Assembler from 'abstractions/software/assembler'
 import { COMMAND_TYPE } from 'abstractions/software/assembler/parser/types'
 
 const ACTIONS = {
@@ -39,10 +38,10 @@ const useAsmStepwiseSimulator = ({
       lastRunRomAddress
     },
     setters: {
-      assembler: setAssembler,
       jumpAddress: setJumpAddress,
       isLooping: setIsLooping,
       isSkipping: setIsSkipping,
+      lastRunRomAddress: setLastRunRomAddress,
       isCurrentAsmBatchExhausted: setIsCurrentAsmBatchExhausted
     },
     stepAssembler
@@ -51,6 +50,12 @@ const useAsmStepwiseSimulator = ({
 
   useEffect(() => {
     setIsCurrentAsmBatchExhausted(true)
+    setters.aRegister(null)
+    setters.dRegister(null)
+    setters.op1(null)
+    setters.op2(null)
+    setters.operator(null)
+    setters.result(null)
   }, [reset])
 
   const setRamValue = (address, value) => {
@@ -107,19 +112,16 @@ const useAsmStepwiseSimulator = ({
           JMP: true
         }
         if (!conditions[jump]) return onAsmSimulationEnd()
-        setJumpAddress(address)
-        if (address > lastRunRomAddress) {
+        const jumpAddress = address
+        if (jumpAddress > lastRunRomAddress) {
+          setJumpAddress(jumpAddress)
           setIsSkipping(true)
           return { shouldSkip: true }
         }
-        const newAssembler = new Assembler(
-          state.nextAsmBatch.join('\n')
-        )
-        newAssembler.beforeStep()
-        for (let i = 0; i < address + 1; i++) {
-          newAssembler.step()
-        }
-        setAssembler(newAssembler)
+        // we are looping back
+        // retune the assembler
+        setLastRunRomAddress(jumpAddress)
+        setJumpAddress(lastRunRomAddress)
         return setIsLooping(true)
       }
       const dest = parser.dest()

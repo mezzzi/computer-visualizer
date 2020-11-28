@@ -68,6 +68,7 @@ const GeneralProvider = (props) => {
     setters.assembler(mainAssembler)
     setters.lastRunRomAddress(0)
     setters.assemblerLineCount(0)
+    setters.assemblerParseCount(0)
     setters.translator(translator)
     setters.reset(!state.reset)
   }

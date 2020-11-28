@@ -86,7 +86,7 @@ const Bucket = ({
               <div
                 className='stackItem'
                 key={index}
-                id={name && `${name}${item.index}`}
+                id={name && `${name}${item.index || item.line}`}
                 style={{
                   color: item.color || ((highlightTop && index === 0) ? 'yellow' : 'green'),
                   background: item.background || 'black',

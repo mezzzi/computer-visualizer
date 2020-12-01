@@ -5,8 +5,9 @@ import {
   getSymbolCommandType, getInitialState
 } from './util'
 import { simulateDivMotion } from '../simulator'
-import { DivRefContext } from '../providers/divRefProvider'
-import { GeneralContext } from '../providers/generalProvider'
+import { DivRefContext } from '../contexts/divRefContext'
+import { GeneralContext } from '../contexts/generalContext'
+import { ModeContext } from '../contexts/modeContext'
 
 import { COMMAND_TYPE } from 'abstractions/software/assembler/parser/types'
 
@@ -25,7 +26,7 @@ const ACTIONS = {
 const asmStepwiseReducer = getReducer(ACTIONS)
 
 const useAsmStepwiseSimulator = ({
-  ram, setRamValue, setIsSimulating, isAsmSteppingFast
+  ram, setRamValue
 }) => {
   const [state, dispatch] = useReducer(asmStepwiseReducer, {
     ...getInitialState(ACTIONS),
@@ -34,12 +35,12 @@ const useAsmStepwiseSimulator = ({
   const {
     state: {
       reset,
+      vmFileIndex,
       assembler,
       lastRunRomAddress
     },
     setters: {
       jumpAddress: setJumpAddress,
-      isLooping: setIsLooping,
       isSkipping: setIsSkipping,
       isCurrentAsmBatchExhausted: setIsCurrentAsmBatchExhausted
     },
@@ -47,6 +48,10 @@ const useAsmStepwiseSimulator = ({
     rewindAssembler
   } = useContext(GeneralContext)
   const { divs } = useContext(DivRefContext)
+  const {
+    state: { isAsmSteppingFast },
+    setters: { isSimulating: setIsSimulating }
+  } = useContext(ModeContext)
 
   useEffect(() => {
     setIsCurrentAsmBatchExhausted(true)
@@ -56,7 +61,7 @@ const useAsmStepwiseSimulator = ({
     setters.op2(null)
     setters.operator(null)
     setters.result(null)
-  }, [reset])
+  }, [reset, vmFileIndex])
 
   const onAsmSimulationEnd = () => {
     return setIsSimulating(false)
@@ -100,10 +105,7 @@ const useAsmStepwiseSimulator = ({
           JNE: compValue !== 0,
           JMP: true
         }
-        if (!conditions[jump]) {
-          setIsLooping(false)
-          return onAsmSimulationEnd()
-        }
+        if (!conditions[jump]) return onAsmSimulationEnd()
         const jumpAddress = address
         if (jumpAddress > lastRunRomAddress) {
           setJumpAddress(jumpAddress)
@@ -112,7 +114,6 @@ const useAsmStepwiseSimulator = ({
         }
         // we are looping back, retune the assembler
         rewindAssembler(jumpAddress)
-        setIsLooping(true)
         return onAsmSimulationEnd()
       }
       const dest = parser.dest()

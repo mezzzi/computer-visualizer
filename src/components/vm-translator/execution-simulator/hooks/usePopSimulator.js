@@ -1,19 +1,26 @@
 import { useEffect, useContext } from 'react'
 import { COMMAND } from 'abstractions/software/vm-translator/command/types'
 import { simulateDivMotion } from '../simulator'
-import { DivRefContext } from '../providers/divRefProvider'
+import { DivRefContext } from '../contexts/divRefContext'
+import { GeneralContext } from '../contexts/generalContext'
+import { ModeContext } from '../contexts/modeContext'
 
 const usePopSimulator = ({
   isAsmGenerated,
   setIsAsmGenerated,
-  currentVmCommand,
   segments,
-  segmentSetters,
-  isSimulationModeOn,
-  isPopSimulationOn,
-  setIsSimulating
+  segmentSetters
 }) => {
   const { divs } = useContext(DivRefContext)
+  const {
+    state: { currentVmCommand }
+  } = useContext(GeneralContext)
+  const {
+    state: { isPopSimulationOn, isSimulationModeOff },
+    setters: {
+      isSimulating: setIsSimulating
+    }
+  } = useContext(ModeContext)
   const pushToSegment = (value) => {
     const segmentName = currentVmCommand.getArg1()
     const segmentIndex = currentVmCommand.getArg2()
@@ -32,12 +39,12 @@ const usePopSimulator = ({
     const updatedStack = [...segments.globalStack]
     const setGlobalStack = segmentSetters.globalStack
     if (updatedStack.length < 1) {
-      isSimulationModeOn && setIsSimulating(false)
+      !isSimulationModeOff && setIsSimulating(false)
       return onPopSimEnd()
     }
     const value = updatedStack.shift()
     setGlobalStack(updatedStack)
-    const shouldSimulate = isSimulationModeOn && isPopSimulationOn
+    const shouldSimulate = !isSimulationModeOff && isPopSimulationOn
     shouldSimulate ? simulateDivMotion({
       sourceRectDiv: divs.globalStackBottomInvisibleDiv,
       sourceBoundingDiv: divs.globalStackBoundingDiv,

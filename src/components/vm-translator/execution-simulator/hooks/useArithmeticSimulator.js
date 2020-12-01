@@ -1,7 +1,7 @@
 import { useEffect, useContext, useReducer } from 'react'
 import { simulateDivMotion } from '../simulator'
-import { DivRefContext } from '../providers/divRefProvider'
-import { GeneralContext } from '../providers/generalProvider'
+import { DivRefContext } from '../contexts/divRefContext'
+import { GeneralContext } from '../contexts/generalContext'
 import {
   isBinaryOp,
   isUnaryOp,
@@ -9,6 +9,7 @@ import {
   getUnaryResult
 } from '../util'
 import { getInitialState, getReducer, getSetters } from './util'
+import { ModeContext } from '../contexts/modeContext'
 
 const ACTIONS = {
   SET_OP1: 'op1',
@@ -25,12 +26,8 @@ const arithemticReducer = getReducer(ACTIONS)
 const useArithmeticSimulator = ({
   isAsmGenerated,
   setIsAsmGenerated,
-  currentVmCommand,
   globalStack,
-  setGlobalStack,
-  isSimulationModeOn,
-  isArithmeticSimulationOn,
-  setIsSimulating
+  setGlobalStack
 }) => {
   const [state, dispatch] = useReducer(arithemticReducer, {
     ...getInitialState(ACTIONS),
@@ -40,7 +37,17 @@ const useArithmeticSimulator = ({
   })
 
   const { divs } = useContext(DivRefContext)
-  const { state: { reset } } = useContext(GeneralContext)
+  const {
+    state: {
+      currentVmCommand, reset, vmFileIndex, shouldProvideNextVmCmd
+    }
+  } = useContext(GeneralContext)
+  const {
+    state: {
+      isSimulationModeOff, isArithmeticSimulationOn
+    },
+    setters: { isSimulating: setIsSimulating }
+  } = useContext(ModeContext)
 
   const op2Processed = (op2) => {
     setters.op2(op2)
@@ -65,12 +72,20 @@ const useArithmeticSimulator = ({
   const updateResult = () => {
     const updatedStack = [...globalStack]
     updatedStack.unshift(state.result)
-    setGlobalStack(updatedStack)
+    setGlobalStack(updatedStack, {
+      isPush: true, isResult: true, isUnary: state.isUnary
+    })
   }
 
   useEffect(() => {
+    if (shouldProvideNextVmCmd) {
+      resetArithmetic()
+    }
+  }, [shouldProvideNextVmCmd])
+
+  useEffect(() => {
     resetArithmetic()
-  }, [reset])
+  }, [reset, vmFileIndex])
 
   useEffect(() => {
     if (!isAsmGenerated) return
@@ -87,7 +102,7 @@ const useArithmeticSimulator = ({
       const op2 = updatedStack.shift()
       setGlobalStack(updatedStack)
       setters.operator(commandType)
-      return (isSimulationModeOn && isArithmeticSimulationOn)
+      return (!isSimulationModeOff && isArithmeticSimulationOn)
         ? simulateDivMotion({
           sourceRectDiv: divs.globalStackBottomInvisibleDiv,
           sourceBoundingDiv: divs.globalStackBoundingDiv,
@@ -102,7 +117,7 @@ const useArithmeticSimulator = ({
       const op1 = updatedStack.shift()
       setGlobalStack(updatedStack)
       setters.operator(commandType)
-      return (isSimulationModeOn && isArithmeticSimulationOn)
+      return (!isSimulationModeOff && isArithmeticSimulationOn)
         ? simulateDivMotion({
           sourceRectDiv: divs.globalStackBottomInvisibleDiv,
           sourceBoundingDiv: divs.globalStackBoundingDiv,
@@ -121,7 +136,7 @@ const useArithmeticSimulator = ({
     const updatedStack = [...globalStack]
     const op1 = updatedStack.shift()
     setGlobalStack(updatedStack)
-    return (isSimulationModeOn && isArithmeticSimulationOn)
+    return (!isSimulationModeOff && isArithmeticSimulationOn)
       ? simulateDivMotion({
         sourceRectDiv: divs.globalStackBottomInvisibleDiv,
         sourceBoundingDiv: divs.globalStackBoundingDiv,
@@ -139,7 +154,7 @@ const useArithmeticSimulator = ({
   useEffect(() => {
     if (!state.isOp2SimulationDone) return
     setters.isOp2SimulationDone(false)
-    return (isSimulationModeOn && isArithmeticSimulationOn)
+    return (!isSimulationModeOff && isArithmeticSimulationOn)
       ? simulateDivMotion({
         sourceRectDiv: divs.vmResultDiv,
         sourceBoundingDiv: divs.vmCpuBoundingDiv,

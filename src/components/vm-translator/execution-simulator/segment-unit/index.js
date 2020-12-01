@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import Box from '../box'
 import StackBox from '../stackbox'
-import { DivRefContext } from '../providers/divRefProvider'
+import { DivRefContext } from '../contexts/divRefContext'
 import { SEGMENTS } from '../hooks/util'
 
 const SegmentUnit = ({

@@ -4,31 +4,34 @@ import Box from '../box'
 import Stack from '../stack'
 import ArithmeticUnit from '../arithmetic-unit'
 
-import { DivRefContext } from '../providers/divRefProvider'
-import { GeneralContext } from '../providers/generalProvider'
+import { DivRefContext } from '../contexts/divRefContext'
+import { GeneralContext } from '../contexts/generalContext'
+import { ModeContext } from '../contexts/modeContext'
 
 const AsmUnit = ({
   asmGenerator,
   provideNextAsmCommand,
-  isAllSimulationOn,
-  isAsmStepSimulationOn,
-  isCurrentVmCommandNull,
   itemSize,
-  isSimulating,
   asmStepwiseState
 }) => {
   const { divSetters } = useContext(DivRefContext)
+  const {
+    state: {
+      isSimulating, isAsmStepSimulationOn, isAllSimulationOn
+    }
+  } = useContext(ModeContext)
   const { state: { isCurrentAsmBatchExhausted } } = useContext(GeneralContext)
   useEffect(() => {
     divSetters.aRegDiv(aRegDivRef.current)
     divSetters.dRegDiv(dRegDivRef.current)
   }, [])
+  const aRegDivRef = useRef(null)
+  const dRegDivRef = useRef(null)
   const {
     aRegister, dRegister,
     isUnary, op1, op2, operator, result
   } = asmStepwiseState
-  const aRegDivRef = useRef(null)
-  const dRegDivRef = useRef(null)
+
   return (
     <Box width='75%'>
       <Box

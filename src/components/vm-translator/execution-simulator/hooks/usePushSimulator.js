@@ -4,22 +4,28 @@ import {
   simulateDivMotion,
   moveFromBoundaryToTarget
 } from '../simulator'
-import { DivRefContext } from '../providers/divRefProvider'
+import { DivRefContext } from '../contexts/divRefContext'
+import { GeneralContext } from '../contexts/generalContext'
+import { ModeContext } from '../contexts/modeContext'
 
 const usePushSimulator = ({
   isAsmGenerated,
   setIsAsmGenerated,
-  currentVmCommand,
   segments,
-  segmentSetters,
-  isSimulationModeOn,
-  isPushSimulationOn,
-  setIsSimulating
+  segmentSetters
 }) => {
   const { divs } = useContext(DivRefContext)
-
+  const {
+    state: { currentVmCommand }
+  } = useContext(GeneralContext)
+  const {
+    state: { isPushSimulationOn, isSimulationModeOff },
+    setters: {
+      isSimulating: setIsSimulating
+    }
+  } = useContext(ModeContext)
   const onPushSimEnd = (updatedStack) => {
-    updatedStack && segmentSetters.globalStack(updatedStack)
+    updatedStack && segmentSetters.globalStack(updatedStack, { isPush: true })
     setIsSimulating(false, true)
   }
 
@@ -31,7 +37,7 @@ const usePushSimulator = ({
     const updatedStack = [...segments.globalStack]
     const segmentName = currentVmCommand.getArg1()
     const segmentIndex = currentVmCommand.getArg2()
-    const shouldSimulate = isSimulationModeOn && isPushSimulationOn
+    const shouldSimulate = !isSimulationModeOff && isPushSimulationOn
     if (segmentName === 'constant') {
       updatedStack.unshift(segmentIndex)
       return shouldSimulate ? moveFromBoundaryToTarget({

@@ -10,27 +10,17 @@ import ModeUnit from './mode-unit'
 
 import useSimulator from './hooks/useSimulator'
 
-import { DivRefContext } from './providers/divRefProvider'
+import { DivRefContext } from './contexts/divRefContext'
 
 const ExecutionSimulator = () => {
   const { divs, divSetters } = useContext(DivRefContext)
   const {
-    vmCommands,
-    currentVmCommand,
-    isVmCodeExhausted,
-    vmCodeSetters,
     asmGenerator,
     segments,
     provideNextAsmCommand,
     arithmetic,
-    asmStepwiseState,
-    simulationModes,
-    simulationModeSetters
+    asmStepwiseState
   } = useSimulator()
-
-  const provideNextVmCmd = () => {
-    vmCodeSetters.shouldProvideNextVmCmd(true)
-  }
 
   const getGstackSize = () => {
     if (!divs.globalStackBottomInvisibleDiv) return {}
@@ -45,20 +35,12 @@ const ExecutionSimulator = () => {
     <div
       className='simulatorContainer'
     >
-      <HvmUnit
-        vmCommands={vmCommands} currentVmCommand={currentVmCommand}
-        provideNextVmCmd={provideNextVmCmd} isVmCodeExhausted={isVmCodeExhausted}
-        isSimulating={simulationModes.isSimulating}
-      />
+      <HvmUnit />
       <AsmUnit
         asmGenerator={asmGenerator}
-        isSimulating={simulationModes.isSimulating}
         itemSize={getGstackSize()}
-        isAsmStepSimulationOn={simulationModes.isAsmStepSimulationOn}
-        isCurrentVmCommandNull={!currentVmCommand}
         provideNextAsmCommand={provideNextAsmCommand}
         asmStepwiseState={asmStepwiseState}
-        isAllSimulationOn={simulationModes.isAllSimulationOn}
       />
       <SegmentUnit segments={segments} />
       <Box width='27%'>
@@ -78,10 +60,7 @@ const ExecutionSimulator = () => {
             />
           </div>
           <div className='modeWrapper'>
-            <ModeUnit
-              simulationModes={simulationModes}
-              modeSetters={simulationModeSetters}
-            />
+            <ModeUnit />
           </div>
         </div>
       </Box>

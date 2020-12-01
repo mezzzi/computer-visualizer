@@ -161,3 +161,230 @@ push argument 0
 if-goto LOOP_START // If counter > 0, goto LOOP_START
 push local 0
 `
+
+export const FibonacciSeries = `
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/08/ProgramFlow/FibonacciSeries/FibonacciSeries.vm
+
+// Puts the first argument[0] elements of the Fibonacci series
+// in the memory, starting in the address given in argument[1].
+// Argument[0] and argument[1] are initialized by the test script 
+// before this code starts running.
+
+push argument 1
+pop pointer 1           // that = argument[1]
+
+push constant 0
+pop that 0              // first element = 0
+push constant 1
+pop that 1              // second element = 1
+
+push argument 0
+push constant 2
+sub
+pop argument 0          // num_of_elements -= 2 (first 2 elements are set)
+
+label MAIN_LOOP_START
+
+push argument 0
+if-goto COMPUTE_ELEMENT // if num_of_elements > 0, goto COMPUTE_ELEMENT
+goto END_PROGRAM        // otherwise, goto END_PROGRAM
+
+label COMPUTE_ELEMENT
+
+push that 0
+push that 1
+add
+pop that 2              // that[2] = that[0] + that[1]
+
+push pointer 1
+push constant 1
+add
+pop pointer 1           // that += 1
+
+push argument 0
+push constant 1
+sub
+pop argument 0          // num_of_elements--
+
+goto MAIN_LOOP_START
+
+label END_PROGRAM
+`
+
+export const Class1 = `
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/08/FunctionCalls/StaticsTest/Class1.vm
+
+// Stores two supplied arguments in static[0] and static[1].
+function Class1.set 0
+push argument 0
+pop static 0
+push argument 1
+pop static 1
+push constant 0
+return
+
+// Returns static[0] - static[1].
+function Class1.get 0
+push static 0
+push static 1
+sub
+return
+`
+
+export const Class2 = `
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/08/FunctionCalls/StaticsTest/Class2.vm
+
+// Stores two supplied arguments in static[0] and static[1].
+function Class2.set 0
+push argument 0
+pop static 0
+push argument 1
+pop static 1
+push constant 0
+return
+
+// Returns static[0] - static[1].
+function Class2.get 0
+push static 0
+push static 1
+sub
+return
+`
+
+export const StaticSys = `
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/08/FunctionCalls/StaticsTest/Sys.vm
+
+// Tests that different functions, stored in two different 
+// class files, manipulate the static segment correctly. 
+function Sys.init 0
+push constant 6
+push constant 8
+call Class1.set 2
+pop temp 0 // Dumps the return value
+push constant 23
+push constant 15
+call Class2.set 2
+pop temp 0 // Dumps the return value
+call Class1.get 0
+call Class2.get 0
+label WHILE
+goto WHILE
+`
+
+export const SimpleFunction = `
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/08/FunctionCalls/SimpleFunction/SimpleFunction.vm
+
+// Performs a simple calculation and returns the result.
+function SimpleFunction.test 2
+push local 0
+push local 1
+add
+not
+push argument 0
+add
+push argument 1
+sub
+return
+`
+
+export const Sys = `
+// Sys.vm for NestedCall test.
+//
+// Copyright (C) 2013 Mark A. Armbrust.
+// Permission granted for educational use.
+
+// Sys.init() calls Sys.main(), stores the return value in temp 1,
+//  and enters an infinite loop.
+
+function Sys.init 0
+call Sys.main 0
+pop temp 1
+label LOOP
+goto LOOP
+
+// Sys.main() calls Sys.add12(123) and stores return value (135) in temp 0.
+// Returns 456.
+
+function Sys.main 0
+push constant 123
+call Sys.add12 1
+pop temp 0
+push constant 246
+return
+
+// Sys.add12(int x) returns x+12.
+// It allocates 3 words of local storage to test the deallocation of local
+// storage during the return.
+
+function Sys.add12 3
+push argument 0
+push constant 12
+add
+return
+`
+
+export const FibonacciMain = `
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/08/FunctionCalls/FibonacciElement/Main.vm
+
+// Computes the n'th element of the Fibonacci series, recursively.
+// n is given in argument[0].  Called by the Sys.init function 
+// (part of the Sys.vm file), which also pushes the argument[0] 
+// parameter before this code starts running.
+
+function Main.fibonacci 0
+push argument 0
+push constant 2
+lt                     // check if n < 2
+if-goto IF_TRUE
+goto IF_FALSE
+label IF_TRUE          // if n<2, return n
+push argument 0        
+return
+label IF_FALSE         // if n>=2, return fib(n-2)+fib(n-1)
+push argument 0
+push constant 2
+sub
+call Main.fibonacci 1  // compute fib(n-2)
+push argument 0
+push constant 1
+sub
+call Main.fibonacci 1  // compute fib(n-1)
+add                    // return fib(n-1) + fib(n-2)
+return
+`
+
+export const FibonacciSys = `
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/08/FunctionCalls/FibonacciElement/Sys.vm
+
+// Pushes n onto the stack and calls the Main.fibonacii function,
+// which computes the n'th element of the Fibonacci series.
+// The Sys.init function is called "automatically" by the 
+// bootstrap code.
+
+function Sys.init 0
+push constant 4
+call Main.fibonacci 1   // Compute the 4'th fibonacci element
+label WHILE
+goto WHILE              // Loop infinitely
+`

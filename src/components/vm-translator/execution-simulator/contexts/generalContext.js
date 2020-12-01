@@ -3,25 +3,39 @@ import React, { useReducer, useEffect } from 'react'
 import {
   getReducer, getSetters
 } from '../hooks/util'
-import { SimpleAdd, StackTest, BasicTest, PointerTest, StaticTest, BasicLoop } from '../files'
+import {
+  SimpleAdd,
+  StackTest,
+  BasicTest,
+  PointerTest,
+  StaticTest,
+  BasicLoop,
+  FibonacciSeries
+} from '../files'
 import HVMTranslator from 'abstractions/software/vm-translator'
 import Assembler from 'abstractions/software/assembler'
 
 const files = [
-  SimpleAdd, StackTest, BasicTest, PointerTest, StaticTest, BasicLoop
+  SimpleAdd, StackTest, BasicTest, PointerTest, StaticTest, BasicLoop,
+  FibonacciSeries
 ]
 
 const ACTIONS = {
+  VM_COMMANDS: 'vmCommands',
+  SET_MAX_VM_PARSE_COUNT: 'maxVmParseCount',
+  SET_CURRENT_VM_COMMAND: 'currentVmCommand',
+  SET_IS_NEXT_VM_CMD_PROVIDED: 'isNextVmCmdProvided',
+  SET_SHOULD_PROVIDE_NEXT_VM_CMD: 'shouldProvideNextVmCmd',
   SET_VM_FILE_INDEX: 'vmFileIndex',
   SET_CURRENT_VM_INDEX: 'currentVmCmdIndex',
   SET_RESET: 'reset',
   SET_TRANSLATOR: 'translator',
   SET_MAIN_ASSEMBLY: 'mainAssembly',
   IS_CURRENT_ASM_BATCH_EXHAUSTED: 'isCurrentAsmBatchExhausted',
-  SET_IS_LOOPING: 'isLooping',
   SET_IS_SKIPPING: 'isSkipping',
   SET_JUMP_ADDRESS: 'jumpAddress',
   SET_ASSEMBLER: 'assembler',
+  SET_MAX_ASM_PARSE_COUNT: 'maxAsmParseCount',
   SET_BATCH_ASSEMBLER: 'batchAssembler',
   SET_ASM_BATCH_INDEX: 'asmBatchIndex',
   SET_ASM_BATCH_COUNT: 'asmBatchCount',
@@ -33,13 +47,16 @@ const ACTIONS = {
 const generalReducer = getReducer(ACTIONS)
 
 const initialState = {
+  vmCommands: [],
+  currentVmCommand: null,
+  shouldProvideNextVmCmd: false,
+  isNextVmCmdProvided: false,
   reset: false,
   vmFileIndex: 0,
   currentVmCmdIndex: -1,
   translator: null,
   mainAssembly: [],
   isCurrentAsmBatchExhausted: true,
-  isLooping: false,
   isSkipping: false,
   jumpAddress: null,
   assembler: null,
@@ -48,7 +65,9 @@ const initialState = {
   asmBatchCount: 0,
   lastRunRomAddress: 0,
   assemblerParseCount: 0,
-  assemblerLineCount: 0
+  assemblerLineCount: 0,
+  maxAsmParseCount: 0,
+  maxVmParseCount: 0
 }
 
 const GeneralContext = React.createContext(initialState)
@@ -58,9 +77,21 @@ const GeneralProvider = (props) => {
 
   useEffect(() => {
     resetVmFile()
-  }, [state.vmFileIndex])
+  }, [state.vmFileIndex, state.reset])
 
   const setters = getSetters(dispatch, ACTIONS)
+  const setAssemblerParseCount = count => {
+    setters.assemblerParseCount(count)
+    if (count > state.maxAsmParseCount) {
+      setters.maxAsmParseCount(count)
+    }
+  }
+  const setCurrentVmIndex = index => {
+    setters.currentVmCmdIndex(index)
+    if (index + 1 > state.maxVmParseCount) {
+      setters.maxVmParseCount(index + 1)
+    }
+  }
 
   const resetVmFile = (file) => {
     const translator = new HVMTranslator([{
@@ -81,7 +112,9 @@ const GeneralProvider = (props) => {
     setters.assemblerParseCount(0)
     setters.translator(translator)
     setters.currentVmCmdIndex(-1)
-    setters.reset(!state.reset)
+    setters.asmBatchIndex(-1)
+    setters.maxAsmParseCount(0)
+    setters.maxVmParseCount(0)
   }
 
   /**
@@ -90,9 +123,8 @@ const GeneralProvider = (props) => {
    * code has been exectued up to that same point
    */
   const stepAssembler = () => {
-    console.log('STEEPED')
     const { assemblerParseCount, assembler, lastRunRomAddress } = state
-    setters.assemblerParseCount(assemblerParseCount + 1)
+    setAssemblerParseCount(assemblerParseCount + 1)
     const parser = assembler.step()
     const isLCommand = parser.commandType() === COMMAND_TYPE.L_COMMAND
     setters.lastRunRomAddress(isLCommand
@@ -112,11 +144,11 @@ const GeneralProvider = (props) => {
   }
 
   const rewindAssembler = lastRunAddress => {
-    console.log('LAST RUN ADDRES', lastRunAddress)
     const translator = new HVMTranslator([{
       className: 'VmClass',
       file: files[state.vmFileIndex]
     }])
+    console.log('REWINDER CALLED')
     const assembler = new Assembler(translator.translate())
     assembler.beforeStep()
     let rewindOver = false
@@ -129,17 +161,54 @@ const GeneralProvider = (props) => {
       rewindOver = runAddress === lastRunAddress
       parseCount += 1
     }
-    console.log('PARSE COUNT bef:', parseCount)
     setters.assembler(assembler)
     setters.lastRunRomAddress(lastRunAddress)
-    setters.assemblerParseCount(parseCount)
+    setAssemblerParseCount(parseCount)
+  }
+
+  const synchronizeAssembler = () => {
+    const {
+      assemblerLineCount, assemblerParseCount, lastRunRomAddress
+    } = state
+    if (assemblerParseCount >= assemblerLineCount) return
+    console.log('SYNCHRONIZER CALLED')
+    const translator = new HVMTranslator([{
+      className: 'VmClass',
+      file: files[state.vmFileIndex]
+    }])
+    const assembler = new Assembler(translator.translate())
+    assembler.beforeStep()
+    let rewindOver = false
+    let runAddress = lastRunRomAddress
+    let parseCount = assemblerParseCount
+    while (!rewindOver) {
+      const parser = assembler.step()
+      const isLCommand = parser.commandType() === COMMAND_TYPE.L_COMMAND
+      runAddress = isLCommand ? runAddress : runAddress + 1
+      parseCount += 1
+      rewindOver = parseCount === assemblerLineCount
+    }
+    setters.assembler(assembler)
+    setters.lastRunRomAddress(runAddress)
+    setAssemblerParseCount(parseCount)
+  }
+
+  const setLinecount = lineCount => {
+    if (state.assemblerParseCount < lineCount) {
+      synchronizeAssembler()
+    }
   }
 
   return (
     <GeneralContext.Provider
       value={{
         state,
-        setters,
+        setters: {
+          ...setters,
+          currentVmCmdIndex: setCurrentVmIndex,
+          assemblerParseCount: setAssemblerParseCount,
+          assemblerLineCount: setLinecount
+        },
         stepAssembler,
         resetVmFile,
         rewindAssembler,

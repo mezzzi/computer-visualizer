@@ -1,21 +1,24 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import './index.css'
 import Box from '../box'
+import { ModeContext } from '../contexts/modeContext'
 
-const ModeUnit = ({
-  simulationModes: {
-    isSimulationModeOn,
-    isAllSimulationOn,
-    isAsmCodeSimulationOn,
-    isAsmStepSimulationOn,
-    isSimulating,
-    isAsmSteppingFast,
-    isArithmeticSimulationOn,
-    isPopSimulationOn,
-    isPushSimulationOn
-  },
-  modeSetters
-}) => {
+const ModeUnit = () => {
+  const {
+    state: {
+      isSimulationModeOff,
+      isAllSimulationOn,
+      isAsmCodeSimulationOn,
+      isAsmStepSimulationOn,
+      isSimulating,
+      isAsmSteppingFast,
+      isArithmeticSimulationOn,
+      isPopSimulationOn,
+      isPushSimulationOn
+    },
+    setters
+  } = useContext(ModeContext)
+
   return (
     <Box
       title='Simulated Features'
@@ -33,9 +36,9 @@ const ModeUnit = ({
     >
       <span>
         <input
-          type='checkbox' checked={!isSimulationModeOn} value='none' name='none'
+          type='checkbox' checked={isSimulationModeOff} value='none' name='none'
           disabled={isSimulating}
-          onChange={() => modeSetters.isSimulationModeOn(!isSimulationModeOn)}
+          onChange={() => setters.isSimulationModeOff(!isSimulationModeOff)}
         />
         <label htmlFor='none'>none</label>
       </span>
@@ -43,8 +46,8 @@ const ModeUnit = ({
         <input
           type='checkbox' value='arth' name='arth'
           disabled={isSimulating}
-          checked={isSimulationModeOn && isArithmeticSimulationOn}
-          onChange={() => modeSetters.isArithmeticSimulationOn(!isArithmeticSimulationOn)}
+          checked={!isSimulationModeOff && isArithmeticSimulationOn}
+          onChange={() => setters.isArithmeticSimulationOn(!isArithmeticSimulationOn)}
         />
         <label htmlFor='arth'>arth</label>
       </span>
@@ -52,8 +55,8 @@ const ModeUnit = ({
         <input
           type='checkbox' value='pop' name='pop'
           disabled={isSimulating}
-          checked={isSimulationModeOn && isPopSimulationOn}
-          onChange={() => modeSetters.isPopSimulationOn(!isPopSimulationOn)}
+          checked={!isSimulationModeOff && isPopSimulationOn}
+          onChange={() => setters.isPopSimulationOn(!isPopSimulationOn)}
         />
         <label htmlFor='pop'>pop</label>
       </span>
@@ -61,8 +64,8 @@ const ModeUnit = ({
         <input
           type='checkbox' value='push' name='push'
           disabled={isSimulating}
-          checked={isSimulationModeOn && isPushSimulationOn}
-          onChange={() => modeSetters.isPushSimulationOn(!isPushSimulationOn)}
+          checked={!isSimulationModeOff && isPushSimulationOn}
+          onChange={() => setters.isPushSimulationOn(!isPushSimulationOn)}
         />
         <label htmlFor='push'>push</label>
       </span>
@@ -70,8 +73,8 @@ const ModeUnit = ({
         <input
           type='checkbox' value='asmg' name='asmg'
           disabled={isSimulating || isAllSimulationOn}
-          checked={isSimulationModeOn && isAsmCodeSimulationOn}
-          onChange={() => modeSetters.isAsmCodeSimulationOn(!isAsmCodeSimulationOn)}
+          checked={!isSimulationModeOff && isAsmCodeSimulationOn}
+          onChange={() => setters.isAsmCodeSimulationOn(!isAsmCodeSimulationOn)}
         />
         <label htmlFor='asmg'>asmg</label>
       </span>
@@ -79,8 +82,8 @@ const ModeUnit = ({
         <input
           type='checkbox' value='asms' name='asms'
           disabled={isSimulating || isAllSimulationOn}
-          checked={isSimulationModeOn && isAsmStepSimulationOn}
-          onChange={() => modeSetters.isAsmStepSimulationOn(!isAsmStepSimulationOn)}
+          checked={!isSimulationModeOff && isAsmStepSimulationOn}
+          onChange={() => setters.isAsmStepSimulationOn(!isAsmStepSimulationOn)}
         />
         <label htmlFor='asms'>asms</label>
       </span>
@@ -88,13 +91,12 @@ const ModeUnit = ({
         <input
           type='checkbox' value='asmf' name='asmf'
           disabled={isSimulating || isAllSimulationOn}
-          checked={isSimulationModeOn && isAsmSteppingFast}
+          checked={!isSimulationModeOff && isAsmSteppingFast}
           onChange={() => {
             if (!isAsmSteppingFast) {
-              modeSetters.isAsmStepSimulationOn(true)
-              modeSetters.isAsmCodeSimulationOn(true)
+              setters.isAsmStepSimulationOn(true)
             }
-            modeSetters.isAsmSteppingFast(!isAsmSteppingFast)
+            setters.isAsmSteppingFast(!isAsmSteppingFast)
           }}
         />
         <label htmlFor='asmf'>asmf</label>
@@ -103,18 +105,13 @@ const ModeUnit = ({
         <input
           type='checkbox' value='all' name='all'
           disabled={isSimulating}
-          checked={isSimulationModeOn && isAllSimulationOn}
+          checked={!isSimulationModeOff && isAllSimulationOn}
           onChange={() => {
             if (!isAllSimulationOn) {
-              modeSetters.isArithmeticSimulationOn(true)
-              modeSetters.isPopSimulationOn(true)
-              modeSetters.isPushSimulationOn(true)
-              modeSetters.isAsmCodeSimulationOn(false)
+              setters.isAsmStepSimulationOn(true)
+              setters.isAsmSteppingFast(true)
             }
-            modeSetters.isArithmeticSimulationOn(true)
-            modeSetters.isAsmStepSimulationOn(!isAllSimulationOn)
-            modeSetters.isAsmSteppingFast(!isAllSimulationOn)
-            modeSetters.isAllSimulationOn(!isAllSimulationOn)
+            setters.isAllSimulationOn(!isAllSimulationOn)
           }}
         />
         <label htmlFor='all'>all</label>

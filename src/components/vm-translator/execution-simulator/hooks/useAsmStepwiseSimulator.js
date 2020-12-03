@@ -44,7 +44,6 @@ const useAsmStepwiseSimulator = ({
       isSkipping: setIsSkipping,
       isCurrentAsmBatchExhausted: setIsCurrentAsmBatchExhausted
     },
-    stepAssembler,
     rewindAssembler
   } = useContext(GeneralContext)
   const { divs } = useContext(DivRefContext)
@@ -67,7 +66,7 @@ const useAsmStepwiseSimulator = ({
     return setIsSimulating(false)
   }
 
-  const simulateAsmExecution = () => {
+  const simulateAsmExecution = parser => {
     if (!assembler) return
     const { aRegister, dRegister } = state
     const {
@@ -77,7 +76,6 @@ const useAsmStepwiseSimulator = ({
       dRegister: setDRegister,
       ...arithmeticSetters
     } = setters
-    const parser = stepAssembler()
     const commandType = parser.commandType()
     if (commandType === COMMAND_TYPE.L_COMMAND) {
       return onAsmSimulationEnd()
@@ -108,6 +106,7 @@ const useAsmStepwiseSimulator = ({
         if (!conditions[jump]) return onAsmSimulationEnd()
         const jumpAddress = address
         if (jumpAddress > lastRunRomAddress) {
+          // jumping forward
           setJumpAddress(jumpAddress)
           setIsSkipping(true)
           return { shouldSkip: true }

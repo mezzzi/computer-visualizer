@@ -10,14 +10,15 @@ import {
   PointerTest,
   StaticTest,
   BasicLoop,
-  FibonacciSeries
+  FibonacciSeries,
+  SimpleFunction
 } from '../files'
 import HVMTranslator from 'abstractions/software/vm-translator'
 import Assembler from 'abstractions/software/assembler'
 
 const files = [
   SimpleAdd, StackTest, BasicTest, PointerTest, StaticTest, BasicLoop,
-  FibonacciSeries
+  FibonacciSeries, SimpleFunction
 ]
 
 const ACTIONS = {
@@ -113,6 +114,7 @@ const GeneralProvider = (props) => {
     setters.translator(translator)
     setters.currentVmCmdIndex(-1)
     setters.asmBatchIndex(-1)
+    setters.asmBatchCount(0)
     setters.maxAsmParseCount(0)
     setters.maxVmParseCount(0)
   }
@@ -132,24 +134,58 @@ const GeneralProvider = (props) => {
     return parser
   }
 
-  const rewindTranslator = vmIndex => {
-    const translator = new HVMTranslator([{
-      className: 'VmClass',
-      file: files[state.vmFileIndex]
-    }])
-    for (let i = 0; i < vmIndex + 1; i++) {
-      translator.step()
+  const stepTranslator = isSimulationModeOff => {
+    const {
+      translator, assembler, currentVmCmdIndex, maxVmParseCount
+    } = state
+    const batch = translator.step()
+    const vmLooping = currentVmCmdIndex + 1 < maxVmParseCount
+    if (vmLooping && isSimulationModeOff) {
+      for (let i = 0; i < batch.length; i++) {
+        assembler.step()
+      }
+      setters.assemblerParseCount(state.assemblerParseCount + batch.length)
+      setters.lastRunRomAddress(state.lastRunRomAddress +
+        getNonLabelCommandCount(batch.join('\n')))
     }
-    setters.translator(translator)
+    return batch
   }
 
-  const rewindAssembler = lastRunAddress => {
+  // rewind both the translator and the assembler
+  // assembler should be rewinded here only if
+  // simulationIsOff, otherwise it would have rewinded itself
+  const rewindTranslator = (vmIndex, isSimulationOff) => {
     const translator = new HVMTranslator([{
       className: 'VmClass',
       file: files[state.vmFileIndex]
     }])
-    console.log('REWINDER CALLED')
-    const assembler = new Assembler(translator.translate())
+    const batches = []
+    let batch = null
+    for (let i = 0; i < vmIndex + 1; i++) {
+      batch = translator.step()
+      batches.push([...batch])
+    }
+    setters.translator(translator)
+    if (!isSimulationOff) return
+    const assembler = new Assembler(state.mainAssembly.join('\n'))
+    assembler.beforeStep()
+    let lastRunAddress = 0
+    let parseCount = 0
+    for (let i = 0; i < batches.length; i++) {
+      parseCount += batches[i].length
+      for (let j = 0; j < batches[i].length; j++) {
+        assembler.step()
+      }
+      lastRunAddress += getNonLabelCommandCount(batches[i].join('\n'))
+    }
+    setters.assembler(assembler)
+    setters.assemblerParseCount(parseCount)
+    setters.lastRunRomAddress(lastRunAddress)
+  }
+
+  // the assembler rewinds itself
+  const rewindAssembler = lastRunAddress => {
+    const assembler = new Assembler(state.mainAssembly.join('\n'))
     assembler.beforeStep()
     let rewindOver = false
     let runAddress = 0
@@ -166,37 +202,21 @@ const GeneralProvider = (props) => {
     setAssemblerParseCount(parseCount)
   }
 
-  const synchronizeAssembler = () => {
-    const {
-      assemblerLineCount, assemblerParseCount, lastRunRomAddress
-    } = state
-    if (assemblerParseCount >= assemblerLineCount) return
-    console.log('SYNCHRONIZER CALLED')
-    const translator = new HVMTranslator([{
-      className: 'VmClass',
-      file: files[state.vmFileIndex]
-    }])
-    const assembler = new Assembler(translator.translate())
-    assembler.beforeStep()
-    let rewindOver = false
-    let runAddress = lastRunRomAddress
-    let parseCount = assemblerParseCount
-    while (!rewindOver) {
-      const parser = assembler.step()
+  const getNonLabelCommandCount = assembly => {
+    const assembler = new Assembler(assembly)
+    const parser = assembler.beforeStep()
+    let nonLabelCount = 0
+    while (parser.hasMoreCommands()) {
+      assembler.step()
       const isLCommand = parser.commandType() === COMMAND_TYPE.L_COMMAND
-      runAddress = isLCommand ? runAddress : runAddress + 1
-      parseCount += 1
-      rewindOver = parseCount === assemblerLineCount
+      nonLabelCount = isLCommand ? nonLabelCount : nonLabelCount + 1
     }
-    setters.assembler(assembler)
-    setters.lastRunRomAddress(runAddress)
-    setAssemblerParseCount(parseCount)
+    return nonLabelCount
   }
 
   const setLinecount = lineCount => {
-    if (state.assemblerParseCount < lineCount) {
-      synchronizeAssembler()
-    }
+    setters.assemblerLineCount(lineCount)
+    // synchronizeAssembler(lineCount)
   }
 
   return (
@@ -209,6 +229,7 @@ const GeneralProvider = (props) => {
           assemblerParseCount: setAssemblerParseCount,
           assemblerLineCount: setLinecount
         },
+        stepTranslator,
         stepAssembler,
         resetVmFile,
         rewindAssembler,

@@ -25,7 +25,7 @@ const usePushSimulator = ({
     }
   } = useContext(ModeContext)
   const onPushSimEnd = (updatedStack) => {
-    updatedStack && segmentSetters.globalStack(updatedStack, { isPush: true })
+    updatedStack && segmentSetters.functionStack(updatedStack, { isPush: true })
     setIsSimulating(false, true)
   }
 
@@ -34,7 +34,7 @@ const usePushSimulator = ({
     setIsAsmGenerated(false)
     const commandType = currentVmCommand.getCommandType()
     if (commandType !== COMMAND.PUSH) return
-    const updatedStack = [...segments.globalStack]
+    const updatedStack = [...segments.functionStack]
     const segmentName = currentVmCommand.getArg1()
     const segmentIndex = currentVmCommand.getArg2()
     const shouldSimulate = !isSimulationModeOff && isPushSimulationOn
@@ -42,9 +42,9 @@ const usePushSimulator = ({
       updatedStack.unshift(segmentIndex)
       return shouldSimulate ? moveFromBoundaryToTarget({
         boundaryRect:
-          divs.globalStackBoundingDiv.getBoundingClientRect(),
+          divs.functionStackBoundingDiv.getBoundingClientRect(),
         targetRect:
-          divs.globalStackBottomInvisibleDiv.getBoundingClientRect(),
+          divs.functionStackBottomInvisibleDiv.getBoundingClientRect(),
         isMovingUp: false,
         text: segmentIndex,
         speed: 5,
@@ -58,8 +58,8 @@ const usePushSimulator = ({
     updatedStack.unshift(target.item)
     return shouldSimulate ? simulateDivMotion({
       sourceRectDiv: divs[`${segmentName}BottomInvisibleDiv`],
-      sourceBoundingDiv: divs.globalStackBoundingDiv,
-      destinationRectDiv: divs.globalStackBottomInvisibleDiv,
+      sourceBoundingDiv: divs.functionStackBoundingDiv,
+      destinationRectDiv: divs.functionStackBottomInvisibleDiv,
       text: target.item,
       speed: 5,
       clearOnEnd: true,

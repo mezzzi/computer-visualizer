@@ -23,8 +23,8 @@ const ExecutionSimulator = () => {
   } = useSimulator()
 
   const getGstackSize = () => {
-    if (!divs.globalStackBottomInvisibleDiv) return {}
-    const boundingRect = divs.globalStackBottomInvisibleDiv.getBoundingClientRect()
+    if (!divs.functionStackBottomInvisibleDiv) return {}
+    const boundingRect = divs.functionStackBottomInvisibleDiv.getBoundingClientRect()
     return {
       width: `${boundingRect.width}px`,
       height: `${boundingRect.height}px`

@@ -8,7 +8,10 @@ import useControlFlowReducer from './useControlFlowSimulator'
 import useArithmeticSimulator from './useArithmeticSimulator'
 
 const useSimulator = () => {
-  const { segments, segmentSetters } = useSegmentReducer()
+  const {
+    segments, segmentSetters, bulkSegmentSetters,
+    getBaseAddress, segmentGetters, getPtrLocation
+  } = useSegmentReducer()
 
   const {
     state: asmStepwiseState,
@@ -43,14 +46,18 @@ const useSimulator = () => {
   useControlFlowReducer({
     isAsmGenerated: asmGenerator.isAsmGenerated,
     setIsAsmGenerated: asmSetters.isAsmGenerated,
-    globalStack: segments.globalStack
+    segments,
+    bulkSegmentSetters,
+    getBaseAddress,
+    segmentGetters,
+    getPtrLocation
   })
 
   const { arithmetic } = useArithmeticSimulator({
     isAsmGenerated: asmGenerator.isAsmGenerated,
     setIsAsmGenerated: asmSetters.isAsmGenerated,
-    globalStack: segments.globalStack,
-    setGlobalStack: segmentSetters.globalStack
+    functionStack: segments.functionStack,
+    setGlobalStack: segmentSetters.functionStack
   })
 
   return {

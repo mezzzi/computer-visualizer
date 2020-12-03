@@ -36,8 +36,8 @@ const usePopSimulator = ({
     setIsAsmGenerated(false)
     const commandType = currentVmCommand.getCommandType()
     if (commandType !== COMMAND.POP) return
-    const updatedStack = [...segments.globalStack]
-    const setGlobalStack = segmentSetters.globalStack
+    const updatedStack = [...segments.functionStack]
+    const setGlobalStack = segmentSetters.functionStack
     if (updatedStack.length < 1) {
       !isSimulationModeOff && setIsSimulating(false)
       return onPopSimEnd()
@@ -46,8 +46,8 @@ const usePopSimulator = ({
     setGlobalStack(updatedStack)
     const shouldSimulate = !isSimulationModeOff && isPopSimulationOn
     shouldSimulate ? simulateDivMotion({
-      sourceRectDiv: divs.globalStackBottomInvisibleDiv,
-      sourceBoundingDiv: divs.globalStackBoundingDiv,
+      sourceRectDiv: divs.functionStackBottomInvisibleDiv,
+      sourceBoundingDiv: divs.functionStackBoundingDiv,
       destinationRectDiv:
         divs[`${currentVmCommand.getArg1()}BottomInvisibleDiv`],
       text: value,

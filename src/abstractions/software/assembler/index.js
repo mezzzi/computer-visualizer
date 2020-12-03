@@ -61,6 +61,7 @@ class Assembler {
   beforeStep () {
     this.firstPass()
     this.parser = new Parser(this.assemblyCode)
+    return this.parser
   }
 
   /**

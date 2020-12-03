@@ -36,8 +36,8 @@ const HvmUnit = () => {
 
   const editHandler = (index, value) => {
     const vmCommandsNew = [...vmCommands]
-    vmCommandsNew[index] = value.trim()
-    resetVmFile(vmCommandsNew.join('\n'))
+    vmCommandsNew[index] = { item: value.trim() }
+    resetVmFile(vmCommandsNew.map(({ item }) => item).join('\n'))
   }
 
   const provideNextVmCmd = () => {
@@ -94,6 +94,7 @@ const HvmUnit = () => {
           <option value='4'>Static Test</option>
           <option value='5'>Basic Loop</option>
           <option value='6'>Fibonacci</option>
+          <option value='7'>Simple Function</option>
         </select>
         <button
           className='resetButton'

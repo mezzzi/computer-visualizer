@@ -26,7 +26,7 @@ const arithemticReducer = getReducer(ACTIONS)
 const useArithmeticSimulator = ({
   isAsmGenerated,
   setIsAsmGenerated,
-  globalStack,
+  functionStack,
   setGlobalStack
 }) => {
   const [state, dispatch] = useReducer(arithemticReducer, {
@@ -70,7 +70,7 @@ const useArithmeticSimulator = ({
   }
 
   const updateResult = () => {
-    const updatedStack = [...globalStack]
+    const updatedStack = [...functionStack]
     updatedStack.unshift(state.result)
     setGlobalStack(updatedStack, {
       isPush: true, isResult: true, isUnary: state.isUnary
@@ -90,7 +90,7 @@ const useArithmeticSimulator = ({
   useEffect(() => {
     if (!isAsmGenerated) return
     setIsAsmGenerated(false)
-    const updatedStack = [...globalStack]
+    const updatedStack = [...functionStack]
     const commandType = currentVmCommand.getCommandType()
     const isCurrentUnary = isUnaryOp(commandType)
     const isCurrentBinary = isBinaryOp(commandType)
@@ -98,14 +98,14 @@ const useArithmeticSimulator = ({
     setters.operator(commandType)
     setters.isUnary(isCurrentUnary)
     if (isCurrentBinary) {
-      if (globalStack.length < 2) return setIsSimulating(false, true)
+      if (functionStack.length < 2) return setIsSimulating(false, true)
       const op2 = updatedStack.shift()
-      setGlobalStack(updatedStack)
+      setGlobalStack(updatedStack, { isPush: false })
       setters.operator(commandType)
       return (!isSimulationModeOff && isArithmeticSimulationOn)
         ? simulateDivMotion({
-          sourceRectDiv: divs.globalStackBottomInvisibleDiv,
-          sourceBoundingDiv: divs.globalStackBoundingDiv,
+          sourceRectDiv: divs.functionStackBottomInvisibleDiv,
+          sourceBoundingDiv: divs.functionStackBoundingDiv,
           destinationRectDiv: divs.vmOp2Div,
           text: op2,
           speed: 5,
@@ -113,14 +113,14 @@ const useArithmeticSimulator = ({
         }) : op2Processed(op2)
     }
     if (isCurrentUnary) {
-      if (globalStack.length < 1) return setIsSimulating(false, true)
+      if (functionStack.length < 1) return setIsSimulating(false, true)
       const op1 = updatedStack.shift()
-      setGlobalStack(updatedStack)
+      setGlobalStack(updatedStack, { isPush: false })
       setters.operator(commandType)
       return (!isSimulationModeOff && isArithmeticSimulationOn)
         ? simulateDivMotion({
-          sourceRectDiv: divs.globalStackBottomInvisibleDiv,
-          sourceBoundingDiv: divs.globalStackBoundingDiv,
+          sourceRectDiv: divs.functionStackBottomInvisibleDiv,
+          sourceBoundingDiv: divs.functionStackBoundingDiv,
           destinationRectDiv: divs.vmOp2Div,
           text: op1,
           speed: 5,
@@ -132,14 +132,14 @@ const useArithmeticSimulator = ({
   useEffect(() => {
     if (!state.isOp1SimulationDone) return
     setters.isOp1SimulationDone(false)
-    if (globalStack.length === 0) return
-    const updatedStack = [...globalStack]
+    if (functionStack.length === 0) return
+    const updatedStack = [...functionStack]
     const op1 = updatedStack.shift()
-    setGlobalStack(updatedStack)
+    setGlobalStack(updatedStack, { isPush: false })
     return (!isSimulationModeOff && isArithmeticSimulationOn)
       ? simulateDivMotion({
-        sourceRectDiv: divs.globalStackBottomInvisibleDiv,
-        sourceBoundingDiv: divs.globalStackBoundingDiv,
+        sourceRectDiv: divs.functionStackBottomInvisibleDiv,
+        sourceBoundingDiv: divs.functionStackBoundingDiv,
         destinationRectDiv: divs.vmOp1Div,
         text: op1,
         speed: 5,
@@ -158,8 +158,8 @@ const useArithmeticSimulator = ({
       ? simulateDivMotion({
         sourceRectDiv: divs.vmResultDiv,
         sourceBoundingDiv: divs.vmCpuBoundingDiv,
-        destinationRectDiv: (divs.globalStackBottomInvisibleDiv ||
-          divs.globalStackBottomInvisibleDiv),
+        destinationRectDiv: (divs.functionStackBottomInvisibleDiv ||
+          divs.functionStackBottomInvisibleDiv),
         text: state.result,
         speed: 5,
         clearOnEnd: true,

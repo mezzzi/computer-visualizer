@@ -17,7 +17,7 @@ const SegmentUnit = ({
             boxProps={{
               setContentBoundingDiv: divSetters[`${name}BoundingDiv`],
               title: name !== 'ram' &&
-                (name !== 'globalStack' ? name.toUpperCase() : 'STACK')
+                (name !== 'functionStack' ? name.toUpperCase() : 'STACK')
             }}
             stackProps={{
               name,

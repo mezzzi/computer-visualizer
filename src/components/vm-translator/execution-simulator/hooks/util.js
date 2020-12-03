@@ -2,7 +2,7 @@ import { COMMAND } from 'abstractions/software/vm-translator/command/types'
 
 export const SEGMENTS = [
   'local', 'argument', 'this', 'that', 'temp',
-  'pointer', 'static', 'globalStack', 'ram'
+  'pointer', 'static', 'functionStack', 'ram'
 ]
 
 export const ARITHMETIC_SYMBOLS = ['+', '-', '&', '|', '!']
@@ -42,4 +42,8 @@ export const getInitialState = (ACTIONS, defaultValue = null) => {
   const initialState = {}
   Object.values(ACTIONS).forEach(key => { initialState[key] = defaultValue })
   return initialState
+}
+
+export const isObjectEmpty = obj => {
+  return Object.keys(obj).length === 0 && obj.constructor === Object
 }

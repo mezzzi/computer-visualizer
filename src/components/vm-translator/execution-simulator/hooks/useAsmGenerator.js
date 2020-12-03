@@ -29,8 +29,6 @@ const useAsmGenerator = ({
     state: {
       reset,
       vmFileIndex,
-      translator,
-      mainAssembly,
       asmBatchIndex,
       asmBatchCount,
       lastRunRomAddress,
@@ -52,7 +50,8 @@ const useAsmGenerator = ({
       assemblerLineCount: setAssemblerLineCount,
       isNextVmCmdProvided: setIsNextVmCmdProvided
     },
-    stepAssembler
+    stepAssembler,
+    stepTranslator
   } = useContext(GeneralContext)
   const {
     state: {
@@ -80,7 +79,7 @@ const useAsmGenerator = ({
   useEffect(() => {
     if (!isNextVmCmdProvided) return
     setIsNextVmCmdProvided(false)
-    const asmBatch = translator.step()
+    const asmBatch = stepTranslator(isSimulationModeOff)
     const batchCount = asmBatch.length
     setAsmBatchCount(batchCount)
     setters.nextAsmBatch(asmBatch)
@@ -97,18 +96,15 @@ const useAsmGenerator = ({
     if (asmBatchIndex <= -1) return
     setIsSimulating(true)
     setIsCurrentAsmBatchExhausted(false)
-    const isParsed = isAsmStepSimulationOn ||
-      isAllSimulationOn || isAsmSteppingFast
-    const currentAsm = mainAssembly[
-      isParsed ? assemblerParseCount : asmBatchIndex]
+    const parser = stepAssembler()
+    const currentAsm = parser.getCurrentCommand()
     const shouldPush = !isAsmLooping()
     const onAsmGenerationSimEnd = () => {
       shouldPush && pushAssemblyBatch([currentAsm])
       resetAsmArithmetic()
       const shouldSimulateExec = (isAsmStepSimulationOn ||
       isAllSimulationOn || isAsmSteppingFast) && !isSkipping
-      isSkipping && stepAssembler()
-      const now = shouldSimulateExec ? simulateAsmExecution() || {}
+      const now = shouldSimulateExec ? simulateAsmExecution(parser) || {}
         : {}
       const shouldSkipNext = isSkipping || now.shouldSkip
       const autoProvideNextAsm = isAllSimulationOn ||
@@ -135,11 +131,11 @@ const useAsmGenerator = ({
     return assemblerParseCount < maxAsmParseCount
   }
 
-  const onAsmGenerationEnd = lineCount => {
+  const onAsmGenerationEnd = batchCount => {
     setters.isAsmGenerated(true)
     if (isVmLooping() || isAsmLooping()) return
     setAssemblerLineCount(
-      assemblerLineCount + (lineCount || asmBatchCount))
+      assemblerLineCount + (batchCount || asmBatchCount))
   }
 
   const provideNextAsmCommand = () => {
@@ -150,7 +146,7 @@ const useAsmGenerator = ({
       return setAsmBatchIndex(asmBatchIndex + 1)
     }
     setAsmBatchIndex(-1)
-    onAsmGenerationEnd()
+    onAsmGenerationEnd(asmBatchCount)
     isAsmStepSimulationOn && setIsSimulating(false)
     setIsCurrentAsmBatchExhausted(true)
   }

@@ -6,7 +6,7 @@ import {
 const ACTIONS = {
   SET_VM_STACK_BOUNDING_DIV: 'vmStackBoundingDiv',
   SET_ASM_STACK_BOUNDING_DIV: 'asmStackBoundingDiv',
-  SET_GLOBALSTACK_BOUNDING_DIV: 'globalStackBoundingDiv',
+  SET_GLOBALSTACK_BOUNDING_DIV: 'functionStackBoundingDiv',
   SET_RAM_BOUNDING_DIV: 'ramBoundingDiv',
   SET_CURRENT_VM_CMD_BOUNDING_DIV: 'currentVmCmdDiv',
   SET_VM_CPU_BOUNDING_DIV: 'vmCpuBoundingDiv',
@@ -16,7 +16,7 @@ const ACTIONS = {
   SET_D_REG_DIV: 'dRegDiv'
 }
 
-SEGMENTS.concat('globalStack').forEach(segment => {
+SEGMENTS.concat('functionStack').forEach(segment => {
   ACTIONS[`${segment.toUpperCase()}_BOTTOM_INVISIBLE_DIV`] =
   `${segment}BottomInvisibleDiv`
 })

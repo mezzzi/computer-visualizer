@@ -19,13 +19,18 @@ const ACTIONS = {}
 SEGMENTS.forEach(segment => { ACTIONS[segment.toUpperCase()] = segment })
 const segmentReducer = getReducer(ACTIONS)
 
+const syncOnlyHeap = true
+
 const useSegmentReducer = () => {
   const [topStaticIndx, setTopStaticIndx] = useState(0)
   const [staticDictionary, setStaticDictionary] = useState({})
   const [segments, dispatch] = useReducer(segmentReducer, {
     ...getInitialState(ACTIONS, [])
   })
-  const { state: { vmFileIndex, reset } } = useContext(GeneralContext)
+  const {
+    state: { vmFileIndex, reset },
+    updateMaxPtrIndex
+  } = useContext(GeneralContext)
   const {
     state: {
       isSimulationModeOff
@@ -50,7 +55,8 @@ const useSegmentReducer = () => {
     }
     if (vmFileIndex === 5) {
       // Ram initialization for Basic Loop Test
-      setToDefault(SEGMENTS.filter(seg => seg !== 'ram'))
+      setToDefault(SEGMENTS.filter(seg => !['ram', 'argument'].includes(seg)))
+      syncOnlyHeap && customSetters.argument(0, 3)
       return ramBulkSetter({
         items: [
           { index: POINTERS.SP.value, item: 256 },
@@ -59,12 +65,16 @@ const useSegmentReducer = () => {
           { index: 400, item: 3 }
         ],
         replace: true,
-        syncSegments: true
+        syncSegments: !syncOnlyHeap
       })
     }
     if (vmFileIndex === 6) {
       // Ram initialization for Fibonacci Series Test
-      setToDefault(SEGMENTS.filter(seg => seg !== 'ram'))
+      setToDefault(SEGMENTS.filter(seg => !['ram', 'argument'].includes(seg)))
+      syncOnlyHeap && getBulkSetter('argument')([
+        { index: 0, item: 6 },
+        { index: 1, item: 3000 }
+      ])
       return ramBulkSetter({
         items: [
           { index: POINTERS.SP.value, item: 256 },
@@ -74,12 +84,21 @@ const useSegmentReducer = () => {
           { index: 401, item: 3000 }
         ],
         replace: true,
-        syncSegments: true
+        syncSegments: !syncOnlyHeap
       })
     }
     if (vmFileIndex === 7) {
       // Ram initialization for Simple Function Test
-      setToDefault(SEGMENTS.filter(seg => seg !== 'ram'))
+      setToDefault(SEGMENTS.filter(seg => !['ram', 'argument'].includes(seg)))
+      syncOnlyHeap && getBulkSetter('argument')([
+        { index: 0, item: 1234 },
+        { index: 1, item: 37 },
+        { index: 2, item: 1000 },
+        { index: 3, item: 305 },
+        { index: 4, item: 300 },
+        { index: 5, item: 3010 },
+        { index: 6, item: 4010 }
+      ])
       return ramBulkSetter({
         items: [
           { index: POINTERS.SP.value, item: 317 },
@@ -96,7 +115,7 @@ const useSegmentReducer = () => {
           { index: 316, item: 4010 }
         ],
         replace: true,
-        syncSegments: true
+        syncSegments: !syncOnlyHeap
       })
     }
     setters.ram([{ index: POINTERS.SP.value, item: 256 }])
@@ -135,6 +154,13 @@ const useSegmentReducer = () => {
     return latestSegment
   }
 
+  const updateMaxPtrIndexFromItems = (segName, items) => {
+    if (['that', 'this'].includes(segName)) {
+      const maxIndex = items.map(({ index }) => index).sort().reverse()[0]
+      updateMaxPtrIndex(segName, maxIndex)
+    }
+  }
+
   const getBulkSetter = segmentName => (items, replace = false) => {
     const segment = segments[segmentName]
     const updatedSegment = getMergedSegment({
@@ -145,6 +171,7 @@ const useSegmentReducer = () => {
     updatedSegment.sort((a, b) => a.index < b.index ? 1 : (
       a.index > b.index ? -1 : 0
     ))
+    updateMaxPtrIndexFromItems(segmentName, items)
     setters[segmentName](updatedSegment)
   }
 
@@ -177,7 +204,7 @@ const useSegmentReducer = () => {
       .filter(({ index }) => [3, 4].includes[index])
       .map(({ index, item }) => ({ item, index: index - 3 }))
     getBulkSetter('pointer')(latestPointerSeg)
-    // sync the other segments, only that, this, argument, and local
+    // sync the other segments, only that and this segments for now
     const PTRS = Object.values(POINTERS)
       .filter(({ name }) => !['ram', 'functionStack', 'static'].includes(name))
     for (const { name: pointerName, value: pointerAddr } of PTRS) {
@@ -189,6 +216,69 @@ const useSegmentReducer = () => {
         ? getSegmentPointerAddr(pointerName) : baseItem.item
       let i = 0
       const maxIndx = pointerName === 'pointer' ? 1 : getMaxSegIndx(pointerName)
+      while (true) {
+        const ramItem = latestRam.find(({ index }) => index === baseAddress + i)
+        // explore at least the first four indexes
+        if (!ramItem && (!maxIndx || i > maxIndx)) break
+        ramItem && updatedSeg.push({ index: i, item: ramItem.item })
+        i += 1
+      }
+      getBulkSetter(pointerName)(updatedSeg, true)
+    }
+  }
+
+  const syncSegmentsWithRam = (latestRam = [], segmentsToSync) => {
+    if (!latestRam.length) return
+    // first sync the pointer segment
+    const latestPointerSeg = latestRam
+      .filter(({ index }) => [3, 4].includes[index])
+      .map(({ index, item }) => ({ item, index: index - 3 }))
+    getBulkSetter('pointer')(latestPointerSeg)
+    // sync the other segments, only that and this segments for now
+    if (!segmentsToSync) return
+    const segments = Object.keys(segmentsToSync)
+    const PTRS = Object.values(POINTERS)
+      .filter(({ name }) => [...segments].includes(name))
+    for (const { name: pointerName, value: pointerAddr } of PTRS) {
+      const updatedSeg = []
+      const isBaseAddrFixed = ['temp', 'pointer'].includes(pointerName)
+      const baseItem = latestRam.find(({ index }) => index === pointerAddr)
+      if (!baseItem && !isBaseAddrFixed) continue
+      const baseAddress = isBaseAddrFixed
+        ? getSegmentPointerAddr(pointerName) : baseItem.item
+      let i = 0
+      const maxIndx = pointerName === 'pointer' ? 1 : segmentsToSync[pointerName]
+      while (true) {
+        if (maxIndx === undefined) break
+        const ramItem = latestRam.find(({ index }) => index === baseAddress + i)
+        // explore at least the first four indexes
+        if (i > maxIndx) break
+        ramItem && updatedSeg.push({ index: i, item: ramItem.item })
+        i += 1
+      }
+      getBulkSetter(pointerName)(updatedSeg, true)
+    }
+  }
+
+  // sync this and that segments as ram changes,
+  // in case there is some manipualtion of segment's base address
+  const syncHeapSegments = (latestRam = []) => {
+    if (!latestRam.length) return
+    // first sync the pointer segment
+    const latestPointerSeg = latestRam
+      .filter(({ index }) => [3, 4].includes[index])
+      .map(({ index, item }) => ({ item, index: index - 3 }))
+    getBulkSetter('pointer')(latestPointerSeg)
+    // sync the other segments, only that and this segments for now
+    const PTRS = Object.values(POINTERS)
+      .filter(({ name }) => ['that', 'this'].includes(name))
+    for (const { name: pointerName, value: pointerAddr } of PTRS) {
+      const updatedSeg = []
+      const baseItem = latestRam.find(({ index }) => index === pointerAddr)
+      if (!baseItem) continue
+      const baseAddress = baseItem.item
+      let i = 0
+      const maxIndx = getMaxSegIndx(pointerName)
       while (true) {
         const ramItem = latestRam.find(({ index }) => index === baseAddress + i)
         // explore at least the first four indexes
@@ -220,7 +310,9 @@ const useSegmentReducer = () => {
 
   // When pointer addresses are updated in ram, we would want to adjust
   // virtual segment contents
-  const ramBulkSetter = ({ items, replace = false, syncSegments = false }) => {
+  const ramBulkSetter = ({
+    items, replace = false, syncSegments = false, segmentsToSync
+  }) => {
     getBulkSetter('ram')(items, replace)
     if (!syncSegments) return
     const latestRam = getMergedSegment({
@@ -228,7 +320,12 @@ const useSegmentReducer = () => {
       newSegment: items,
       replace
     })
-    syncSegmentsAgainstRam(latestRam)
+    if (segmentsToSync) {
+      // sync after returning from a function
+      return syncSegmentsWithRam(latestRam, segmentsToSync)
+    }
+    !syncOnlyHeap && syncSegmentsAgainstRam(latestRam)
+    syncOnlyHeap && syncHeapSegments(latestRam)
   }
 
   const ramSetter = (address, value) => {
@@ -245,6 +342,7 @@ const useSegmentReducer = () => {
     updatedSegment.sort((a, b) => a.index < b.index ? 1 : (
       a.index > b.index ? -1 : 0
     ))
+    updateMaxPtrIndexFromItems(segmentName, [{ item: value, index: address }])
     setters[segmentName](updatedSegment)
   }
 
@@ -265,7 +363,8 @@ const useSegmentReducer = () => {
   SEGMENTS.forEach(segmentName => {
     if (['ram', 'functionStack'].includes(segmentName)) return
     customSetters[segmentName] = (address, value) => {
-      !isRamBeingSetByAsm() && getCustomSetter(segmentName)(address, value)
+      (!isRamBeingSetByAsm() || syncOnlyHeap) &&
+      getCustomSetter(segmentName)(address, value)
       if (isRamBeingSetByAsm() && segmentName === 'static') {
         return getCustomSetter(segmentName)(address, value)
       }

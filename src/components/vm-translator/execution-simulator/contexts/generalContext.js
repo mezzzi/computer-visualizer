@@ -42,7 +42,9 @@ const ACTIONS = {
   SET_ASM_BATCH_COUNT: 'asmBatchCount',
   SET_CURRENT_ASM_INDEX: 'lastRunRomAddress',
   SET_ASSEMBLER_STEP_COUNT: 'assemblerParseCount',
-  SET_ASSEMBLER_LINE_COUNT: 'assemblerLineCount'
+  SET_ASSEMBLER_LINE_COUNT: 'assemblerLineCount',
+  SET_FUNCTION_INFO: 'functionInfo',
+  SET_CURRENT_FUNCTION: 'currentFunction'
 }
 
 const generalReducer = getReducer(ACTIONS)
@@ -68,7 +70,9 @@ const initialState = {
   assemblerParseCount: 0,
   assemblerLineCount: 0,
   maxAsmParseCount: 0,
-  maxVmParseCount: 0
+  maxVmParseCount: 0,
+  functionInfo: {},
+  currentFunction: ''
 }
 
 const GeneralContext = React.createContext(initialState)
@@ -219,6 +223,30 @@ const GeneralProvider = (props) => {
     // synchronizeAssembler(lineCount)
   }
 
+  const updateMaxPtrIndex = (seg, index) => {
+    const { currentFunction, functionInfo } = state
+    if (!currentFunction) return
+    const funcInfo = functionInfo || {}
+    if (!funcInfo[currentFunction]) funcInfo[currentFunction] = {}
+    const attr = seg === 'that' ? 'maxThatIndex' : 'maxThisIndex'
+    const currentSegIndex = funcInfo[currentFunction][attr] || 0
+    if (currentSegIndex >= index) return
+    setters.functionInfo({
+      ...functionInfo,
+      [currentFunction]: {
+        ...functionInfo[currentFunction],
+        [attr]: index
+      }
+    })
+  }
+
+  const getMaxPtrIndex = (funcName, seg) => {
+    const { functionInfo } = state
+    if (!functionInfo || !functionInfo[funcName]) return
+    const attr = seg === 'that' ? 'maxThatIndex' : 'maxThisIndex'
+    return functionInfo[funcName][attr]
+  }
+
   return (
     <GeneralContext.Provider
       value={{
@@ -233,7 +261,9 @@ const GeneralProvider = (props) => {
         stepAssembler,
         resetVmFile,
         rewindAssembler,
-        rewindTranslator
+        rewindTranslator,
+        getMaxPtrIndex,
+        updateMaxPtrIndex
       }}
     >
       {props.children}

@@ -8,8 +8,9 @@ import {
 } from './util'
 
 const ACTIONS = {
-  SET_FUNCTION_NAME: 'functionName',
-  SET_NUM_LOCALS: 'numLocals'
+  SET_FUNC_NAME_STACK: 'funcNameStack',
+  SET_NUM_ARGS_STACK: 'numArgsStack',
+  SET_NUM_LOCALS_STACK: 'numLocalsStack'
 }
 
 const controlFlowReducer = getReducer(ACTIONS)
@@ -33,12 +34,19 @@ const useControlFlowReducer = ({
 }) => {
   const [state, dispatch] = useReducer(controlFlowReducer, {
     numLocals: 0,
-    functionName: null
+    functionName: null,
+    funcNameStack: [],
+    numArgsStack: [],
+    numLocalsStack: []
   })
   const {
     state: { currentVmCommand, vmCommands },
-    setters: { currentVmCmdIndex: setCurrentVmIndex },
-    rewindTranslator
+    setters: {
+      currentVmCmdIndex: setCurrentVmIndex,
+      currentFunction: setCurrentFunction
+    },
+    rewindTranslator,
+    getMaxPtrIndex
   } = useContext(GeneralContext)
   const {
     state: { isSimulationModeOff },
@@ -63,27 +71,37 @@ const useControlFlowReducer = ({
       }
     }
     if (commandType === COMMAND.FUNCTION) {
+      const funcName = currentVmCommand.getArg1()
+      setCurrentFunction(funcName)
+      setters.funcNameStack([...state.funcNameStack, funcName])
       const numLocals = currentVmCommand.getArg2()
-      setters.numLocals(numLocals)
+      setters.numLocalsStack([...state.numLocalsStack, numLocals])
+      const ramUpdates = []
       const defaultLocals = []
       const localBaseAddr = getBaseAddress('LCL')
       for (let i = 0; i < numLocals; i++) {
         defaultLocals.push({
+          index: i, item: 0
+        })
+        ramUpdates.push({
           index: localBaseAddr + i, item: 0
         })
       }
+      bulkSegmentSetters.local({
+        items: defaultLocals
+      })
       // increment stack pointer by num locals
-      defaultLocals.push({
+      ramUpdates.push({
         index: getPtrLocation('SP'), item: localBaseAddr + numLocals
       })
       bulkSegmentSetters.ram({
-        items: defaultLocals, syncSegments: true
+        items: ramUpdates, syncSegments: true
       })
     }
     if (commandType === COMMAND.CALL) {
       const name = currentVmCommand.getArg1()
-      setters.functionName(name)
-      const numArguments = currentVmCommand.getArg2()
+      const numArguments = currentVmCommand.getArg2() || undefined
+      setters.numArgsStack([...state.numArgsStack, numArguments])
       // save segment pointers
       const spBaseAddress = getBaseAddress('SP')
       const pointers = ['LCL', 'ARG', 'THIS', 'THAT']
@@ -112,6 +130,7 @@ const useControlFlowReducer = ({
     if (commandType === COMMAND.RETURN) {
       // restore segment pointers, and segment values
       const localBaseAddr = getBaseAddress('LCL')
+      const returnLabel = currentVmCommand.getArg1()
       const pointers = ['THAT', 'THIS', 'ARG', 'LCL']
       const ramItems = []
       pointers.forEach((ptr, index) => {
@@ -128,11 +147,32 @@ const useControlFlowReducer = ({
         { index: newSpAddr - 1, item: returnValue },
         { index: getPtrLocation('SP'), item: newSpAddr }
       ])
+      // pop off current function name
+      state.funcNameStack.pop()
+      const callee = state.funcNameStack.reverse()[0]
+      if (!callee) return // there is nothing to restore
+      setCurrentFunction(callee)
+      const updatedNumArgsStack = [...state.numArgsStack]
+      const updatedNumLocalsStack = [...state.numLocalsStack]
+      const updatedFuncNameStack = [...state.funcNameStack]
+      const funcName = updatedFuncNameStack.pop()
+      const numArgs = updatedNumArgsStack.pop()
+      const numLocals = updatedNumLocalsStack.pop()
       bulkSegmentSetters.ram({
-        items: ramItems, syncSegments: true
+        items: ramItems,
+        syncSegments: true,
+        segmentsToSync: {
+          argument: numArgs && numArgs - 1,
+          local: numLocals && numLocals - 1,
+          that: getMaxPtrIndex(funcName, 'that'),
+          this: getMaxPtrIndex(funcName, 'this')
+        }
       })
+      setters.numArgsStack(updatedNumArgsStack)
+      setters.numLocalsStack(updatedNumLocalsStack)
+      setters.funcNameStack(updatedFuncNameStack)
       // push result and jump to return address
-      jumpToLabel(state.functionName)
+      returnLabel && jumpToLabel(returnLabel)
     }
     return onFlowSimEnd()
   }, [isAsmGenerated])

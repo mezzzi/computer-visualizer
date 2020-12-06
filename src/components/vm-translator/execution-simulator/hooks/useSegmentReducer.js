@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useContext } from 'react'
+import { useReducer, useEffect, useContext, useState } from 'react'
 import {
   getReducer, getInitialState, getSetters, SEGMENTS
 } from './util'
@@ -20,6 +20,8 @@ SEGMENTS.forEach(segment => { ACTIONS[segment.toUpperCase()] = segment })
 const segmentReducer = getReducer(ACTIONS)
 
 const useSegmentReducer = () => {
+  const [topStaticIndx, setTopStaticIndx] = useState(0)
+  const [staticDictionary, setStaticDictionary] = useState({})
   const [segments, dispatch] = useReducer(segmentReducer, {
     ...getInitialState(ACTIONS, [])
   })
@@ -246,6 +248,19 @@ const useSegmentReducer = () => {
     setters[segmentName](updatedSegment)
   }
 
+  const getStaticIndex = indx => {
+    const staticName = `static${indx}`
+    if (staticDictionary[staticName]) {
+      return staticDictionary[staticName]
+    }
+    setTopStaticIndx(topStaticIndx + 1)
+    setStaticDictionary({
+      ...staticDictionary,
+      [staticName]: topStaticIndx + 1
+    })
+    return topStaticIndx
+  }
+
   const customSetters = {}
   SEGMENTS.forEach(segmentName => {
     if (['ram', 'functionStack'].includes(segmentName)) return
@@ -257,13 +272,15 @@ const useSegmentReducer = () => {
       if (isRamBeingSetByAsm()) return
       const isSegmentFixed = ['pointer', 'static', 'temp']
         .includes(segmentName)
+      const isStatic = segmentName === 'static'
       const baseAddress = isSegmentFixed
         ? getSegmentPointerAddr(segmentName)
         : getSegmentBaseAddress(segmentName)
       const spValue = getters.ram(POINTERS.SP.value)
+      const segmentIndex = isStatic ? getStaticIndex(address) : address
       ramBulkSetter({
         items: [
-          { index: baseAddress + address, item: value },
+          { index: baseAddress + segmentIndex, item: value },
           { index: POINTERS.SP.value, item: spValue - 1 }
         ],
         syncSegments: true

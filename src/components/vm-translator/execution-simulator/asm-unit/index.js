@@ -73,7 +73,8 @@ const AsmUnit = ({
             width='40%'
             customContentStyle={{
               justifyContent: 'space-between',
-              width: '90%'
+              width: '90%',
+              marginLeft: '9px'
             }}
           >
             <div className='registerWrapper'>

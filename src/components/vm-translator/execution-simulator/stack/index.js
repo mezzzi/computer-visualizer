@@ -73,7 +73,8 @@ const Bucket = ({
                 style={{
                   color: 'transparent',
                   background: 'transparent',
-                  justifySelf: 'flex-end'
+                  justifySelf: 'flex-end',
+                  padding: '3px'
                 }}
                 ref={index === -3 ? bottomInvisibleIDivRef : undefined}
               >
@@ -88,7 +89,7 @@ const Bucket = ({
                 key={index}
                 id={name && `${name}${item.index || item.line}`}
                 style={{
-                  color: item.color || ((highlightTop && index === 0) ? 'yellow' : 'green'),
+                  color: item.color || ((highlightTop && index === 0) ? 'yellow' : 'white'),
                   background: item.background || 'black',
                   ...(item.index !== undefined ? {
                     display: 'flex',
@@ -99,18 +100,21 @@ const Bucket = ({
                 {item.index !== undefined &&
                   <div
                     style={{
-                      color: 'black', backgroundColor: 'yellow', padding: '0 5px'
+                      color: 'black',
+                      backgroundColor: 'white',
+                      padding: parseInt(item.index) > 99 ? '3px 2px' : '3px 5px',
+                      border: '1px solid black'
                     }}
                   >
                     {item.label || item.index}
                   </div>}
                 <div
                   id={`${name || 'cmd'}-${index}`}
-                  style={{ outline: 'none' }}
+                  style={{ outline: 'none', padding: '3px' }}
                   contentEditable={contentEditable}
                   onClick={editable
                     ? event => event.detail === 2 &&
-                    setContentEditable(true) : undefined}
+                      setContentEditable(true) : undefined}
                   onBlur={editable
                     ? ((i) => () => editHandler(i,
                       document.getElementById(`${name || 'cmd'}-${index}`)

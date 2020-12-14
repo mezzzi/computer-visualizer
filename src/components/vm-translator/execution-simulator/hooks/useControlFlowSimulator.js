@@ -171,7 +171,6 @@ const useControlFlowReducer = ({
       setters.numArgsStack(updatedNumArgsStack)
       setters.numLocalsStack(updatedNumLocalsStack)
       setters.funcNameStack(updatedFuncNameStack)
-      // push result and jump to return address
       returnLabel && jumpToLabel(returnLabel)
     }
     return onFlowSimEnd()

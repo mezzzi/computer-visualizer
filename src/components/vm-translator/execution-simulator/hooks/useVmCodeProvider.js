@@ -89,7 +89,7 @@ const useVmCodeProvider = () => {
     const targetIndex = indexToHighlight || currentVmCmdIndex + 1
     const updatedVmCmds = vmCommands.map((item, index) => {
       if (index !== targetIndex) {
-        return { ...item, color: 'green' }
+        return { ...item, color: 'white' }
       }
       return { ...item, color: 'yellow' }
     })

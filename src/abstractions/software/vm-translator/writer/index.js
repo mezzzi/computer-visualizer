@@ -11,7 +11,6 @@ class HVMCodeWriter {
     this.assemblyBuffer = []
     this.lastBuffer = []
     this.assembly = []
-    this.shouldCallSysInit = false
     this.shouldCallSysInit = hasSysInit
   }
 

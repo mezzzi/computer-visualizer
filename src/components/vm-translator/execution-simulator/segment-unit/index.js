@@ -22,6 +22,7 @@ const SegmentUnit = ({
             stackProps={{
               name,
               setBottomInvisibleDiv: divSetters[`${name}BottomInvisibleDiv`],
+              highlightTop: name === 'functionStack',
               content: segments[name],
               ...(
                 name === 'ram' ? {

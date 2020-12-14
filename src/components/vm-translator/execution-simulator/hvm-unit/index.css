@@ -2,8 +2,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  color: yellow;
-  background-color: black;
+  color: black;
   width: 70%;
   height: 50%;
   border-top: 1px solid green;
@@ -40,11 +39,11 @@
 }
 
 .resetButton {
-  background-color: black;
+  background-color: lightgray;
   border: none;
   outline: none;
   color: red;
   font-family: monospace;
-  padding: 5px 10px;
+  padding: 6px 10px;
   cursor: pointer;  
 }

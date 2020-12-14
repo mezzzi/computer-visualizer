@@ -21,14 +21,13 @@
 }
 
 .stackButton {
-  background-color: green;
   color: black;
   font-size: small;
   font-family: monospace;
   letter-spacing: 10px;
   font-weight: bold;
   cursor: pointer;
-  border: none;
+  border: 1px solid gray;
   margin: 2% 0;
 }
 
@@ -38,7 +37,8 @@
 }
 
 .stackButton:disabled {
-  background-color: rgb(22, 39, 22);
+  cursor: not-allowed;
+  background-color: white;
 }
 
 .stackButton:focus {
@@ -46,12 +46,11 @@
 }
 
 .stackItem {
-  padding: 3px;
   margin: 1px 0;
   overflow-wrap: anywhere;
 }
 
 .stackBottom {
-  border: 1px solid green;
+  border: 1px solid darkgray;
   width: 100%
 }

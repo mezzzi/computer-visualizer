@@ -37,7 +37,7 @@ const Box = ({
             className='boxTitle'
             style={{
               height: titleHeight || '15%',
-              backgroundColor: '#252323',
+              backgroundColor: 'none',
               ...titleStyle
             }}
           >

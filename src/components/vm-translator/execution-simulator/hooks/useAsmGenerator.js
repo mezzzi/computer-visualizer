@@ -156,7 +156,7 @@ const useAsmGenerator = ({
     const targetIndex = assembly.length - assemblerParseCount - 1
     const updatedAssembly = assembly.map((item, index) => {
       if (index !== targetIndex) {
-        return { ...item, color: 'green' }
+        return { ...item, color: 'white' }
       }
       return { ...item, color: 'yellow' }
     })
@@ -170,7 +170,7 @@ const useAsmGenerator = ({
 
   const pushAssemblyBatch = (asmBatch) => {
     const updatedAssembly = [...state.assembly.reverse().map(
-      (item, line) => ({ ...item, color: 'green', line }))]
+      (item, line) => ({ ...item, color: 'white', line }))]
     updatedAssembly.push(...asmBatch.map(
       item => ({ item, color: 'yellow' })))
     setters.assembly(updatedAssembly.reverse())

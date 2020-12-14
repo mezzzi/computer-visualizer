@@ -265,10 +265,10 @@ const useSegmentReducer = () => {
   const syncHeapSegments = (latestRam = []) => {
     if (!latestRam.length) return
     // first sync the pointer segment
-    const latestPointerSeg = latestRam
-      .filter(({ index }) => [3, 4].includes[index])
-      .map(({ index, item }) => ({ item, index: index - 3 }))
-    getBulkSetter('pointer')(latestPointerSeg)
+    // const latestPointerSeg = latestRam
+    //   .filter(({ index }) => [3, 4].includes[index])
+    //   .map(({ index, item }) => ({ item, index: index - 3 }))
+    // getBulkSetter('pointer')(latestPointerSeg)
     // sync the other segments, only that and this segments for now
     const PTRS = Object.values(POINTERS)
       .filter(({ name }) => ['that', 'this'].includes(name))
@@ -290,6 +290,34 @@ const useSegmentReducer = () => {
     }
   }
 
+  // When pointer addresses are updated in ram, we would want to adjust
+  // virtual segment contents
+  const ramBulkSetter = ({
+    items, replace = false, syncSegments = false, segmentsToSync
+  }) => {
+    getBulkSetter('ram')(items, replace)
+    if (!syncSegments) return
+    const latestRam = getMergedSegment({
+      oldSegment: segments.ram,
+      newSegment: items,
+      replace
+    })
+    console.log('LATEST RAM:', latestRam)
+    if (segmentsToSync) {
+      // sync after returning from a function
+      return syncSegmentsWithRam(latestRam, segmentsToSync)
+    }
+    !syncOnlyHeap && syncSegmentsAgainstRam(latestRam)
+    syncOnlyHeap && syncHeapSegments(latestRam)
+  }
+
+  const ramSetter = (address, value) => {
+    ramBulkSetter({
+      items: [{ item: value, index: address }],
+      syncSegments: true
+    })
+  }
+
   const bulkSetters = {}
   SEGMENTS.forEach(segmentName => {
     if (['ram', 'functionStack'].includes(segmentName)) return
@@ -307,33 +335,6 @@ const useSegmentReducer = () => {
       getBulkSetter('ram')(ramItems)
     }
   })
-
-  // When pointer addresses are updated in ram, we would want to adjust
-  // virtual segment contents
-  const ramBulkSetter = ({
-    items, replace = false, syncSegments = false, segmentsToSync
-  }) => {
-    getBulkSetter('ram')(items, replace)
-    if (!syncSegments) return
-    const latestRam = getMergedSegment({
-      oldSegment: segments.ram,
-      newSegment: items,
-      replace
-    })
-    if (segmentsToSync) {
-      // sync after returning from a function
-      return syncSegmentsWithRam(latestRam, segmentsToSync)
-    }
-    !syncOnlyHeap && syncSegmentsAgainstRam(latestRam)
-    syncOnlyHeap && syncHeapSegments(latestRam)
-  }
-
-  const ramSetter = (address, value) => {
-    ramBulkSetter({
-      items: [{ item: value, index: address }],
-      syncSegments: true
-    })
-  }
 
   const getCustomSetter = segmentName => (address, value) => {
     const segment = segments[segmentName]
@@ -382,7 +383,7 @@ const useSegmentReducer = () => {
           { index: baseAddress + segmentIndex, item: value },
           { index: POINTERS.SP.value, item: spValue - 1 }
         ],
-        syncSegments: true
+        syncSegments: segmentName === 'pointer'
       })
     }
   })

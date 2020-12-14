@@ -1,5 +1,6 @@
 .registerWrapper {
   display: flex;
+  color: white;
   background: black;
   align-items: center;
   margin: 0 5%;
@@ -23,9 +24,12 @@
   width: 40%;
   display: flex;
   flex-direction: column;
-  padding-bottom: 10px;
+  border-bottom: 1px solid black;
+  border-right: 1px solid black;
+  margin-bottom: 10px;
   font-family: monospace;
   align-self: flex-start;
+  margin-left: 9px;
 }
 
 .symbolTableRow {

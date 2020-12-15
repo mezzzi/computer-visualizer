@@ -16,6 +16,7 @@ export const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 20px;
 `
 
 export const Header = styled.span`

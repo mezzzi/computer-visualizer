@@ -1,0 +1,85 @@
+.simulatorContainer {
+  padding: 0;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  color: green;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.arithmeticAndModeWrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.arithmeticWrapper {
+  width: 100%;
+  height: 60%;
+}
+
+.modeWrapper {
+  width: 100%;
+  height: 40%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.simulatorContainer ::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Track */
+.simulatorContainer ::-webkit-scrollbar-track {
+  background: darkgray; 
+}
+ 
+/* Handle */
+.simulatorContainer ::-webkit-scrollbar-thumb {
+  background: green; 
+}
+
+/* Handle on hover */
+.simulatorContainer ::-webkit-scrollbar-thumb:hover {
+  background: green; 
+}
+
+.simulatorContainer input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* Styling checkbox */
+  width: 16px;
+  height: 16px;
+  background-color: black;
+  outline: none;
+}
+
+.simulatorContainer input[type="checkbox"]:checked {
+  background-color: green;
+  outline: none;
+}
+
+.simulatorContainer input[type="checkbox"]:hover {
+  cursor: pointer;
+}
+
+.simulatorContainer select {
+  /* Styling select */
+  font-family: monospace;
+  outline: none;
+  border: none;
+  color: green;
+  padding: 5px;
+}

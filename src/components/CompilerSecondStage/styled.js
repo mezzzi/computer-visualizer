@@ -5,6 +5,7 @@ export const MainWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 20px;
 `
 
 export const ItemWrapper = styled.div`

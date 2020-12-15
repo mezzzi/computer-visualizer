@@ -1,10 +1,10 @@
 import React from 'react'
 import { DivRefProvider } from
-  'components/vm-translator/contexts/divRefContext'
+  'components/VmTranslationSimulator/contexts/divRefContext'
 import { GeneralProvider } from
-  'components/vm-translator/contexts/generalContext'
+  'components/VmTranslationSimulator/contexts/generalContext'
 import { ModeProvider } from
-  'components/vm-translator/contexts/modeContext'
+  'components/VmTranslationSimulator/contexts/modeContext'
 
 import ExecutionSimulator from './vm-simulator'
 

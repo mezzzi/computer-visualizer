@@ -1,6 +1,11 @@
 .App {
-  padding: 50px;
   height: 100%;
+}
+
+.navigationDdrawerButton {
+  position: fixed;
+  left: 10px;
+  top: 10px;
 }
 
 .ant-drawer-body {

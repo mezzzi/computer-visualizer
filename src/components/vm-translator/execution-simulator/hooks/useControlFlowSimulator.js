@@ -10,7 +10,9 @@ import {
 const ACTIONS = {
   SET_FUNC_NAME_STACK: 'funcNameStack',
   SET_NUM_ARGS_STACK: 'numArgsStack',
-  SET_NUM_LOCALS_STACK: 'numLocalsStack'
+  SET_NUM_LOCALS_STACK: 'numLocalsStack',
+  SET_RETURN_LABELS_STACK: 'returnLabelsStack',
+  SET_MOST_RECENT_LABEL: 'mostRecentLabel'
 }
 
 const controlFlowReducer = getReducer(ACTIONS)
@@ -37,7 +39,9 @@ const useControlFlowReducer = ({
     functionName: null,
     funcNameStack: [],
     numArgsStack: [],
-    numLocalsStack: []
+    numLocalsStack: [],
+    returnLabelsStack: [],
+    mostRecentLabel: null
   })
   const {
     state: { currentVmCommand, vmCommands },
@@ -70,6 +74,9 @@ const useControlFlowReducer = ({
         jumpToLabel(jumpLabel)
       }
     }
+    if (commandType === COMMAND.LABEL) {
+      setters.mostRecentLabel(currentVmCommand.getArg1())
+    }
     if (commandType === COMMAND.FUNCTION) {
       const funcName = currentVmCommand.getArg1()
       setCurrentFunction(funcName)
@@ -99,6 +106,10 @@ const useControlFlowReducer = ({
       })
     }
     if (commandType === COMMAND.CALL) {
+      // PUSH RETURN LABEL
+      setters.returnLabelsStack([
+        ...state.returnLabelsStack, state.mostRecentLabel
+      ])
       const name = currentVmCommand.getArg1()
       const numArguments = currentVmCommand.getArg2() || undefined
       setters.numArgsStack([...state.numArgsStack, numArguments])
@@ -130,7 +141,6 @@ const useControlFlowReducer = ({
     if (commandType === COMMAND.RETURN) {
       // restore segment pointers, and segment values
       const localBaseAddr = getBaseAddress('LCL')
-      const returnLabel = currentVmCommand.getArg1()
       const pointers = ['THAT', 'THIS', 'ARG', 'LCL']
       const ramItems = []
       pointers.forEach((ptr, index) => {
@@ -171,6 +181,9 @@ const useControlFlowReducer = ({
       setters.numArgsStack(updatedNumArgsStack)
       setters.numLocalsStack(updatedNumLocalsStack)
       setters.funcNameStack(updatedFuncNameStack)
+      const returnLabelsStack = [...state.returnLabelsStack]
+      setters.returnLabelsStack(returnLabelsStack)
+      const returnLabel = returnLabelsStack && returnLabelsStack.pop()
       returnLabel && jumpToLabel(returnLabel)
     }
     return onFlowSimEnd()

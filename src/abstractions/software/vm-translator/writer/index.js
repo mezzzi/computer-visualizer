@@ -498,6 +498,9 @@ class HVMCodeWriter {
 
   getAssemblyLength () {
     return this.assembly.length + this.assemblyBuffer.length
+    // return this.assembly.filter(asm => !asm.startsWith('(')).length + this.assemblyBuffer.filter(
+    //   asm => !asm.startsWith('(')
+    // ).length
   }
 }
 export default HVMCodeWriter

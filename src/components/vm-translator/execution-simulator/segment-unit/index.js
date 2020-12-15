@@ -9,7 +9,14 @@ const SegmentUnit = ({
 }) => {
   const { divSetters } = useContext(DivRefContext)
   return (
-    <Box width='73%'>
+    <Box
+      width='73%'
+      customContentStyle={{
+        paddingTop: '5%',
+        height: '95%',
+        boxSizing: 'border-box'
+      }}
+    >
       {
         SEGMENTS.map((name, index) => (
           <StackBox

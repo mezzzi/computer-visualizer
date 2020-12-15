@@ -39,7 +39,7 @@
 }
 
 .resetButton {
-  background-color: lightgray;
+  background-color: transparent;
   border: none;
   outline: none;
   color: red;

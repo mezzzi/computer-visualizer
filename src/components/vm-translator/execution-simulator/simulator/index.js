@@ -34,9 +34,10 @@ export const simulateDivMotion = ({
   id = 'movingDiv',
   text = 'moving div',
   onSimulationEnd,
-  speed = 20,
+  speed = 40,
   clearOnEnd,
-  matchTopOnEnd = true
+  matchTopOnEnd = true,
+  step = 5
 }) => {
   const destinationRect = destinationRectCoors ||
     destinationRectDiv.getBoundingClientRect()
@@ -70,7 +71,7 @@ export const simulateDivMotion = ({
         return
       }
       movingDiv.style.top = `${movingRect.top}px`
-      movingRect.top = movingRect.top - 5
+      movingRect.top = movingRect.top - step
     }
     if (upMoveDone && !sideWayMoveDone) {
       if (isDestinationToRight
@@ -82,8 +83,8 @@ export const simulateDivMotion = ({
       }
       movingDiv.style.left = `${movingRect.left}px`
       movingRect.left = isDestinationToRight
-        ? movingRect.left + 5
-        : movingRect.left - 5
+        ? movingRect.left + step
+        : movingRect.left - step
     }
     if (upMoveDone && sideWayMoveDone) {
       if (movingRect.top > destinationRect.top) {
@@ -96,7 +97,7 @@ export const simulateDivMotion = ({
         return
       }
       movingDiv.style.top = `${movingRect.top}px`
-      movingRect.top = movingRect.top + 5
+      movingRect.top = movingRect.top + step
     }
   }, speed)
 }

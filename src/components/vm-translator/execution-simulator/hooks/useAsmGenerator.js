@@ -17,17 +17,20 @@ const asmReducer = getReducer(ACTIONS)
 
 const useAsmGenerator = ({
   simulateAsmExecution,
-  resetAsmArithmetic
+  resetAsmArithmetic,
+  setAsmDescription
 }) => {
   const [state, dispatch] = useReducer(asmReducer, {
     assembly: [],
     nextAsmBatch: [],
-    isAsmGenerated: false
+    isAsmGenerated: false,
+    isAboutToExec: false
   })
   const { divs } = useContext(DivRefContext)
   const {
     state: {
       reset,
+      assembler,
       vmFileIndex,
       asmBatchIndex,
       asmBatchCount,
@@ -40,15 +43,19 @@ const useAsmGenerator = ({
       currentVmCmdIndex,
       maxVmParseCount,
       maxAsmParseCount,
-      isCurrentAsmBatchExhausted
+      isCurrentAsmBatchExhausted,
+      shouldExecAsm,
+      isAboutToExecAsm
     },
     setters: {
+      shouldExecAsm: setShouldExecAsm,
       isCurrentAsmBatchExhausted: setIsCurrentAsmBatchExhausted,
       asmBatchIndex: setAsmBatchIndex,
       asmBatchCount: setAsmBatchCount,
       isSkipping: setIsSkipping,
       assemblerLineCount: setAssemblerLineCount,
-      isNextVmCmdProvided: setIsNextVmCmdProvided
+      isNextVmCmdProvided: setIsNextVmCmdProvided,
+      isAboutToExecAsm: setIsAboutToExecAsm
     },
     stepAssembler,
     stepTranslator
@@ -104,6 +111,13 @@ const useAsmGenerator = ({
       resetAsmArithmetic()
       const shouldSimulateExec = (isAsmStepSimulationOn ||
       isAllSimulationOn || isAsmSteppingFast) && !isSkipping
+      const shouldWaitForExecSignal = !isSkipping && !isSimulationModeOff &&
+        !isAllSimulationOn && !isAsmSteppingFast
+      setIsAboutToExecAsm(shouldWaitForExecSignal)
+      if (shouldWaitForExecSignal) {
+        setAsmDescription(parser)
+        return setIsSimulating(false)
+      }
       const now = shouldSimulateExec ? simulateAsmExecution(parser) || {}
         : {}
       const shouldSkipNext = isSkipping || now.shouldSkip
@@ -123,6 +137,15 @@ const useAsmGenerator = ({
       }) : onAsmGenerationSimEnd()
   }, [asmBatchIndex])
 
+  useEffect(() => {
+    if (!shouldExecAsm) return
+    setShouldExecAsm(false)
+    const now = simulateAsmExecution(assembler.parser) || {}
+    const shouldSkipNext = isSkipping || now.shouldSkip
+    setIsAboutToExecAsm(false)
+    shouldSkipNext && provideNextAsmCommand(true)
+  }, [shouldExecAsm])
+
   const isVmLooping = () => {
     return currentVmCmdIndex + 1 < maxVmParseCount
   }
@@ -138,7 +161,11 @@ const useAsmGenerator = ({
       assemblerLineCount + (batchCount || asmBatchCount))
   }
 
-  const provideNextAsmCommand = () => {
+  const provideNextAsmCommand = (skip) => {
+    if (!skip && isAboutToExecAsm) {
+      setIsAboutToExecAsm(false)
+      return setShouldExecAsm(true)
+    }
     if (asmBatchIndex < asmBatchCount - 1) {
       if (isSkipping && lastRunRomAddress === jumpAddress) {
         setIsSkipping(false)
@@ -173,6 +200,14 @@ const useAsmGenerator = ({
       (item, line) => ({ ...item, color: 'white', line }))]
     updatedAssembly.push(...asmBatch.map(
       item => ({ item, color: 'yellow' })))
+    let counter = 0
+    updatedAssembly.forEach((assembly) => {
+      assembly.index = undefined
+      if (!assembly.item.startsWith('(')) {
+        assembly.index = counter
+        counter += 1
+      }
+    })
     setters.assembly(updatedAssembly.reverse())
   }
 

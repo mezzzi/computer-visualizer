@@ -32,6 +32,8 @@ const ACTIONS = {
   SET_RESET: 'reset',
   SET_TRANSLATOR: 'translator',
   SET_MAIN_ASSEMBLY: 'mainAssembly',
+  SET_IS_ABOUT_TO_EXEC_ASM: 'isAboutToExecAsm',
+  SET_SHOULD_EXEC_ASM: 'shouldExecAsm',
   IS_CURRENT_ASM_BATCH_EXHAUSTED: 'isCurrentAsmBatchExhausted',
   SET_IS_SKIPPING: 'isSkipping',
   SET_JUMP_ADDRESS: 'jumpAddress',
@@ -72,7 +74,9 @@ const initialState = {
   maxAsmParseCount: 0,
   maxVmParseCount: 0,
   functionInfo: {},
-  currentFunction: ''
+  currentFunction: '',
+  isAboutToExecAsm: false,
+  shouldExecAsm: false
 }
 
 const GeneralContext = React.createContext(initialState)

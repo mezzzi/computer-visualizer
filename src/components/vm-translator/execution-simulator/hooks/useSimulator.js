@@ -16,7 +16,8 @@ const useSimulator = () => {
   const {
     state: asmStepwiseState,
     simulateAsmExecution,
-    resetAsmArithmetic
+    resetAsmArithmetic,
+    setAsmDescription
   } = useAsmStepwiseSimulator({
     ram: segments.ram,
     setRamValue: segmentSetters.ram
@@ -26,7 +27,8 @@ const useSimulator = () => {
     asmGenerator, asmSetters, provideNextAsmCommand
   } = useAsmGenerator({
     simulateAsmExecution,
-    resetAsmArithmetic
+    resetAsmArithmetic,
+    setAsmDescription
   })
 
   usePushSimulator({

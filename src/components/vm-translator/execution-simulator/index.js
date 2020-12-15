@@ -43,7 +43,12 @@ const ExecutionSimulator = () => {
         asmStepwiseState={asmStepwiseState}
       />
       <SegmentUnit segments={segments} />
-      <Box width='27%'>
+      <Box
+        width='27%'
+        customContentStyle={{
+          paddingTop: '10%'
+        }}
+      >
         <div className='arithmeticAndModeWrapper'>
           <div className='arithmeticWrapper'>
             <ArithmeticUnit

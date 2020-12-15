@@ -20,7 +20,9 @@ const AsmUnit = ({
       isSimulating, isAsmStepSimulationOn, isAllSimulationOn
     }
   } = useContext(ModeContext)
-  const { state: { isCurrentAsmBatchExhausted } } = useContext(GeneralContext)
+  const {
+    state: { isCurrentAsmBatchExhausted, isAboutToExecAsm }
+  } = useContext(GeneralContext)
   useEffect(() => {
     divSetters.aRegDiv(aRegDivRef.current)
     divSetters.dRegDiv(dRegDivRef.current)
@@ -28,7 +30,7 @@ const AsmUnit = ({
   const aRegDivRef = useRef(null)
   const dRegDivRef = useRef(null)
   const {
-    aRegister, dRegister,
+    aRegister, dRegister, asmDescription,
     isUnary, op1, op2, operator, result
   } = asmStepwiseState
 
@@ -49,7 +51,7 @@ const AsmUnit = ({
           content={asmGenerator.assembly}
           hasAction
           onAction={() => provideNextAsmCommand()}
-          actionName='NEXT'
+          actionName={isAboutToExecAsm ? 'EXEC' : 'NEXT'}
           actionDisabled={!isAsmStepSimulationOn || isCurrentAsmBatchExhausted ||
           isSimulating || isAllSimulationOn}
           buttonHeight='10%'
@@ -58,11 +60,26 @@ const AsmUnit = ({
       </Box>
       <Box
         height='100%' width='80%' title='Hack CPU'
+        titleStyle={{
+          marginRight: '30px'
+        }}
         customContentStyle={{
           flexDirection: 'column',
           justifyContent: 'flex-end'
         }}
       >
+        <div
+          style={{
+            width: '60%',
+            alignSelf: 'center',
+            marginBottom: 'auto',
+            fontFamily: 'monospace',
+            textAlign: 'center',
+            marginRight: '30px'
+          }}
+        >
+          {asmDescription || ''}
+        </div>
         <div
           style={{
             width: '100%',

@@ -2,7 +2,9 @@ import { useReducer, useContext, useEffect } from 'react'
 
 import {
   getReducer, getSetters, isArithmeticSymbol,
-  getSymbolCommandType, getInitialState
+  getSymbolCommandType, getInitialState,
+  ASM_COMP_DESCRIPTIONS, ASM_DEST_DESCRIPTIONS,
+  ASM_JUMP_DESCRIPTIONS
 } from './util'
 import { simulateDivMotion } from '../simulator'
 import { DivRefContext } from '../contexts/divRefContext'
@@ -20,7 +22,7 @@ const ACTIONS = {
   SET_IS_UNARY: 'isUnary',
   SET_RESULT: 'result',
   SET_VM_CMD_DESCRIPTION: 'vmCmdDescription',
-  SET_ASM_CMD_DESCRIPTION: 'asmCmdDescription'
+  SET_ASM_DESCRIPTION: 'asmDescription'
 }
 
 const asmStepwiseReducer = getReducer(ACTIONS)
@@ -81,7 +83,8 @@ const useAsmStepwiseSimulator = ({
       return onAsmSimulationEnd()
     }
     if (commandType === COMMAND_TYPE.A_COMMAND) {
-      setARegister(assembler.getAddress(parser.symbol()))
+      const address = assembler.getAddress(parser.symbol())
+      setARegister(address)
       return onAsmSimulationEnd()
     }
     if (commandType === COMMAND_TYPE.C_COMMAND) {
@@ -244,11 +247,37 @@ const useAsmStepwiseSimulator = ({
     )
   }
 
+  const setAsmDescription = (parser) => {
+    const commandType = parser.commandType()
+    if (commandType === COMMAND_TYPE.A_COMMAND) {
+      const address = assembler.getAddress(parser.symbol())
+      return setters.asmDescription(
+        `Load address location ${address} to the A register`)
+    }
+    if (commandType === COMMAND_TYPE.C_COMMAND) {
+      const address = parseInt(state.aRegister)
+      const jump = parser.jump()
+      if (jump) {
+        return setters.asmDescription(ASM_JUMP_DESCRIPTIONS[jump](address))
+      }
+      const dest = parser.dest()
+      const comp = parser.comp()
+      setters.asmDescription(
+        `${comp.includes('M') ? ASM_COMP_DESCRIPTIONS[comp](address)
+        : ASM_COMP_DESCRIPTIONS[comp]}${
+          dest === 'M' ? ASM_DEST_DESCRIPTIONS[dest](address)
+          : ASM_DEST_DESCRIPTIONS[dest]
+        }`
+      )
+    }
+  }
+
   return {
     state,
     setters,
     simulateAsmExecution,
-    resetAsmArithmetic
+    resetAsmArithmetic,
+    setAsmDescription
   }
 }
 export default useAsmStepwiseSimulator
